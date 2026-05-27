@@ -1,4 +1,6 @@
 from dataclasses import dataclass
+import re
+from pathlib import Path
 
 import requests
 from django.conf import settings
@@ -12,6 +14,92 @@ if truststore is not None:
     truststore.inject_into_ssl()
 
 from .models import AccountUser
+
+
+class TerraformAccountDataService:
+    RESOURCE_PATTERN = re.compile(
+        r'resource\s+"(?P<type>[^"]+)"\s+"(?P<name>[^"]+)"\s*\{(?P<body>.*?)\n\}',
+        re.DOTALL,
+    )
+
+    ATTRIBUTE_PATTERN = re.compile(
+        r'^\s*(?P<key>[A-Za-z_][A-Za-z0-9_]*)\s*=\s*(?P<value>.+?)\s*$',
+        re.MULTILINE,
+    )
+
+    def __init__(self, workspace_dir=None):
+        root = workspace_dir or Path(settings.DT_TERRAFORM_ROOT) / 'account-management'
+        self.workspace_dir = Path(root)
+
+    def load(self):
+        result = {
+            'users': [],
+            'policies': [],
+            'boundaries': [],
+            'roles': [],
+            'source_root': str(self.workspace_dir),
+            'resource_count': 0,
+        }
+
+        if not self.workspace_dir.exists():
+            return result
+
+        for tf_file in self.workspace_dir.rglob('*.tf'):
+            if '.terraform' in tf_file.parts or 'reference' in tf_file.parts:
+                continue
+
+            content = tf_file.read_text(encoding='utf-8', errors='ignore')
+            for match in self.RESOURCE_PATTERN.finditer(content):
+                resource_type = match.group('type')
+                resource_name = match.group('name')
+                attrs = self._extract_attributes(match.group('body'))
+
+                entry = {
+                    'name': attrs.get('name') or resource_name,
+                    'resource_name': resource_name,
+                    'resource_type': resource_type,
+                    'file_path': self._to_display_path(tf_file),
+                    'email': attrs.get('email', ''),
+                    'id': attrs.get('id', ''),
+                }
+
+                bucket = self._bucket_for_type(resource_type)
+                if bucket:
+                    result[bucket].append(entry)
+                    result['resource_count'] += 1
+
+        for key in ('users', 'policies', 'boundaries', 'roles'):
+            result[key].sort(key=lambda item: (item.get('name') or '').lower())
+
+        return result
+
+    def _extract_attributes(self, body):
+        attributes = {}
+        for match in self.ATTRIBUTE_PATTERN.finditer(body):
+            key = match.group('key')
+            value = match.group('value').strip()
+            if value.startswith('"') and value.endswith('"') and len(value) >= 2:
+                value = value[1:-1]
+            attributes[key] = value
+        return attributes
+
+    def _bucket_for_type(self, resource_type):
+        lower = resource_type.lower()
+        if 'user' in lower:
+            return 'users'
+        if 'boundary' in lower:
+            return 'boundaries'
+        if 'policy' in lower and 'binding' not in lower:
+            return 'policies'
+        if any(marker in lower for marker in ('role', 'group', 'binding', 'permission')):
+            return 'roles'
+        return None
+
+    def _to_display_path(self, path_obj):
+        try:
+            return str(path_obj.relative_to(settings.BASE_DIR)).replace('\\', '/')
+        except Exception:
+            return str(path_obj).replace('\\', '/')
 
 
 @dataclass

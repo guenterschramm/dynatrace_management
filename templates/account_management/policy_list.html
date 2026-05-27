@@ -3,15 +3,42 @@
 {% block content %}
 <div class="mb-4">
     <h2 class="h3 mb-1">Account Management</h2>
-    <p class="text-secondary mb-0">Rubrik Policies fuer Account-weite Berechtigungsdefinitionen.</p>
+    <p class="text-secondary mb-0">Terraform ist die Datenbasis. Policies werden aus den Terraform-Dateien gelesen.</p>
 </div>
 
 {% include 'account_management/_section_nav.html' %}
 
+<div class="alert alert-light border mb-4" role="alert">
+    Quelle: <code>{{ source_root }}</code><br>
+    Erkannte Terraform-Ressourcen: {{ resource_count }}
+</div>
+
 <div class="card border-0 shadow-sm">
-    <div class="card-body p-4">
-        <h3 class="h5">Policies</h3>
-        <p class="text-secondary mb-0">Die Synchronisierung und Bearbeitung von Dynatrace Policies wird im naechsten Schritt ergaenzt.</p>
+    <div class="table-responsive">
+        <table class="table align-middle mb-0">
+            <thead>
+                <tr>
+                    <th>Name</th>
+                    <th>Typ</th>
+                    <th>Ressource</th>
+                    <th>Datei</th>
+                </tr>
+            </thead>
+            <tbody>
+                {% for policy in policies %}
+                    <tr>
+                        <td>{{ policy.name|default:'-' }}</td>
+                        <td><code>{{ policy.resource_type }}</code></td>
+                        <td><code>{{ policy.resource_name }}</code></td>
+                        <td><code>{{ policy.file_path }}</code></td>
+                    </tr>
+                {% empty %}
+                    <tr>
+                        <td colspan="4" class="text-center py-5 text-secondary">Keine Policy-Ressourcen im Terraform-Workspace gefunden.</td>
+                    </tr>
+                {% endfor %}
+            </tbody>
+        </table>
     </div>
 </div>
 {% endblock %}

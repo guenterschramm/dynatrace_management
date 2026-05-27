@@ -1,0 +1,9 @@
+=== Account Management Export ===
+DT_ACCOUNT_ID          = gesetzt
+DT_CLIENT_ID           = gesetzt
+DT_CLIENT_SECRET       = gesetzt
+DYNATRACE_TARGET_FOLDER = C:\Tools\dynatrace_management\terraform\workspaces\account-management
+Provider EXE           = C:\Tools\Terraform\tf-dynatrace\.terraform\providers\registry.terraform.io\dynatrace-oss\dynatrace\1.96.0\windows_amd64\terraform-provider-dynatrace_v1.96.0.exe
+Ressourcen             = dynatrace_iam_group, dynatrace_iam_policy, dynatrace_iam_policy_boundary, dynatrace_iam_policy_bindings_v2, dynatrace_iam_policy_bindings
+... finished after 0 seconds
+ No Environment URL has been specified. Use either the environment variable `DYNATRACE_ENV_URL` or the configuration attribute `dt_env_url` of the provider for that

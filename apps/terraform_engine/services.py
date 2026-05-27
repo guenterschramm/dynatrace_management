@@ -1,6 +1,7 @@
 import subprocess
 import shutil
 import json
+import os
 from pathlib import Path
 
 from django.conf import settings
@@ -425,6 +426,11 @@ def _sync_reference_module(workspace, module_name):
     if source_module.exists():
         target_module.mkdir(parents=True, exist_ok=True)
         copied_any = False
+        if workspace.scope == TerraformWorkspace.WorkspaceScope.ACCOUNT_MANAGEMENT:
+            for source_file in source_module.glob('*.tf'):
+                shutil.copy2(source_file, target_module / source_file.name)
+                copied_any = True
+            return copied_any
         for file_name in ('main.tf', 'variables.tf', 'outputs.tf'):
             source_file = source_module / file_name
             if source_file.exists():
@@ -486,6 +492,21 @@ def run_legacy_export_script(workspace):
     tfvars_path.parent.mkdir(parents=True, exist_ok=True)
     tfvars_path.write_text(_legacy_tfvars_content(), encoding='utf-8')
 
+    account = settings.DT_ACCOUNT_CONFIG
+    environments = {item['name']: item for item in settings.DT_DEFAULT_ENVIRONMENTS}
+    test_env = environments.get('test-environment', {})
+
+    process_env = dict(os.environ)
+    process_env.update(
+        {
+            'DYNATRACE_ACCOUNT_ID': str(account.get('account_id', '')),
+            'DYNATRACE_CLIENT_ID': str(account.get('client_id', '')),
+            'DYNATRACE_CLIENT_SECRET': str(account.get('client_secret', '')),
+            'DYNATRACE_ENV_URL': str(test_env.get('environment_url', '')),
+            'DYNATRACE_API_TOKEN': str(test_env.get('api_token', '')),
+        }
+    )
+
     result = subprocess.run(
         [
             'powershell',
@@ -499,14 +520,35 @@ def run_legacy_export_script(workspace):
             str(workspace.workspace_dir),
         ],
         cwd=str(_reference_root()),
+        env=process_env,
         capture_output=True,
         text=True,
         check=False,
     )
 
+    combined_output = f'{result.stdout}\n{result.stderr}'.lower()
+    failure_markers = (
+        'no environment url has been specified',
+        'no api token, platform token, or oauth has been specified',
+        'error:',
+        'write-error',
+    )
+    success = result.returncode == 0 and not any(marker in combined_output for marker in failure_markers)
+
+    if workspace.scope == TerraformWorkspace.WorkspaceScope.ACCOUNT_MANAGEMENT:
+        for module_name in _reference_module_names(workspace):
+            _sync_reference_module(workspace, module_name)
+        object_files = [
+            path
+            for path in (workspace.workspace_dir / 'modules').rglob('*.tf')
+            if path.name not in {'main.tf', 'variables.tf', 'outputs.tf', '___providers___.tf', '___variables___.tf'}
+        ]
+        if object_files:
+            success = True
+
     return {
         'ran': True,
-        'success': result.returncode == 0,
+        'success': success,
         'code': result.returncode,
         'stdout': result.stdout,
         'stderr': result.stderr,
