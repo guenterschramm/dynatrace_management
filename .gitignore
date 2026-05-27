@@ -1,0 +1,20 @@
+# Python
+__pycache__/
+*.py[cod]
+*.pyo
+*.pyd
+.venv/
+
+# Django local data
+*.sqlite3
+db.sqlite3
+
+# Local env/secrets
+.env
+
+# Terraform local/runtime artifacts
+**/.terraform/
+*.tfstate
+*.tfstate.*
+*.tfvars
+*.tfplan

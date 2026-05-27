@@ -1,0 +1,47 @@
+{% extends 'base.html' %}
+
+{% block content %}
+<div class="d-flex flex-column flex-lg-row justify-content-between align-items-lg-center gap-3 mb-4">
+    <div>
+        <h2 class="h3 mb-1">Account Management</h2>
+        <p class="text-secondary mb-0">Rubrik User mit lokaler Sicht auf Dynatrace Account User, synchronisiert ueber die IAM API.</p>
+    </div>
+    <form action="{% url 'account_management:sync_users' %}" method="post">
+        {% csrf_token %}
+        <button class="btn btn-dark" type="submit">IAM Sync starten</button>
+    </form>
+</div>
+
+{% include 'account_management/_section_nav.html' %}
+
+<div class="card border-0 shadow-sm">
+    <div class="table-responsive">
+        <table class="table align-middle mb-0">
+            <thead>
+                <tr>
+                    <th>E-Mail</th>
+                    <th>Name</th>
+                    <th>Status</th>
+                    <th>Typ</th>
+                    <th>UUID</th>
+                </tr>
+            </thead>
+            <tbody>
+                {% for user in users %}
+                    <tr>
+                        <td>{{ user.email|default:'-' }}</td>
+                        <td>{{ user.full_name|default:'-' }}</td>
+                        <td>{{ user.status|default:'-' }}</td>
+                        <td>{{ user.user_type|default:'-' }}</td>
+                        <td><code>{{ user.user_uuid }}</code></td>
+                    </tr>
+                {% empty %}
+                    <tr>
+                        <td colspan="5" class="text-center py-5 text-secondary">Noch keine User synchronisiert.</td>
+                    </tr>
+                {% endfor %}
+            </tbody>
+        </table>
+    </div>
+</div>
+{% endblock %}

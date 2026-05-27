@@ -1,0 +1,22 @@
+{% extends 'base.html' %}
+
+{% block content %}
+<div class="mb-4">
+    <span class="badge rounded-pill text-bg-dark mb-3">Internal Admin Tool</span>
+    <h2 class="display-6">Dynatrace Configuration Control Plane</h2>
+    <p class="lead text-secondary">Zentrale Verwaltung von Account Management, Environments und Platform-Konfigurationen mit Terraform als Ausfuehrungsschicht.</p>
+</div>
+
+<div class="row g-4">
+    {% for section in sections %}
+        <div class="col-12 col-lg-4">
+            <div class="card shadow-sm border-0 h-100">
+                <div class="card-body">
+                    <h3 class="h5">{{ section.title }}</h3>
+                    <p class="text-secondary mb-0">{{ section.description }}</p>
+                </div>
+            </div>
+        </div>
+    {% endfor %}
+</div>
+{% endblock %}
