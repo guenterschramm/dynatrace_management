@@ -1,0 +1,47 @@
+resource "dynatrace_web_app_anomalies" "APPLICATION-1511292D0FDC055A" {
+  scope = "APPLICATION-1511292D0FDC055A"
+  error_rate {
+    enabled                   = true
+    error_rate_detection_mode = "auto"
+    error_rate_auto {
+      absolute_increase = 0
+      relative_increase = 50
+      over_alerting_protection {
+        actions_per_minute     = 10
+        minutes_abnormal_state = 3
+      }
+    }
+  }
+  response_time {
+    enabled        = true
+    detection_mode = "auto"
+    response_time_auto {
+      over_alerting_protection {
+        actions_per_minute     = 10
+        minutes_abnormal_state = 3
+      }
+      response_time_all {
+        degradation_milliseconds = 100
+        degradation_percent      = 50
+      }
+      response_time_slowest {
+        slowest_degradation_milliseconds = 1000
+        slowest_degradation_percent      = 100
+      }
+    }
+  }
+  traffic_drops {
+    enabled = true
+    traffic_drops {
+      abnormal_state_abnormal_state = 1
+      traffic_drop_percentage       = 50
+    }
+  }
+  traffic_spikes {
+    enabled = true
+    traffic_spikes {
+      minutes_abnormal_state   = 2
+      traffic_spike_percentage = 200
+    }
+  }
+}

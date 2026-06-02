@@ -4,10 +4,6 @@ resource "dynatrace_iam_policy_bindings_v2" "_0df20785-9e2d-498b-a6fe-cce61e9a9e
   group       = "0df20785-9e2d-498b-a6fe-cce61e9a9e5c"
   policy {
     boundaries = [ "e7969de8-ecde-4350-922b-daa0a8cc0fff", "793e4a8c-b249-44c2-9884-a42126ec63d9" ]
-    id         = "cdc83ae6-6d0c-4379-9216-731b23fa4831#-#global#-#global"
-  }
-  policy {
-    boundaries = [ "e7969de8-ecde-4350-922b-daa0a8cc0fff", "793e4a8c-b249-44c2-9884-a42126ec63d9" ]
     id         = "2531f5a6-330e-4cf3-853f-f0d17403d9d8#-#global#-#global"
   }
   policy {
@@ -20,5 +16,9 @@ resource "dynatrace_iam_policy_bindings_v2" "_0df20785-9e2d-498b-a6fe-cce61e9a9e
   policy {
     boundaries = [ "e7969de8-ecde-4350-922b-daa0a8cc0fff", "793e4a8c-b249-44c2-9884-a42126ec63d9" ]
     id         = "5d4c420b-131e-48ee-9526-beef01787968#-#global#-#global"
+  }
+  policy {
+    boundaries = [ "e7969de8-ecde-4350-922b-daa0a8cc0fff", "793e4a8c-b249-44c2-9884-a42126ec63d9" ]
+    id         = "cdc83ae6-6d0c-4379-9216-731b23fa4831#-#global#-#global"
   }
 }

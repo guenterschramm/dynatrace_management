@@ -1,0 +1,9 @@
+resource "dynatrace_rum_ip_locations" "_10_149_205" {
+  city         = "voestalpine Automotive Components Dettingen GmbH & Co. KG (2288)"
+  country_code = "DE"
+  ip           = "10.149.205.1"
+  ip_to        = "10.149.205.254"
+  latitude     = 48.528359
+  longitude    = 9.334332
+  region_code  = "01"
+}

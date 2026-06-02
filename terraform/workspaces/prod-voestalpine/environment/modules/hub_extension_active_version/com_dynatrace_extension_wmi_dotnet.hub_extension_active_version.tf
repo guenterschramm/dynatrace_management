@@ -1,0 +1,4 @@
+resource "dynatrace_hub_extension_active_version" "com_dynatrace_extension_wmi_dotnet" {
+  name    = "com.dynatrace.extension.wmi.dotnet"
+  version = "1.2.8"
+}

@@ -22,6 +22,7 @@
                     <th>Typ</th>
                     <th>Ressource</th>
                     <th>Datei</th>
+                    <th class="text-end">Details</th>
                 </tr>
             </thead>
             <tbody>
@@ -31,10 +32,38 @@
                         <td><code>{{ boundary.resource_type }}</code></td>
                         <td><code>{{ boundary.resource_name }}</code></td>
                         <td><code>{{ boundary.file_path }}</code></td>
+                        <td class="text-end">
+                            <button
+                                type="button"
+                                class="btn btn-sm btn-outline-dark"
+                                data-bs-toggle="modal"
+                                data-bs-target="#boundary-detail-{{ forloop.counter }}"
+                            >
+                                Anzeigen
+                            </button>
+                        </td>
                     </tr>
+
+                    <div class="modal fade" id="boundary-detail-{{ forloop.counter }}" tabindex="-1" aria-hidden="true">
+                        <div class="modal-dialog modal-lg modal-dialog-scrollable">
+                            <div class="modal-content">
+                                <div class="modal-header">
+                                    <h5 class="modal-title">Boundary-Details: {{ boundary.name|default:boundary.resource_name }}</h5>
+                                    <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+                                </div>
+                                <div class="modal-body">
+                                    <div class="mb-3">
+                                        <strong>Typ:</strong> <code>{{ boundary.resource_type }}</code><br>
+                                        <strong>Ressource:</strong> <code>{{ boundary.resource_name }}</code>
+                                    </div>
+                                    <pre class="bg-light border rounded p-3 mb-0"><code>{{ boundary.details_json }}</code></pre>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
                 {% empty %}
                     <tr>
-                        <td colspan="4" class="text-center py-5 text-secondary">Keine Boundary-Ressourcen im Terraform-Workspace gefunden.</td>
+                        <td colspan="5" class="text-center py-5 text-secondary">Keine Boundary-Ressourcen im Terraform-Workspace gefunden.</td>
                     </tr>
                 {% endfor %}
             </tbody>

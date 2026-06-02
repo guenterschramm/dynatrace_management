@@ -4,7 +4,7 @@
 <div class="d-flex flex-column flex-lg-row justify-content-between align-items-lg-center gap-3 mb-4">
     <div>
         <h2 class="h3 mb-1">Account Management</h2>
-        <p class="text-secondary mb-0">Terraform ist die Datenbasis. User werden aus den Terraform-Objekten im Account-Workspace gelesen.</p>
+        <p class="text-secondary mb-0">User werden aus dem IAM-Sync geladen und mit Terraform-Gruppeninformationen kombiniert.</p>
     </div>
     <form action="{% url 'account_management:sync_users' %}" method="post">
         {% csrf_token %}
@@ -25,22 +25,62 @@
             <thead>
                 <tr>
                     <th>Name</th>
+                    <th>E-Mail</th>
+                    <th>Gruppen</th>
                     <th>Typ</th>
-                    <th>Ressource</th>
-                    <th>Datei</th>
+                    <th>Quelle</th>
+                    <th class="text-end">Details</th>
                 </tr>
             </thead>
             <tbody>
                 {% for user in users %}
                     <tr>
                         <td>{{ user.name|default:'-' }}</td>
+                        <td>{{ user.email|default:'-' }}</td>
+                        <td>
+                            {% if user.groups %}
+                                {% for group in user.groups %}
+                                    <span class="badge text-bg-light border me-1 mb-1">{{ group.name }}</span>
+                                {% endfor %}
+                            {% else %}
+                                <span class="text-secondary">-</span>
+                            {% endif %}
+                        </td>
                         <td><code>{{ user.resource_type }}</code></td>
-                        <td><code>{{ user.resource_name }}</code></td>
-                        <td><code>{{ user.file_path }}</code></td>
+                        <td>{{ user.source|default:'terraform' }}</td>
+                        <td class="text-end">
+                            <button
+                                type="button"
+                                class="btn btn-sm btn-outline-dark"
+                                data-bs-toggle="modal"
+                                data-bs-target="#user-detail-{{ forloop.counter }}"
+                            >
+                                Anzeigen
+                            </button>
+                        </td>
                     </tr>
+
+                    <div class="modal fade" id="user-detail-{{ forloop.counter }}" tabindex="-1" aria-hidden="true">
+                        <div class="modal-dialog modal-lg modal-dialog-scrollable">
+                            <div class="modal-content">
+                                <div class="modal-header">
+                                    <h5 class="modal-title">User-Details: {{ user.name|default:user.email|default:user.id }}</h5>
+                                    <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+                                </div>
+                                <div class="modal-body">
+                                    <div class="mb-3">
+                                        <strong>User UUID:</strong> <code>{{ user.id|default:'-' }}</code><br>
+                                        <strong>E-Mail:</strong> {{ user.email|default:'-' }}<br>
+                                        <strong>Gruppenzuordnungen:</strong> {{ user.group_count|default:0 }}
+                                    </div>
+                                    <pre class="bg-light border rounded p-3 mb-0"><code>{{ user.details_json }}</code></pre>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
                 {% empty %}
                     <tr>
-                        <td colspan="4" class="text-center py-5 text-secondary">Keine User-Ressourcen im Terraform-Workspace gefunden.</td>
+                        <td colspan="6" class="text-center py-5 text-secondary">Keine User gefunden. Optional den IAM-Sync ausführen.</td>
                     </tr>
                 {% endfor %}
             </tbody>

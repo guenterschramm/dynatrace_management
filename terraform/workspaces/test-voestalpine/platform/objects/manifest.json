@@ -1,0 +1,22 @@
+{
+  "workspace": "test-platform",
+  "scope": "platform",
+  "exported": {
+    "alerting": {
+      "endpoint": "/api/config/v1/alertingProfiles",
+      "file": "C:\\Tools\\dynatrace_management\\terraform\\workspaces\\test-voestalpine\\platform\\objects\\alerting.json",
+      "items": 3
+    },
+    "application_detection_rule": {
+      "endpoint": "/api/config/v1/applicationDetectionRules",
+      "file": "C:\\Tools\\dynatrace_management\\terraform\\workspaces\\test-voestalpine\\platform\\objects\\application_detection_rule.json",
+      "items": 11
+    },
+    "api_detection": {
+      "endpoint": "/api/config/v1/service/detectionRules/FULL_WEB_REQUEST",
+      "file": "C:\\Tools\\dynatrace_management\\terraform\\workspaces\\test-voestalpine\\platform\\objects\\api_detection.json",
+      "items": 0
+    }
+  },
+  "errors": {}
+}

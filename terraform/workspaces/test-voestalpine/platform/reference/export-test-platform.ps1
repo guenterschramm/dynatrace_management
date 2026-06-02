@@ -1,16 +1,33 @@
 param(
-    [string]$TfvarsPath = "C:\Tools\Terraform\tf-dynatrace\terraform.tfvars",
-    [string]$TargetFolder = "C:\Tools\Terraform\tf-dynatrace\test-voestalpine\platform",
+    [string]$TfvarsPath = (Join-Path $PSScriptRoot "terraform.tfvars"),
+    [string]$TargetFolder = (Join-Path $PSScriptRoot ".."),
     [string[]]$Resources = @(
-        "dynatrace_document",
+        "dynatrace_automation_business_calendar",
+        "dynatrace_automation_scheduling_rule",
         "dynatrace_automation_workflow",
-        "dynatrace_platform_slo",
+        "dynatrace_azure_connection",
+        "dynatrace_azure_connection_authentication",
         "dynatrace_direct_shares",
-        "dynatrace_generic_setting"
+        "dynatrace_document",
+        "dynatrace_hub_extension_v2_config",
+        "dynatrace_openpipeline_business_events",
+        "dynatrace_openpipeline_davis_events",
+        "dynatrace_openpipeline_davis_problems",
+        "dynatrace_openpipeline_events",
+        "dynatrace_openpipeline_logs",
+        "dynatrace_openpipeline_metrics",
+        "dynatrace_openpipeline_sdlc_events",
+        "dynatrace_openpipeline_security_events",
+        "dynatrace_openpipeline_spans",
+        "dynatrace_openpipeline_system_events",
+        "dynatrace_openpipeline_user_events",
+        "dynatrace_openpipeline_user_sessions",
+        "dynatrace_platform_bucket",
+        "dynatrace_platform_slo",
+        "dynatrace_segment",
+        "dynatrace_settings_permissions"
     )
 )
-
-$env:Path = "C:\Tools\Terraform;$env:Path"
 
 function Read-Tfvars {
     param([string]$Path)
@@ -35,10 +52,15 @@ function Read-Tfvars {
 }
 
 function Find-DynatraceProviderExe {
-    $root = "C:\Tools\Terraform\tf-dynatrace\.terraform\providers\registry.terraform.io\dynatrace-oss\dynatrace"
+    $candidateRoots = @(
+        (Join-Path $TargetFolder ".terraform\providers\registry.terraform.io\dynatrace-oss\dynatrace"),
+        (Join-Path (Join-Path $PSScriptRoot "..") ".terraform\providers\registry.terraform.io\dynatrace-oss\dynatrace")
+    )
+
+    $root = $candidateRoots | Where-Object { Test-Path $_ } | Select-Object -First 1
 
     if (-not (Test-Path $root)) {
-        throw "Provider-Verzeichnis nicht gefunden. Bitte zuerst 'terraform init' ausführen."
+        throw "Provider-Verzeichnis nicht gefunden. Bitte zuerst 'terraform init' im Workspace ausfuehren. Geprueft: $($candidateRoots -join ', ')"
     }
 
     $exe = Get-ChildItem -Path $root -Recurse -Filter "terraform-provider-dynatrace*.exe" |
@@ -50,6 +72,80 @@ function Find-DynatraceProviderExe {
     }
 
     return $exe.FullName
+}
+
+function Write-ExportProgress {
+    param(
+        [int]$Current,
+        [int]$Total,
+        [string]$Status = "running",
+        [string]$Resource = "",
+        [int]$Failed = 0
+    )
+
+    if (-not $env:DT_EXPORT_PROGRESS_FILE) {
+        return
+    }
+
+    $payload = @{
+        current = $Current
+        total = $Total
+        status = $Status
+        resource = $Resource
+        failed = $Failed
+    }
+
+    $payload | ConvertTo-Json -Compress | Set-Content -Path $env:DT_EXPORT_PROGRESS_FILE -Encoding utf8
+}
+
+function Invoke-ResourceExport {
+    param(
+        [string]$ProviderExe,
+        [string[]]$ResourceList
+    )
+
+    if (-not $ResourceList -or $ResourceList.Count -eq 0) {
+        Write-Host "Ressourcen               = keine explizite Liste konfiguriert"
+        return
+    }
+
+    $moduleDir = Join-Path $TargetFolder "modules"
+    $moduleCount = 0
+    if (Test-Path $moduleDir) {
+        $moduleCount = (Get-ChildItem -Path $moduleDir -Directory | Measure-Object).Count
+    }
+
+    $total = $ResourceList.Count
+    if ($moduleCount -gt 0) {
+        $total = $moduleCount
+    }
+    $failed = 0
+    Write-Host "Module (gesamt)          = $total"
+
+    for ($i = 0; $i -lt $total; $i++) {
+        $resource = $ResourceList[$i]
+        $current = $i + 1
+        Write-Host "[$current/$total] Export $resource"
+        Write-ExportProgress -Current $current -Total $total -Status "running" -Resource $resource -Failed $failed
+
+        & $ProviderExe -export $resource
+        if ($LASTEXITCODE -ne 0) {
+            $failed += 1
+            Write-Warning "Export fehlgeschlagen fuer $resource (ExitCode=$LASTEXITCODE)."
+        }
+    }
+
+    $successCount = $total - $failed
+    if ($successCount -le 0) {
+        Write-ExportProgress -Current $total -Total $total -Status "failed" -Resource "" -Failed $failed
+        throw "Kein Ressourcentyp konnte exportiert werden (fehlgeschlagen: $failed/$total)."
+    }
+
+    if ($failed -gt 0) {
+        Write-Warning "Export mit Warnungen abgeschlossen. Fehlgeschlagen: $failed/$total"
+    }
+
+    Write-ExportProgress -Current $total -Total $total -Status "done" -Resource "" -Failed $failed
 }
 
 try {
@@ -73,13 +169,11 @@ try {
     Write-Host "DYNATRACE_ENV_URL        = $env:DYNATRACE_ENV_URL"
     Write-Host "DYNATRACE_TARGET_FOLDER  = $env:DYNATRACE_TARGET_FOLDER"
     Write-Host "DYNATRACE_PLATFORM_TOKEN = gesetzt"
-    Write-Host "Ressourcen               = $($Resources -join ', ')"
 
     $providerExe = Find-DynatraceProviderExe
     Write-Host "Provider EXE             = $providerExe"
 
-    $exportArgs = @("-export") + $Resources
-    & $providerExe @exportArgs
+    Invoke-ResourceExport -ProviderExe $providerExe -ResourceList $Resources
 }
 catch {
     Write-Error $_

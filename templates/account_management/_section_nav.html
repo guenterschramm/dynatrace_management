@@ -1,10 +1,38 @@
+{% load tz %}
+
 <div class="card border-0 shadow-sm mb-4">
     <div class="card-body py-3">
         <div class="nav nav-pills gap-2">
             <a class="nav-link {% if section == 'users' %}active{% else %}link-dark{% endif %}" href="{% url 'account_management:user_list' %}">User</a>
             <a class="nav-link {% if section == 'policies' %}active{% else %}link-dark{% endif %}" href="{% url 'account_management:policy_list' %}">Policies</a>
             <a class="nav-link {% if section == 'boundaries' %}active{% else %}link-dark{% endif %}" href="{% url 'account_management:boundary_list' %}">Boundaries</a>
-            <a class="nav-link {% if section == 'roles' %}active{% else %}link-dark{% endif %}" href="{% url 'account_management:role_list' %}">Rollen</a>
+            <a class="nav-link {% if section == 'groups' %}active{% else %}link-dark{% endif %}" href="{% url 'account_management:role_list' %}">Groups</a>
+        </div>
+
+        <div class="mt-3 pt-3 border-top small text-secondary">
+            {% if account_workspace %}
+                <div class="d-flex flex-column flex-lg-row gap-2 gap-lg-3 align-items-lg-center">
+                    <span>
+                        Status:
+                        <span class="badge text-bg-dark">{{ account_workspace.get_status_display }}</span>
+                    </span>
+                    <span>Letzter Befehl: <strong>{{ account_workspace.last_command|default:'-' }}</strong></span>
+                    <span>
+                        Daten-Aktualitaet:
+                        <span class="badge {{ account_data_freshness.badge_class }}">{{ account_data_freshness.label }}</span>
+                    </span>
+                    <span>
+                        Stand:
+                        {% if account_data_freshness.timestamp %}
+                            {{ account_data_freshness.timestamp|localtime|date:'Y-m-d H:i:s' }}
+                        {% else %}
+                            -
+                        {% endif %}
+                    </span>
+                </div>
+            {% else %}
+                <span class="text-warning">Kein Account-Management Terraform-Workspace gefunden.</span>
+            {% endif %}
         </div>
     </div>
 </div>

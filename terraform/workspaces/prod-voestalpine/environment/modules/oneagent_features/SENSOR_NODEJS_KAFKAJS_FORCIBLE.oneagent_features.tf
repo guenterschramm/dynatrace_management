@@ -1,0 +1,6 @@
+resource "dynatrace_oneagent_features" "SENSOR_NODEJS_KAFKAJS_FORCIBLE" {
+  enabled           = false
+  # instrumentation = false
+  key               = "SENSOR_NODEJS_KAFKAJS_FORCIBLE"
+  scope             = "environment"
+}

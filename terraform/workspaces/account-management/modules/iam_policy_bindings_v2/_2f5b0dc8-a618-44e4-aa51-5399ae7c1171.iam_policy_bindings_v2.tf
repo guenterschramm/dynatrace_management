@@ -3,8 +3,7 @@ resource "dynatrace_iam_policy_bindings_v2" "_2f5b0dc8-a618-44e4-aa51-5399ae7c11
   environment = "hgm72482"
   group       = "2f5b0dc8-a618-44e4-aa51-5399ae7c1171"
   policy {
-    boundaries = [ "9ee53778-4ca1-4d9f-82fc-bc7a43670dfa" ]
-    id         = "d5219bca-41fb-4587-af1f-2df0ad148037#-#global#-#global"
+    id = "8528e866-3f1c-45b5-b9b6-701d74d19b77#-#account#-#c65530cc-1621-455c-989d-22e43b2c00f5"
   }
   policy {
     boundaries = [ "9ee53778-4ca1-4d9f-82fc-bc7a43670dfa" ]

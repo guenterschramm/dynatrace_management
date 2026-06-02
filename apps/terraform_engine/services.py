@@ -2,6 +2,8 @@ import subprocess
 import shutil
 import json
 import os
+import stat
+import re
 from pathlib import Path
 
 from django.conf import settings
@@ -27,7 +29,20 @@ EXPORT_DOMAINS = (
     'application_detection_rule',
 )
 
-REFERENCE_ROOT_DEFAULT = Path(r'C:\Tools\Terraform\tf-dynatrace')
+ACCOUNT_MANAGEMENT_MODULES = (
+    'iam_group',
+    'iam_permission',
+    'iam_policy',
+    'iam_policy_boundary',
+    'iam_policy_bindings',
+    'iam_policy_bindings_v2',
+    'iam_service_user',
+    'iam_user',
+    'mgmz_permission',
+    'policy_bindings',
+    'user',
+    'user_group',
+)
 
 
 class TerraformRunner:
@@ -138,21 +153,19 @@ class DynatraceConfigExporter:
         return None, None, last_error
 
 
-def _render_provider_tf(workspace):
+def _render_provider_tf(workspace, has_reference_provider=False):
     if workspace.scope == TerraformWorkspace.WorkspaceScope.ACCOUNT_MANAGEMENT:
         return '\n'.join([
-            'terraform {',
-            '  required_version = ">= 1.8.0"',
-            '  required_providers {',
-            '    dynatrace = {',
-            f'      source  = "{settings.DT_TERRAFORM_PROVIDER_SOURCE}"',
-            f'      version = "{settings.DT_TERRAFORM_PROVIDER_VERSION}"',
-            '    }',
-            '  }',
-            '}',
-            '',
+            '# Account management provider configuration is sourced from ___providers___.tf',
+            '# to avoid duplicate required_providers blocks during terraform init.',
             '# Account-management resources are added in later iterations.',
             '# Provider authentication for account scope will be added together with IAM resources.',
+        ])
+
+    if has_reference_provider:
+        return '\n'.join([
+            '# Provider configuration is sourced from ___providers___.tf',
+            '# to avoid duplicate required_providers/provider blocks during terraform init.',
         ])
 
     return '\n'.join([
@@ -178,18 +191,22 @@ def _render_main_tf(workspace):
     module_names = _module_names_for_workspace(workspace)
 
     if workspace.scope == TerraformWorkspace.WorkspaceScope.ACCOUNT_MANAGEMENT:
-        module_name = module_names[0]
-        module_source = _module_source_for_workspace(module_name)
+        module_blocks = []
+        for module_name in module_names:
+            module_blocks.extend([
+                f'module "{module_name}" {{',
+                f'  source = "{_module_source_for_workspace(module_name)}"',
+                '}',
+                '',
+            ])
+
         return '\n'.join([
             '# Terraform workspace for Dynatrace account management',
             'locals {',
             '  workspace_scope = "account_management"',
             '}',
             '',
-            'module "account_management" {',
-            f'  source = "{module_source}"',
-            '  account_id = var.account_id',
-            '}',
+            *module_blocks,
             '',
             '# Example target domains: policies, boundaries, roles and account-wide user bindings.',
         ])
@@ -293,25 +310,27 @@ def _module_name_for_workspace(workspace):
 def _module_names_for_workspace(workspace):
     if workspace.scope == TerraformWorkspace.WorkspaceScope.ACCOUNT_MANAGEMENT:
         reference_modules = _reference_module_names(workspace)
-        return reference_modules or ['account_management']
+        modules = set(reference_modules)
+        modules.update(ACCOUNT_MANAGEMENT_MODULES)
+        return sorted(modules)
+
+    script_modules = _resource_module_names_from_script(workspace)
+    workspace_modules = _workspace_module_names(workspace)
     reference_modules = _reference_module_names(workspace)
+    if script_modules:
+        return script_modules
+    if reference_modules and workspace_modules:
+        return sorted(set(reference_modules) | set(workspace_modules))
     if reference_modules:
         return reference_modules
+    if workspace_modules:
+        return workspace_modules
     return list(EXPORT_DOMAINS)
 
 
-def _reference_root():
-    configured_root = getattr(settings, 'DT_REFERENCE_TERRAFORM_ROOT', str(REFERENCE_ROOT_DEFAULT))
-    return Path(configured_root)
-
-
 def _reference_workspace_dir(workspace):
-    root = _reference_root()
-    if workspace.scope == TerraformWorkspace.WorkspaceScope.ACCOUNT_MANAGEMENT:
-        return root / 'account-management'
-    if workspace.scope == TerraformWorkspace.WorkspaceScope.PLATFORM:
-        return root / 'voestalpine' / 'platform'
-    return root / 'voestalpine' / 'environment'
+    # Keep all template/reference assets inside the local workspace tree.
+    return workspace.workspace_dir / 'reference'
 
 
 def _reference_module_names(workspace):
@@ -319,6 +338,40 @@ def _reference_module_names(workspace):
     if not modules_dir.exists():
         return []
     return sorted([item.name for item in modules_dir.iterdir() if item.is_dir()])
+
+
+def _workspace_module_names(workspace):
+    modules_dir = workspace.workspace_dir / 'modules'
+    if not modules_dir.exists():
+        return []
+    return sorted([item.name for item in modules_dir.iterdir() if item.is_dir()])
+
+
+def _resource_module_names_from_script(workspace):
+    script_name = _reference_script_name(workspace)
+    script_path = _reference_workspace_dir(workspace) / script_name
+    if not script_path.exists():
+        return []
+
+    try:
+        content = script_path.read_text(encoding='utf-8')
+    except Exception:
+        return []
+
+    match = re.search(r'\[string\[\]\]\$Resources\s*=\s*@\((.*?)\)\s*\)', content, re.DOTALL)
+    if not match:
+        return []
+
+    resources = re.findall(r'"dynatrace_[a-z0-9_]+"', match.group(1))
+    if not resources:
+        return []
+
+    module_names = []
+    for resource in resources:
+        clean_name = resource.strip('"')
+        if clean_name.startswith('dynatrace_'):
+            module_names.append(clean_name[len('dynatrace_'):])
+    return sorted(set(module_names))
 
 
 def _reference_script_name(workspace):
@@ -402,22 +455,8 @@ def _migrate_legacy_global_module(workspace, module_name):
 
 
 def _sync_reference_workspace_files(workspace):
-    reference_dir = _reference_workspace_dir(workspace)
-    if not reference_dir.exists():
-        return
-
     reference_target = workspace.workspace_dir / 'reference'
     reference_target.mkdir(parents=True, exist_ok=True)
-
-    for file_name in ('.terraform.lock.hcl', 'main.tf', '___providers___.tf'):
-        source_file = reference_dir / file_name
-        if source_file.exists():
-            shutil.copy2(source_file, reference_target / file_name)
-
-    script_name = _reference_script_name(workspace)
-    script_source = _reference_root() / script_name
-    if script_source.exists():
-        shutil.copy2(script_source, reference_target / script_name)
 
 
 def _sync_reference_module(workspace, module_name):
@@ -443,7 +482,26 @@ def _sync_reference_module(workspace, module_name):
 def _cleanup_legacy_module_root():
     legacy_root = _legacy_module_root()
     if legacy_root.exists():
-        shutil.rmtree(legacy_root)
+        _safe_rmtree(legacy_root)
+
+
+def _safe_rmtree(path):
+    if not path.exists():
+        return
+
+    def _onerror(func, target, exc_info):
+        try:
+            os.chmod(target, stat.S_IWRITE)
+            func(target)
+        except Exception:
+            pass
+
+    try:
+        shutil.rmtree(path, onerror=_onerror)
+    except OSError:
+        # On Windows, transient file locks can trigger "directory not empty".
+        # Do not hard-fail the request in that case.
+        return
 
 
 def _legacy_script_name_for_workspace(workspace):
@@ -459,7 +517,25 @@ def _legacy_script_name_for_workspace(workspace):
 
 def _legacy_tfvars_content():
     account = settings.DT_ACCOUNT_CONFIG
-    environments = {item['name']: item for item in settings.DT_DEFAULT_ENVIRONMENTS}
+
+    # Prefer current values from DB (runtime source of truth).
+    environments = {
+        env.name: {
+            'environment_url': env.environment_url,
+            'api_token': env.api_token,
+            # Platform exports use the same environment URL in this model.
+            'platform_url': env.environment_url,
+            'platform_token': env.platform_token,
+        }
+        for env in Environment.objects.all()
+    }
+
+    # Fallback to static settings only if DB entries are not available.
+    if 'test-environment' not in environments or 'prod-environment' not in environments:
+        settings_envs = {item['name']: item for item in settings.DT_DEFAULT_ENVIRONMENTS}
+        environments.setdefault('test-environment', settings_envs.get('test-environment', {}))
+        environments.setdefault('prod-environment', settings_envs.get('prod-environment', {}))
+
     test_env = environments.get('test-environment', {})
     prod_env = environments.get('prod-environment', {})
 
@@ -484,28 +560,25 @@ def run_legacy_export_script(workspace):
     if not script_name:
         return {'ran': False, 'success': False, 'reason': 'No script mapped for workspace.'}
 
-    script_path = _reference_root() / script_name
+    script_path = workspace.workspace_dir / 'reference' / script_name
     if not script_path.exists():
         return {'ran': False, 'success': False, 'reason': f'Script missing: {script_path}'}
 
     tfvars_path = workspace.workspace_dir / 'reference' / 'terraform.tfvars'
     tfvars_path.parent.mkdir(parents=True, exist_ok=True)
-    tfvars_path.write_text(_legacy_tfvars_content(), encoding='utf-8')
-
-    account = settings.DT_ACCOUNT_CONFIG
-    environments = {item['name']: item for item in settings.DT_DEFAULT_ENVIRONMENTS}
-    test_env = environments.get('test-environment', {})
+    # Preserve manually maintained tfvars in the workspace reference folder.
+    # Overwriting it with settings-derived values can drop tenant tokens and
+    # lead to empty exports.
+    if not tfvars_path.exists() or not tfvars_path.read_text(encoding='utf-8').strip():
+        tfvars_path.write_text(_legacy_tfvars_content(), encoding='utf-8')
 
     process_env = dict(os.environ)
-    process_env.update(
-        {
-            'DYNATRACE_ACCOUNT_ID': str(account.get('account_id', '')),
-            'DYNATRACE_CLIENT_ID': str(account.get('client_id', '')),
-            'DYNATRACE_CLIENT_SECRET': str(account.get('client_secret', '')),
-            'DYNATRACE_ENV_URL': str(test_env.get('environment_url', '')),
-            'DYNATRACE_API_TOKEN': str(test_env.get('api_token', '')),
-        }
+    progress_file = workspace.workspace_dir / '.export-progress.json'
+    progress_file.write_text(
+        json.dumps({'current': 0, 'total': 0, 'status': 'running', 'resource': '', 'failed': 0}, ensure_ascii=True),
+        encoding='utf-8',
     )
+    process_env['DT_EXPORT_PROGRESS_FILE'] = str(progress_file)
 
     result = subprocess.run(
         [
@@ -519,7 +592,7 @@ def run_legacy_export_script(workspace):
             '-TargetFolder',
             str(workspace.workspace_dir),
         ],
-        cwd=str(_reference_root()),
+        cwd=str(script_path.parent),
         env=process_env,
         capture_output=True,
         text=True,
@@ -527,24 +600,42 @@ def run_legacy_export_script(workspace):
     )
 
     combined_output = f'{result.stdout}\n{result.stderr}'.lower()
-    failure_markers = (
-        'no environment url has been specified',
-        'no api token, platform token, or oauth has been specified',
-        'error:',
-        'write-error',
-    )
-    success = result.returncode == 0 and not any(marker in combined_output for marker in failure_markers)
+    success = result.returncode == 0
+    reason = ''
+    object_file_count = None
 
-    if workspace.scope == TerraformWorkspace.WorkspaceScope.ACCOUNT_MANAGEMENT:
-        for module_name in _reference_module_names(workspace):
-            _sync_reference_module(workspace, module_name)
+    if (workspace.workspace_dir / 'modules').exists():
         object_files = [
             path
             for path in (workspace.workspace_dir / 'modules').rglob('*.tf')
             if path.name not in {'main.tf', 'variables.tf', 'outputs.tf', '___providers___.tf', '___variables___.tf'}
         ]
-        if object_files:
-            success = True
+        object_file_count = len(object_files)
+
+    if workspace.scope == TerraformWorkspace.WorkspaceScope.ACCOUNT_MANAGEMENT:
+        for module_name in _reference_module_names(workspace):
+            _sync_reference_module(workspace, module_name)
+        if success and object_file_count == 0:
+            reason = 'Export completed with 0 object files. Check credentials, tenant scope, and resource availability.'
+
+    progress_payload = {}
+    if progress_file.exists():
+        try:
+            progress_payload = json.loads(progress_file.read_text(encoding='utf-8-sig'))
+        except Exception:
+            progress_payload = {}
+
+    if result.returncode == 0:
+        progress_payload['status'] = 'done'
+        if isinstance(progress_payload.get('total'), int) and progress_payload.get('total', 0) > 0:
+            progress_payload['current'] = progress_payload['total']
+    else:
+        progress_payload['status'] = 'failed'
+
+    try:
+        progress_file.write_text(json.dumps(progress_payload, ensure_ascii=True), encoding='utf-8')
+    except Exception:
+        pass
 
     return {
         'ran': True,
@@ -553,6 +644,9 @@ def run_legacy_export_script(workspace):
         'stdout': result.stdout,
         'stderr': result.stderr,
         'script': str(script_path),
+        'reason': reason,
+        'object_file_count': object_file_count,
+        'progress_file': str(progress_file),
     }
 
 
@@ -574,9 +668,10 @@ def ensure_workspace_files(workspace):
     if modules_root.exists():
         for child in modules_root.iterdir():
             if child.is_dir() and child.name not in expected_modules:
-                shutil.rmtree(child)
+                _safe_rmtree(child)
 
-    _write_file(workspace_path / 'provider.tf', _render_provider_tf(workspace))
+    has_reference_provider = (workspace_path / '___providers___.tf').exists()
+    _write_file(workspace_path / 'provider.tf', _render_provider_tf(workspace, has_reference_provider=has_reference_provider))
     _write_file(workspace_path / 'main.tf', _render_main_tf(workspace))
     _write_file(workspace_path / 'variables.tf', _render_variables_tf(workspace))
     _write_file(workspace_path / 'terraform.tfvars', _render_tfvars(workspace))
@@ -662,7 +757,12 @@ def sync_terraform_workspaces(selected_workspace_ids=None, run_reference_export=
             _migrate_legacy_workspace_directory(workspace)
             ensure_workspace_files(workspace)
             if run_reference_export:
-                sync_results[workspace.workspace_name] = run_legacy_export_script(workspace)
+                export_result = run_legacy_export_script(workspace)
+                if workspace.scope == TerraformWorkspace.WorkspaceScope.ACCOUNT_MANAGEMENT:
+                    # Provider export may remove modules that currently have no resources.
+                    # Recreate expected module scaffolds afterwards.
+                    ensure_workspace_files(workspace)
+                sync_results[workspace.workspace_name] = export_result
             else:
                 sync_results[workspace.workspace_name] = {'ran': False, 'success': True}
 
@@ -675,7 +775,6 @@ def sync_terraform_workspaces(selected_workspace_ids=None, run_reference_export=
 class TerraformExecutionService:
     def __init__(self, runner=None):
         self.runner = runner or TerraformRunner()
-        self.exporter = DynatraceConfigExporter()
 
     def _create_execution_log(self, workspace, command, result):
         return TerraformExecution.objects.create(
@@ -690,12 +789,23 @@ class TerraformExecutionService:
     def execute(self, workspace, command):
         ensure_workspace_files(workspace)
 
-        export_result = {'exported': {}, 'errors': {}}
+        provider_export_result = {'ran': False, 'success': True}
+
         if workspace.scope in (
+            TerraformWorkspace.WorkspaceScope.ACCOUNT_MANAGEMENT,
             TerraformWorkspace.WorkspaceScope.ENVIRONMENT,
             TerraformWorkspace.WorkspaceScope.PLATFORM,
         ):
-            export_result = self.exporter.export(workspace)
+            # All supported scopes export via provider export scripts in reference/.
+            provider_export_result = run_legacy_export_script(workspace)
+
+        if workspace.scope in (
+            TerraformWorkspace.WorkspaceScope.ACCOUNT_MANAGEMENT,
+            TerraformWorkspace.WorkspaceScope.ENVIRONMENT,
+            TerraformWorkspace.WorkspaceScope.PLATFORM,
+        ):
+            # Re-render the workspace after export so provider.tf reflects the exported root files.
+            ensure_workspace_files(workspace)
 
         status_map = {
             'init': TerraformWorkspace.WorkspaceStatus.INIT_RUNNING,
@@ -719,13 +829,35 @@ class TerraformExecutionService:
         else:
             result = self.runner.plan(workspace.workspace_dir)
 
+        if provider_export_result.get('ran') and not provider_export_result.get('success'):
+            export_reason = (
+                provider_export_result.get('reason')
+                or provider_export_result.get('stderr')
+                or provider_export_result.get('stdout')
+                or 'Provider export failed.'
+            )
+            result.returncode = 1
+            failure_line = f'Provider export failed: {export_reason}'
+            result.stderr = f'{failure_line}\n\n{result.stderr or ""}'.strip()
+
         export_summary_lines = []
-        if export_result['exported']:
-            exported_names = ', '.join(sorted(export_result['exported'].keys()))
-            export_summary_lines.append(f'Config export completed: {exported_names}')
-        if export_result['errors']:
-            error_parts = [f'{key}: {value}' for key, value in export_result['errors'].items()]
-            export_summary_lines.append('Config export warnings: ' + ' | '.join(error_parts))
+        if provider_export_result.get('ran'):
+            if provider_export_result.get('success'):
+                count = provider_export_result.get('object_file_count')
+                if count is not None:
+                    export_summary_lines.append(f'Provider export completed: {count} object files.')
+                else:
+                    export_summary_lines.append('Provider export completed.')
+                if provider_export_result.get('reason'):
+                    export_summary_lines.append(f'Provider export warning: {provider_export_result["reason"][:400]}')
+            else:
+                reason = (
+                    provider_export_result.get('reason')
+                    or provider_export_result.get('stderr')
+                    or provider_export_result.get('stdout')
+                    or 'unknown error'
+                )
+                export_summary_lines.append(f'Provider export warning: {reason[:400]}')
         if export_summary_lines:
             summary = '\n'.join(export_summary_lines)
             result.stdout = f'{summary}\n\n{result.stdout or ""}'

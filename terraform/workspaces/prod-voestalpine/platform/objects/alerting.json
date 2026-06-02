@@ -1,0 +1,48 @@
+{
+  "values": [
+    {
+      "id": "d5ac8e41-6ad8-34db-8b92-38999a16e721",
+      "name": "Webhosting Alerts"
+    },
+    {
+      "id": "94bfb027-b28b-3a30-991d-2c143560d88e",
+      "name": "Remedy Alerts"
+    },
+    {
+      "id": "40ff184e-a6ef-3029-b624-9aef4b2a4bf3",
+      "name": "Bee4IT Alerts"
+    },
+    {
+      "id": "8010b7be-fdb1-3117-88a3-b12557dd40db",
+      "name": "PAM Alerts"
+    },
+    {
+      "id": "0e0d7f5b-ca28-3f1d-9ebb-da976c7780f1",
+      "name": "xECM Corporate Alerts"
+    },
+    {
+      "id": "5c48bc62-35cf-3800-9af8-3a4981d13f7c",
+      "name": "Virtualization Alerts"
+    },
+    {
+      "id": "a60118d3-9ec9-30d1-9294-ae6198827714",
+      "name": "PCD_PW Alerts"
+    },
+    {
+      "id": "c21f969b-5f03-333d-83e0-4f8f136e7682",
+      "name": "Default"
+    },
+    {
+      "id": "a74bc624-b196-3bad-94d9-281f0901537f",
+      "name": "Database Alerts"
+    },
+    {
+      "id": "69799268-9575-3510-bbd6-e3a4cf7eebd5",
+      "name": "xECM Steel Alerts"
+    },
+    {
+      "id": "409a4f28-f496-3a84-9cb7-4e44ed1a6c36",
+      "name": "Default for ActiveGate Token Expiry"
+    }
+  ]
+}

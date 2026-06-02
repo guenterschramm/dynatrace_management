@@ -1,0 +1,14 @@
+resource "dynatrace_log_storage" "PAM_CyberArk_Logs" {
+  name            = "PAM (CyberArk Logs)"
+  enabled         = true
+  insert_after    = "vu9U3hXa3q0AAAABACpidWlsdGluOmxvZ21vbml0b3JpbmcubG9nLXN0b3JhZ2Utc2V0dGluZ3MACkhPU1RfR1JPVVAAEDU1RjU0NkQ2MzgxOUJBNTgAJDg1MjBiZjA3LTJhYjYtMzFhNC1hOTBlLTBkZTkzOGE0NmI1M77vVN4V2t6t"
+  scope           = "HOST_GROUP-76B585663184C4C0"
+  send_to_storage = true
+  matchers {
+    matcher {
+      attribute = "log.source"
+      operator  = "MATCHES"
+      values    = [ "C:\\Program Files (x86)\\CyberArk\\PSM\\Logs\\PSMConsole.log", "C:\\Program Files (x86)\\CyberArk\\PSM\\Logs\\PSMTrace.log", "C:\\Program Files (x86)\\CyberArk\\Password Manager\\Logs\\Casos.Activity.log", "C:\\Program Files (x86)\\CyberArk\\Password Manager\\Logs\\Casos.Debug.log", "C:\\Program Files (x86)\\CyberArk\\Password Manager\\Logs\\Casos.Error.log", "C:\\Program Files (x86)\\CyberArk\\Password Manager\\Logs\\PMConsole.log", "C:\\Program Files (x86)\\CyberArk\\Password Manager\\Logs\\PMTrace.log", "C:\\Program Files (x86)\\CyberArk\\Password Manager\\Logs\\pm.log", "C:\\Program Files (x86)\\CyberArk\\Password Manager\\Logs\\pm_error.log", "C:\\Program Files\\nxlog\\data\\nxlog.log", "C:\\inetpub\\logs\\LogFiles\\W3SVC1\\*.log", "C:\\Program Files (x86)\\CyberArk\\ApplicationPasswordProvider\\Logs\\APPAudit.log", "C:\\Program Files (x86)\\CyberArk\\ApplicationPasswordProvider\\Logs\\APPConsole.log", "C:\\Program Files (x86)\\CyberArk\\PSM\\Logs\\Components\\#.RDP.log", "C:\\Program Files (x86)\\CyberArk\\PSM\\Logs\\Components\\#.ClientDispatcher.log", "Windows Application Log", "Windows System Log", "/var/opt/CARKpsmp/logs/PSMPConsole.log", "/var/opt/CARKpsmp/logs/PSMPTrace.log", "/var/opt/CARKpsmp/logs/components/#.PSOpenSSH.#.log", "/var/opt/CARKpsmp/logs/components/#.PSOpenSSH.log", "/var/log/commvault/Log_Files/cvfwd.log", "C:\\Program Files (x86)\\CyberArk\\Password Manager\\Logs\\ThirdParty\\Debug_-#-Citrix-Netscaler-Local-Account-#_CX_Netscaler_AT-Root-Application-Citrix-Netscaler-Local-Account-#cx0010nst.voestalpine.root.local-nsroot-#-#-#_#-#_TPC_#-#-#.log", "C:\\Program Files (x86)\\CyberArk\\Password Manager\\Logs\\ThirdParty\\Debug_-#-DELL-Server-IDRAC-v#-Local-Account-#_PBB_AS_IDRAC-Root-Application-DELL-Server-IDRAC-v#-Local-Account-#cs0010at001r.voestalpine.root.local_TPC_#-#-#.log", "C:\\Program Files (x86)\\CyberArk\\Password Manager\\Logs\\ThirdParty\\Debug_-#-DELL-Server-IDRAC-v#-Local-Account-#_PBB_AS_IDRAC-Root-Application-DELL-Server-IDRAC-v#-Local-Account-#ma0010at101r.voestalpine.root.local-cusadm#-#_TPC_#-#-#.log", "C:\\Program Files (x86)\\CyberArk\\Password Manager\\Logs\\ThirdParty\\Debug_-#-DELL-Server-IDRAC-v#-Local-Account-#_PBB_AS_IDRAC-Root-Application-DELL-Server-IDRAC-v#-Local-Account-#ma0010at102r.voestalpine.root.local-cusadm#-#_TPC_#-#-#.log" ]
+    }
+  }
+}

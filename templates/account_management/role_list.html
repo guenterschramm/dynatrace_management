@@ -3,7 +3,7 @@
 {% block content %}
 <div class="mb-4">
     <h2 class="h3 mb-1">Account Management</h2>
-    <p class="text-secondary mb-0">Terraform ist die Datenbasis. Rollen und Bindings werden aus Terraform gelesen.</p>
+    <p class="text-secondary mb-0">Terraform ist die Datenbasis. Hier werden nur Groups (dynatrace_iam_group) angezeigt.</p>
 </div>
 
 {% include 'account_management/_section_nav.html' %}
@@ -22,19 +22,121 @@
                     <th>Typ</th>
                     <th>Ressource</th>
                     <th>Datei</th>
+                    <th class="text-end">Details</th>
                 </tr>
             </thead>
             <tbody>
-                {% for role in roles %}
+                {% for group in groups %}
                     <tr>
-                        <td>{{ role.name|default:'-' }}</td>
-                        <td><code>{{ role.resource_type }}</code></td>
-                        <td><code>{{ role.resource_name }}</code></td>
-                        <td><code>{{ role.file_path }}</code></td>
+                        <td>{{ group.name|default:'-' }}</td>
+                        <td><code>{{ group.resource_type }}</code></td>
+                        <td><code>{{ group.resource_name }}</code></td>
+                        <td><code>{{ group.file_path }}</code></td>
+                        <td class="text-end">
+                            <button
+                                type="button"
+                                class="btn btn-sm btn-outline-dark"
+                                data-bs-toggle="modal"
+                                data-bs-target="#group-detail-{{ forloop.counter }}"
+                            >
+                                Anzeigen
+                            </button>
+                        </td>
                     </tr>
+
+                    <div class="modal fade" id="group-detail-{{ forloop.counter }}" tabindex="-1" aria-hidden="true">
+                        <div class="modal-dialog modal-lg modal-dialog-scrollable">
+                            <div class="modal-content">
+                                <div class="modal-header">
+                                    <h5 class="modal-title">Group-Details: {{ group.name|default:group.resource_name }}</h5>
+                                    <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+                                </div>
+                                <div class="modal-body">
+                                    <div class="mb-3">
+                                        <strong>Typ:</strong> <code>{{ group.resource_type }}</code><br>
+                                        <strong>Group-ID:</strong> <code>{{ group.group_id|default:'-' }}</code><br>
+                                        <strong>Permissions:</strong> {{ group.permission_count|default:0 }}<br>
+                                        <strong>Policy-Bindings:</strong> {{ group.binding_count|default:0 }}<br>
+                                        <strong>Policy-Assignments:</strong> {{ group.assignment_count|default:0 }}
+                                    </div>
+
+                                    {% if group.binding_count|default:0 == 0 and group.unlinked_binding_count|default:0 > 0 %}
+                                        <div class="alert alert-warning py-2">
+                                            Keine direkte Binding-Zuordnung fuer diese Group gefunden. Fuer exakte Group-ID Zuordnung optional Datei
+                                            <code>terraform/workspaces/account-management/modules/iam_group/group_id_map.json</code> bereitstellen.
+                                        </div>
+                                    {% endif %}
+
+                                    {% with bindings=group.details.bindings assignments=group.details.policy_assignments %}
+                                        {% if bindings %}
+                                            <h6 class="mb-2">Zugeordnete Policy-Bindings</h6>
+                                            <div class="table-responsive mb-3">
+                                                <table class="table table-sm">
+                                                    <thead>
+                                                        <tr>
+                                                            <th>Binding-Typ</th>
+                                                            <th>Group</th>
+                                                            <th>Environment</th>
+                                                            <th>Assignments</th>
+                                                        </tr>
+                                                    </thead>
+                                                    <tbody>
+                                                        {% for binding in bindings %}
+                                                            <tr>
+                                                                <td><code>{{ binding.resource_type }}</code></td>
+                                                                <td><code>{{ binding.group|default:'-' }}</code></td>
+                                                                <td><code>{{ binding.environment|default:'-' }}</code></td>
+                                                                <td>{{ binding.assignment_count|default:0 }}</td>
+                                                            </tr>
+                                                        {% endfor %}
+                                                    </tbody>
+                                                </table>
+                                            </div>
+                                        {% endif %}
+
+                                        {% if assignments %}
+                                            <h6 class="mb-2">Policies aus Bindings (inkl. Scope/Boundary)</h6>
+                                            <div class="table-responsive mb-3">
+                                                <table class="table table-sm">
+                                                    <thead>
+                                                        <tr>
+                                                            <th>Policy-ID</th>
+                                                            <th>Scope-Type</th>
+                                                            <th>Scope</th>
+                                                            <th>Boundaries</th>
+                                                        </tr>
+                                                    </thead>
+                                                    <tbody>
+                                                        {% for assignment in assignments %}
+                                                            <tr>
+                                                                <td><code>{{ assignment.policy_id }}</code></td>
+                                                                <td><code>{{ assignment.scope_type|default:'-' }}</code></td>
+                                                                <td><code>{{ assignment.scope|default:'-' }}</code></td>
+                                                                <td>
+                                                                    {% if assignment.boundaries %}
+                                                                        {% for boundary in assignment.boundaries %}
+                                                                            <span class="badge text-bg-light border me-1 mb-1">{{ boundary }}</span>
+                                                                        {% endfor %}
+                                                                    {% else %}
+                                                                        -
+                                                                    {% endif %}
+                                                                </td>
+                                                            </tr>
+                                                        {% endfor %}
+                                                    </tbody>
+                                                </table>
+                                            </div>
+                                        {% endif %}
+                                    {% endwith %}
+
+                                    <pre class="bg-light border rounded p-3 mb-0"><code>{{ group.details_json }}</code></pre>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
                 {% empty %}
                     <tr>
-                        <td colspan="4" class="text-center py-5 text-secondary">Keine Rollen-/Binding-Ressourcen im Terraform-Workspace gefunden.</td>
+                        <td colspan="5" class="text-center py-5 text-secondary">Keine Group-Ressourcen (dynatrace_iam_group) im Terraform-Workspace gefunden.</td>
                     </tr>
                 {% endfor %}
             </tbody>

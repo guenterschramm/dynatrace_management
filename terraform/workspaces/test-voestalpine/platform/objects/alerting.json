@@ -1,0 +1,16 @@
+{
+  "values": [
+    {
+      "id": "b2b6fa10-60b9-314b-991c-2b4c9a62cd85",
+      "name": "TPI_Messaging"
+    },
+    {
+      "id": "c21f969b-5f03-333d-83e0-4f8f136e7682",
+      "name": "Default"
+    },
+    {
+      "id": "409a4f28-f496-3a84-9cb7-4e44ed1a6c36",
+      "name": "Default for ActiveGate Token Expiry"
+    }
+  ]
+}

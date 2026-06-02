@@ -1,0 +1,9 @@
+resource "dynatrace_rum_ip_locations" "_10_139_146" {
+  city         = "voestalpine Automotive Components Cartersville LLC (2485)"
+  country_code = "US"
+  ip           = "10.139.146.1"
+  ip_to        = "10.139.146.254"
+  latitude     = 34.275588
+  longitude    = -84.786229
+  region_code  = "GA"
+}

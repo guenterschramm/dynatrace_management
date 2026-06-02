@@ -1,0 +1,30 @@
+resource "dynatrace_metric_metadata" "File_Descriptors_Used" {
+  description        = "Used file descriptors."
+  display_name       = "File Descriptors Used"
+  metric_id          = "metric-rabbitmq.node.fd_used"
+  source_entity_type = "rabbitmq:node"
+  tags               = [ "com.dynatrace.rabbitmq", "rabbitmq.queue" ]
+  unit               = "Count"
+  dimensions {
+    dimension {
+      display_name = "Cluster"
+      key          = "cluster"
+    }
+    dimension {
+      display_name = "Node"
+      key          = "node"
+    }
+    dimension {
+      display_name = "Type"
+      key          = "type"
+    }
+    dimension {
+      display_name = "Running"
+      key          = "running"
+    }
+    dimension {
+      display_name = "Processors"
+      key          = "processors"
+    }
+  }
+}
