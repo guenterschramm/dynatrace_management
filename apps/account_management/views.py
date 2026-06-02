@@ -13,7 +13,12 @@ from .services import DynatraceAccountSyncService, TerraformAccountDataService
 
 class TerraformAccountContextMixin:
 	def _terraform_data(self):
-		return TerraformAccountDataService().load()
+		cached = getattr(self, '_terraform_data_cache', None)
+		if cached is not None:
+			return cached
+
+		self._terraform_data_cache = TerraformAccountDataService().load()
+		return self._terraform_data_cache
 
 	def _account_workspace(self):
 		return TerraformWorkspace.objects.filter(

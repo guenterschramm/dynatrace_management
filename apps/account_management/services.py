@@ -5,6 +5,7 @@ from pathlib import Path
 
 import requests
 from django.conf import settings
+from django.core.cache import cache
 
 try:
     import truststore
@@ -18,6 +19,8 @@ from .models import AccountUser
 
 
 class TerraformAccountDataService:
+    CACHE_TIMEOUT_SECONDS = 60
+
     RESOURCE_START_PATTERN = re.compile(
         r'resource\s+"(?P<type>[^"]+)"\s+"(?P<name>[^"]+)"\s*\{',
         re.DOTALL,
@@ -48,6 +51,11 @@ class TerraformAccountDataService:
 
         if not self.workspace_dir.exists():
             return result
+
+        cache_key = self._cache_key()
+        cached = cache.get(cache_key)
+        if cached is not None:
+            return cached
 
         groups_by_id = {}
         group_alias_to_id = {}
@@ -156,7 +164,38 @@ class TerraformAccountDataService:
         for key in ('users', 'policies', 'boundaries', 'groups', 'roles'):
             result[key].sort(key=lambda item: (item.get('name') or '').lower())
 
+        cache.set(cache_key, result, timeout=self.CACHE_TIMEOUT_SECONDS)
         return result
+
+    def _cache_key(self):
+        tf_count = 0
+        latest_tf_mtime = 0
+
+        for tf_file in self.workspace_dir.rglob('*.tf'):
+            if '.terraform' in tf_file.parts or 'reference' in tf_file.parts:
+                continue
+            tf_count += 1
+            try:
+                mtime = tf_file.stat().st_mtime_ns
+            except OSError:
+                continue
+            if mtime > latest_tf_mtime:
+                latest_tf_mtime = mtime
+
+        latest_user_update = 0
+        try:
+            latest = AccountUser.objects.order_by('-updated_at').values_list('updated_at', flat=True).first()
+            if latest is not None:
+                latest_user_update = int(latest.timestamp())
+        except Exception:
+            latest_user_update = 0
+
+        return (
+            'account_tf_data:'
+            f'{self.workspace_dir}:'
+            f'{tf_count}:{latest_tf_mtime}:'
+            f'{latest_user_update}'
+        )
 
     def _extract_resources(self, content):
         resources = []

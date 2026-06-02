@@ -4,6 +4,7 @@ import re
 
 from django.conf import settings
 from django.contrib import messages
+from django.core.cache import cache
 from django.http import JsonResponse
 from django.shortcuts import get_object_or_404, redirect
 from django.urls import reverse
@@ -13,6 +14,9 @@ from django.views.generic import TemplateView
 
 from .models import TerraformExecution, TerraformWorkspace
 from .services import TerraformExecutionService, sync_terraform_workspaces
+
+
+INIT_SUMMARY_CACHE_TIMEOUT_SECONDS = 60
 
 
 def _reference_script_name(workspace):
@@ -101,11 +105,57 @@ def _annotate_export_state(workspace):
 	workspace.export_state = state
 
 
+def _workspace_content_stamp(workspace):
+	latest_mtime = 0
+	file_count = 0
+
+	for root, pattern in (
+		(workspace.workspace_dir / 'modules', '*.tf'),
+		(workspace.workspace_dir / 'objects', '*.json'),
+	):
+		if not root.exists():
+			continue
+		for item in root.rglob(pattern):
+			file_count += 1
+			try:
+				mtime = item.stat().st_mtime_ns
+			except OSError:
+				continue
+			if mtime > latest_mtime:
+				latest_mtime = mtime
+
+	script_path = workspace.workspace_dir / 'reference' / _reference_script_name(workspace)
+	if script_path.exists():
+		file_count += 1
+		try:
+			script_mtime = script_path.stat().st_mtime_ns
+		except OSError:
+			script_mtime = 0
+		if script_mtime > latest_mtime:
+			latest_mtime = script_mtime
+
+	return f'{file_count}:{latest_mtime}'
+
+
 def _build_init_summary(workspace):
 	modules_root = workspace.workspace_dir / 'modules'
 	scaffold_names = {'main.tf', 'variables.tf', 'outputs.tf', '___providers___.tf', '___variables___.tf'}
 	last_init_execution = workspace.executions.filter(command=TerraformExecution.CommandType.INIT).first()
 	last_init_result = None
+	workspace_stamp = _workspace_content_stamp(workspace)
+	last_exec_stamp = 'none'
+	if last_init_execution is not None:
+		last_exec_stamp = f'{last_init_execution.pk}:{int(last_init_execution.created_at.timestamp())}'
+
+	cache_key = (
+		'terraform_init_summary:'
+		f'{workspace.pk}:'
+		f'{workspace_stamp}:'
+		f'{last_exec_stamp}'
+	)
+	cached = cache.get(cache_key)
+	if cached is not None:
+		return cached
 
 	summary = {
 		'workspace_id': workspace.pk,
@@ -191,6 +241,7 @@ def _build_init_summary(workspace):
 					'objects': objects,
 				}
 			)
+		cache.set(cache_key, summary, timeout=INIT_SUMMARY_CACHE_TIMEOUT_SECONDS)
 		return summary
 
 	if workspace.scope in (
@@ -214,6 +265,7 @@ def _build_init_summary(workspace):
 				summary['types'].append({'name': key, 'loaded_count': loaded_count})
 
 			if summary['types']:
+				cache.set(cache_key, summary, timeout=INIT_SUMMARY_CACHE_TIMEOUT_SECONDS)
 				return summary
 
 		objects_dir = workspace.workspace_dir / 'objects'
@@ -231,11 +283,14 @@ def _build_init_summary(workspace):
 				summary['total_loaded_objects'] += loaded_count
 				summary['types'].append({'name': json_file.stem, 'loaded_count': loaded_count})
 		if summary['types']:
+			cache.set(cache_key, summary, timeout=INIT_SUMMARY_CACHE_TIMEOUT_SECONDS)
 			return summary
 
 	if not modules_root.exists():
+		cache.set(cache_key, summary, timeout=INIT_SUMMARY_CACHE_TIMEOUT_SECONDS)
 		return summary
 
+	cache.set(cache_key, summary, timeout=INIT_SUMMARY_CACHE_TIMEOUT_SECONDS)
 	return summary
 
 
