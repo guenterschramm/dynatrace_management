@@ -1,4 +1,5 @@
 import os
+import re
 from pathlib import Path
 
 from dotenv import load_dotenv
@@ -121,7 +122,6 @@ STATICFILES_DIRS = [BASE_DIR / 'static']
 
 DT_TERRAFORM_ROOT = BASE_DIR / 'terraform' / 'workspaces'
 DT_TERRAFORM_EXECUTABLE = os.getenv('DT_TERRAFORM_EXECUTABLE', 'terraform')
-DT_REFERENCE_TERRAFORM_ROOT = os.getenv('DT_REFERENCE_TERRAFORM_ROOT', r'C:\Tools\Terraform\tf-dynatrace')
 DT_FERNET_KEY = os.getenv('DT_FERNET_KEY', '')
 DT_ACCOUNT_CONFIG = DT_RUNTIME_CONFIG['account']
 DT_DEFAULT_ENVIRONMENTS = DT_RUNTIME_CONFIG['environments']
@@ -131,8 +131,27 @@ DT_ACCOUNT_SSL_VERIFY = os.getenv('DT_ACCOUNT_SSL_VERIFY', 'true').lower() == 't
 DT_ACCOUNT_CA_BUNDLE = os.getenv('DT_ACCOUNT_CA_BUNDLE', '')
 DT_ENV_SSL_VERIFY = os.getenv('DT_ENV_SSL_VERIFY', 'true').lower() == 'true'
 DT_ENV_CA_BUNDLE = os.getenv('DT_ENV_CA_BUNDLE', '')
+
+
+def _discover_terraform_provider_version():
+    lock_files = sorted(DT_TERRAFORM_ROOT.glob('**/.terraform.lock.hcl'))
+    pattern = re.compile(r'provider\s+"registry\.terraform\.io/dynatrace-oss/dynatrace"\s*\{.*?version\s*=\s*"([^"]+)"', re.DOTALL)
+
+    for lock_file in lock_files:
+        try:
+            content = lock_file.read_text(encoding='utf-8')
+        except OSError:
+            continue
+
+        match = pattern.search(content)
+        if match:
+            return match.group(1)
+
+    return os.getenv('DT_TERRAFORM_PROVIDER_VERSION', '>= 1.88.0')
+
+
 DT_TERRAFORM_PROVIDER_SOURCE = os.getenv('DT_TERRAFORM_PROVIDER_SOURCE', 'dynatrace-oss/dynatrace')
-DT_TERRAFORM_PROVIDER_VERSION = os.getenv('DT_TERRAFORM_PROVIDER_VERSION', '>= 1.88.0')
+DT_TERRAFORM_PROVIDER_VERSION = _discover_terraform_provider_version()
 
 # Default primary key field type
 # https://docs.djangoproject.com/en/5.2/ref/settings/#default-auto-field

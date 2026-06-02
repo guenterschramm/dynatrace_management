@@ -23,6 +23,7 @@ python manage.py runserver
 
 - Laufzeitdaten fuer Dynatrace liegen in `config/platform.config`
 - Import in die Datenbank mit `python manage.py import_platform_config`
+- Terraform Workspaces liegen lokal im Repository unter `terraform/workspaces`
 - Falls Corporate TLS-Inspection aktiv ist, optional `DT_ACCOUNT_CA_BUNDLE` oder `DT_ACCOUNT_SSL_VERIFY=false` in `.env` setzen
 
 ## Naechste Implementierungsschritte

@@ -1,17 +1,19 @@
 {% extends 'base.html' %}
+{% load tz %}
 
 {% block content %}
 <div class="d-flex flex-column flex-lg-row justify-content-between align-items-lg-center gap-3 mb-3">
 	<h2 class="h3 mb-0">Terraform</h2>
 </div>
-<p class="text-secondary mb-4">Die Workspaces verwenden jetzt den offiziellen Dynatrace Terraform Provider als Basis fuer Environment- und Account-Konfigurationen.</p>
 
 <div class="card border-0 shadow-sm">
 	<div class="card-body">
 		<h3 class="h5">Provider-Basis</h3>
-		<p class="text-secondary mb-2">Generierte Workspaces enthalten `provider.tf`, `variables.tf`, `main.tf` und `terraform.tfvars`.</p>
-		<p class="text-secondary mb-1">Provider Source: {{ provider_source }}</p>
-		<p class="text-secondary mb-0">Provider Version: {{ provider_version }}</p>
+		<p class="text-secondary mb-0">
+			Provider Source: <a href="https://registry.terraform.io/providers/{{ provider_source }}/latest" target="_blank" rel="noopener noreferrer">{{ provider_source }}</a>
+			<span class="mx-2">|</span>
+			Provider Version: <span class="fw-semibold">{{ provider_version }}</span>
+		</p>
 	</div>
 </div>
 
@@ -26,24 +28,55 @@
 					<div class="fw-semibold">Account Management</div>
 					<span class="badge text-bg-dark">Global</span>
 				</div>
-				<div class="card-body">
-					<div class="d-flex flex-column flex-lg-row justify-content-between gap-3 align-items-lg-center">
-						<div>
-							<div class="fw-semibold">{{ account_workspace.workspace_name }}</div>
-							<div class="small text-secondary">{{ account_workspace.workspace_dir }}</div>
-							<div class="small text-secondary">Status: {{ account_workspace.get_status_display }} | Letzter Befehl: {{ account_workspace.last_command|default:'-' }}</div>
-						</div>
-						<div class="d-inline-flex gap-2">
-							<form action="{% url 'terraform_engine:sync' account_workspace.pk %}" method="post">
-								{% csrf_token %}
-								<button class="btn btn-sm btn-outline-dark" type="submit">Sync</button>
-							</form>
-							<form action="{% url 'terraform_engine:plan' account_workspace.pk %}" method="post">
-								{% csrf_token %}
-								<button class="btn btn-sm btn-dark" type="submit">Plan</button>
-							</form>
-						</div>
-					</div>
+				<div class="card-body p-0">
+					<table class="table align-middle mb-0">
+						<thead>
+							<tr>
+								<th>Rubrik</th>
+								<th>Workspace</th>
+								<th>Status</th>
+								<th>Letzter Befehl</th>
+								<th>Aktualitaet</th>
+								<th class="text-end">Aktionen</th>
+							</tr>
+						</thead>
+						<tbody>
+							<tr>
+								<td><span class="badge text-bg-dark">Account</span></td>
+								<td>
+									<div class="fw-semibold">{{ account_workspace.workspace_name }}</div>
+									<div class="small text-secondary">{{ account_workspace.workspace_dir }}</div>
+									<div class="mt-1">
+										<span class="badge {{ account_workspace.export_state.badge_class }}">{{ account_workspace.export_state.label }}</span>
+									</div>
+								</td>
+								<td>{{ account_workspace.get_status_display }}</td>
+								<td>{{ account_workspace.last_command|default:'-' }}</td>
+								<td>
+									<span class="badge {{ account_workspace.data_freshness.badge_class }}">{{ account_workspace.data_freshness.label }}</span>
+									{% if account_workspace.data_freshness.timestamp %}
+										<div class="small text-secondary mt-1">{{ account_workspace.data_freshness.timestamp|localtime|date:'Y-m-d H:i:s' }}</div>
+									{% endif %}
+								</td>
+								<td class="text-end">
+									<div class="d-inline-flex gap-2">
+										<form action="{% url 'terraform_engine:init' account_workspace.pk %}" method="post" data-init-progress="true" data-scope="{{ account_workspace.scope }}" data-workspace="{{ account_workspace.workspace_name }}" data-export-total="{{ account_workspace.expected_export_total }}" data-progress-url="{% url 'terraform_engine:progress' account_workspace.pk %}">
+											{% csrf_token %}
+											<button class="btn btn-sm btn-outline-secondary" type="submit">Init</button>
+										</form>
+										<form action="{% url 'terraform_engine:plan' account_workspace.pk %}" method="post">
+											{% csrf_token %}
+											<button class="btn btn-sm btn-dark" type="submit">Plan</button>
+										</form>
+										<form action="{% url 'terraform_engine:sync' account_workspace.pk %}" method="post">
+											{% csrf_token %}
+											<button class="btn btn-sm btn-outline-dark" type="submit">Apply</button>
+										</form>
+									</div>
+								</td>
+							</tr>
+						</tbody>
+					</table>
 				</div>
 			</div>
 			{% endif %}
@@ -62,6 +95,7 @@
 								<th>Workspace</th>
 								<th>Status</th>
 								<th>Letzter Befehl</th>
+								<th>Aktualitaet</th>
 								<th class="text-end">Aktionen</th>
 							</tr>
 						</thead>
@@ -73,22 +107,39 @@
 									{% if work %}
 										<div class="fw-semibold">{{ work.workspace_name }}</div>
 										<div class="small text-secondary">{{ work.workspace_dir }}</div>
+										<div class="mt-1">
+											<span class="badge {{ work.export_state.badge_class }}">{{ work.export_state.label }}</span>
+										</div>
 									{% else %}
 										<span class="text-secondary">Nicht vorhanden</span>
 									{% endif %}
 								</td>
 								<td>{% if work %}{{ work.get_status_display }}{% else %}-{% endif %}</td>
 								<td>{% if work %}{{ work.last_command|default:'-' }}{% else %}-{% endif %}</td>
+								<td>
+									{% if work %}
+										<span class="badge {{ work.data_freshness.badge_class }}">{{ work.data_freshness.label }}</span>
+										{% if work.data_freshness.timestamp %}
+											<div class="small text-secondary mt-1">{{ work.data_freshness.timestamp|localtime|date:'Y-m-d H:i:s' }}</div>
+										{% endif %}
+									{% else %}
+										-
+									{% endif %}
+								</td>
 								<td class="text-end">
 									{% if work %}
 									<div class="d-inline-flex gap-2">
-										<form action="{% url 'terraform_engine:sync' work.pk %}" method="post">
+										<form action="{% url 'terraform_engine:init' work.pk %}" method="post" data-init-progress="true" data-scope="{{ work.scope }}" data-workspace="{{ work.workspace_name }}" data-export-total="{{ work.expected_export_total }}" data-progress-url="{% url 'terraform_engine:progress' work.pk %}">
 											{% csrf_token %}
-											<button class="btn btn-sm btn-outline-dark" type="submit">Sync</button>
+											<button class="btn btn-sm btn-outline-secondary" type="submit">Init</button>
 										</form>
 										<form action="{% url 'terraform_engine:plan' work.pk %}" method="post">
 											{% csrf_token %}
 											<button class="btn btn-sm btn-dark" type="submit">Plan</button>
+										</form>
+										<form action="{% url 'terraform_engine:sync' work.pk %}" method="post">
+											{% csrf_token %}
+											<button class="btn btn-sm btn-outline-dark" type="submit">Apply</button>
 										</form>
 									</div>
 									{% endif %}
@@ -103,22 +154,39 @@
 									{% if work %}
 										<div class="fw-semibold">{{ work.workspace_name }}</div>
 										<div class="small text-secondary">{{ work.workspace_dir }}</div>
+										<div class="mt-1">
+											<span class="badge {{ work.export_state.badge_class }}">{{ work.export_state.label }}</span>
+										</div>
 									{% else %}
 										<span class="text-secondary">Nicht vorhanden</span>
 									{% endif %}
 								</td>
 								<td>{% if work %}{{ work.get_status_display }}{% else %}-{% endif %}</td>
 								<td>{% if work %}{{ work.last_command|default:'-' }}{% else %}-{% endif %}</td>
+								<td>
+									{% if work %}
+										<span class="badge {{ work.data_freshness.badge_class }}">{{ work.data_freshness.label }}</span>
+										{% if work.data_freshness.timestamp %}
+											<div class="small text-secondary mt-1">{{ work.data_freshness.timestamp|localtime|date:'Y-m-d H:i:s' }}</div>
+										{% endif %}
+									{% else %}
+										-
+									{% endif %}
+								</td>
 								<td class="text-end">
 									{% if work %}
 									<div class="d-inline-flex gap-2">
-										<form action="{% url 'terraform_engine:sync' work.pk %}" method="post">
+										<form action="{% url 'terraform_engine:init' work.pk %}" method="post" data-init-progress="true" data-scope="{{ work.scope }}" data-workspace="{{ work.workspace_name }}" data-export-total="{{ work.expected_export_total }}" data-progress-url="{% url 'terraform_engine:progress' work.pk %}">
 											{% csrf_token %}
-											<button class="btn btn-sm btn-outline-dark" type="submit">Sync</button>
+											<button class="btn btn-sm btn-outline-secondary" type="submit">Init</button>
 										</form>
 										<form action="{% url 'terraform_engine:plan' work.pk %}" method="post">
 											{% csrf_token %}
 											<button class="btn btn-sm btn-dark" type="submit">Plan</button>
+										</form>
+										<form action="{% url 'terraform_engine:sync' work.pk %}" method="post">
+											{% csrf_token %}
+											<button class="btn btn-sm btn-outline-dark" type="submit">Apply</button>
 										</form>
 									</div>
 									{% endif %}
@@ -149,7 +217,7 @@
 					</h2>
 					<div id="execution-{{ execution.pk }}" class="accordion-collapse collapse" aria-labelledby="heading-{{ execution.pk }}" data-bs-parent="#terraformExecutions">
 						<div class="accordion-body">
-							<p class="small text-secondary">{{ execution.created_at }}</p>
+							<p class="small text-secondary">{{ execution.created_at|localtime|date:'Y-m-d H:i:s' }}</p>
 							{% if execution.stdout %}
 								<h4 class="h6">stdout</h4>
 								<pre class="small bg-light p-3 border rounded">{{ execution.stdout }}</pre>
@@ -168,5 +236,161 @@
 	</div>
 </div>
 
+<div class="modal fade" id="initProgressModal" tabindex="-1" aria-labelledby="initProgressModalLabel" aria-hidden="true">
+	<div class="modal-dialog modal-dialog-centered">
+		<div class="modal-content border-0 shadow">
+			<div class="modal-header">
+				<h5 class="modal-title" id="initProgressModalLabel">Terraform Init laeuft</h5>
+			</div>
+			<div class="modal-body">
+				<p class="mb-2" id="initProgressWorkspace">Workspace wird vorbereitet...</p>
+				<p class="small text-secondary mb-2" id="initProgressStatus">Exportiere Objekte...</p>
+				<div class="progress" role="progressbar" aria-label="Init Export Fortschritt" aria-valuemin="0" aria-valuemax="100">
+					<div class="progress-bar progress-bar-striped progress-bar-animated" id="initProgressBar" style="width: 0%">0%</div>
+				</div>
+				<div class="small text-secondary mt-2" id="initProgressCounter">Exportiere 0/0</div>
+			</div>
+		</div>
+	</div>
+</div>
+
 <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js"></script>
+<script>
+	document.addEventListener('DOMContentLoaded', function () {
+		var totalsByScope = {
+			account_management: 12,
+			environment: 379,
+			platform: 24
+		};
+
+		var modalElement = document.getElementById('initProgressModal');
+		if (!modalElement) {
+			return;
+		}
+
+		var progressModal = new bootstrap.Modal(modalElement, {
+			backdrop: 'static',
+			keyboard: false
+		});
+		var progressBar = document.getElementById('initProgressBar');
+		var progressCounter = document.getElementById('initProgressCounter');
+		var progressStatus = document.getElementById('initProgressStatus');
+		var progressWorkspace = document.getElementById('initProgressWorkspace');
+		var timerId = null;
+        var pollId = null;
+
+		function setProgress(current, total) {
+			var safeTotal = total > 0 ? total : 1;
+			var percentage = Math.floor((current / safeTotal) * 100);
+			if (percentage > 100) {
+				percentage = 100;
+			}
+			progressBar.style.width = percentage + '%';
+			progressBar.textContent = percentage + '%';
+			progressCounter.textContent = 'Exportiere ' + current + '/' + total;
+		}
+
+		function pollProgress(progressUrl, fallbackTotal) {
+			if (!progressUrl) {
+				return;
+			}
+
+			if (pollId) {
+				window.clearInterval(pollId);
+			}
+
+			pollId = window.setInterval(function () {
+				fetch(progressUrl, {
+					headers: {
+						'X-Requested-With': 'XMLHttpRequest'
+					}
+				})
+					.then(function (response) {
+						return response.json();
+					})
+					.then(function (payload) {
+						var total = payload.total || fallbackTotal || 100;
+						var current = payload.current || 0;
+						setProgress(current, total);
+						if (payload.resource) {
+							progressStatus.textContent = 'Exportiere: ' + payload.resource;
+						} else if (payload.status === 'done') {
+							progressStatus.textContent = 'Export abgeschlossen.';
+						} else if (payload.status === 'failed') {
+							progressStatus.textContent = 'Export mit Fehlern beendet.';
+						} else {
+							progressStatus.textContent = 'Exportiere Objekte...';
+						}
+					})
+					.catch(function () {
+						progressStatus.textContent = 'Warte auf Export-Status...';
+					});
+			}, 700);
+		}
+
+		document.querySelectorAll('form[data-init-progress="true"]').forEach(function (formElement) {
+			formElement.addEventListener('submit', function (event) {
+				if (formElement.dataset.progressStarted === '1') {
+					return;
+				}
+
+				event.preventDefault();
+
+				formElement.dataset.progressStarted = '1';
+				var scope = formElement.dataset.scope || 'environment';
+				var workspaceName = formElement.dataset.workspace || 'workspace';
+				var progressUrl = formElement.dataset.progressUrl || '';
+				var explicitTotal = parseInt(formElement.dataset.exportTotal || '', 10);
+				var total = Number.isFinite(explicitTotal) && explicitTotal > 0 ? explicitTotal : (totalsByScope[scope] || 100);
+
+				progressWorkspace.textContent = 'Workspace: ' + workspaceName;
+				progressStatus.textContent = 'Init gestartet. Exportiere Objekte...';
+				setProgress(0, total);
+				progressModal.show();
+				pollProgress(progressUrl, total);
+
+				if (timerId) {
+					window.clearInterval(timerId);
+				}
+
+				fetch(formElement.action, {
+					method: 'POST',
+					body: new FormData(formElement),
+					headers: {
+						'X-Requested-With': 'XMLHttpRequest'
+					}
+				})
+					.then(function (response) {
+						return response.json();
+					})
+					.then(function (payload) {
+						if (pollId) {
+							window.clearInterval(pollId);
+						}
+						if (payload && payload.redirect_url) {
+							window.location.assign(payload.redirect_url);
+							return;
+						}
+						window.location.reload();
+					})
+					.catch(function () {
+						if (pollId) {
+							window.clearInterval(pollId);
+						}
+						formElement.dataset.progressStarted = '0';
+						formElement.submit();
+					});
+			});
+		});
+
+		window.addEventListener('beforeunload', function () {
+			if (timerId) {
+				window.clearInterval(timerId);
+			}
+			if (pollId) {
+				window.clearInterval(pollId);
+			}
+		});
+	});
+</script>
 {% endblock %}
