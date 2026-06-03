@@ -2,11 +2,44 @@
 
 <div class="card border-0 shadow-sm mb-4">
     <div class="card-body py-3">
-        <div class="nav nav-pills gap-2">
-            <a class="nav-link {% if section == 'users' %}active{% else %}link-dark{% endif %}" href="{% url 'account_management:user_list' %}">User</a>
-            <a class="nav-link {% if section == 'policies' %}active{% else %}link-dark{% endif %}" href="{% url 'account_management:policy_list' %}">Policies</a>
-            <a class="nav-link {% if section == 'boundaries' %}active{% else %}link-dark{% endif %}" href="{% url 'account_management:boundary_list' %}">Boundaries</a>
-            <a class="nav-link {% if section == 'groups' %}active{% else %}link-dark{% endif %}" href="{% url 'account_management:role_list' %}">Groups</a>
+        <ul class="nav nav-tabs mb-3" role="tablist">
+            <li class="nav-item" role="presentation">
+                <a class="nav-link {% if section == 'iam' %}active{% endif %}" href="{% url 'account_management:iam_overview' %}">IAM</a>
+            </li>
+            <li class="nav-item" role="presentation">
+                <a class="nav-link {% if section != 'iam' %}active{% endif %}" href="{% if section == 'iam' %}{% url 'account_management:user_list' %}{% else %}{{ request.path }}{% endif %}">Management</a>
+            </li>
+        </ul>
+
+        <div class="d-flex flex-column flex-lg-row justify-content-between align-items-lg-center gap-3">
+            {% if section != 'iam' %}
+                <div class="nav nav-pills gap-2">
+                    <a class="nav-link {% if section == 'users' %}active{% else %}link-dark{% endif %}" href="{% url 'account_management:user_list' %}">User</a>
+                    <a class="nav-link {% if section == 'policies' %}active{% else %}link-dark{% endif %}" href="{% url 'account_management:policy_list' %}">Policies</a>
+                    <a class="nav-link {% if section == 'boundaries' %}active{% else %}link-dark{% endif %}" href="{% url 'account_management:boundary_list' %}">Boundaries</a>
+                    <a class="nav-link {% if section == 'groups' %}active{% else %}link-dark{% endif %}" href="{% url 'account_management:role_list' %}">Groups</a>
+                </div>
+            {% endif %}
+
+            {% if account_workspace %}
+                <div class="d-flex flex-column align-items-lg-end gap-1 ms-lg-auto">
+                    <span class="small text-uppercase text-secondary fw-semibold">Terraform Actions</span>
+                    <div class="d-inline-flex gap-2">
+                        <form action="{% url 'terraform_engine:init' account_workspace.pk %}?next=account_{{ section|default:'users' }}" method="post" data-init-progress="true" data-scope="{{ account_workspace.scope }}" data-workspace="{{ account_workspace.workspace_name }}" data-export-total="12" data-progress-url="{% url 'terraform_engine:progress' account_workspace.pk %}">
+                            {% csrf_token %}
+                            <button class="btn btn-sm btn-outline-secondary" type="submit">Init</button>
+                        </form>
+                        <form action="{% url 'terraform_engine:plan' account_workspace.pk %}?next=account_{{ section|default:'users' }}" method="post">
+                            {% csrf_token %}
+                            <button class="btn btn-sm btn-dark" type="submit">Plan</button>
+                        </form>
+                        <form action="{% url 'terraform_engine:sync' account_workspace.pk %}?next=account_{{ section|default:'users' }}" method="post">
+                            {% csrf_token %}
+                            <button class="btn btn-sm btn-outline-dark" type="submit">Apply</button>
+                        </form>
+                    </div>
+                </div>
+            {% endif %}
         </div>
 
         <div class="mt-3 pt-3 border-top small text-secondary">
@@ -36,3 +69,150 @@
         </div>
     </div>
 </div>
+
+<div class="modal fade" id="initProgressModal" tabindex="-1" aria-labelledby="initProgressModalLabel" aria-hidden="true">
+    <div class="modal-dialog modal-dialog-centered">
+        <div class="modal-content border-0 shadow">
+            <div class="modal-header">
+                <h5 class="modal-title" id="initProgressModalLabel">Terraform Init laeuft</h5>
+            </div>
+            <div class="modal-body">
+                <p class="mb-2" id="initProgressWorkspace">Workspace wird vorbereitet...</p>
+                <p class="small text-secondary mb-2" id="initProgressStatus">Exportiere Objekte...</p>
+                <div class="progress" role="progressbar" aria-label="Init Export Fortschritt" aria-valuemin="0" aria-valuemax="100">
+                    <div class="progress-bar progress-bar-striped progress-bar-animated" id="initProgressBar" style="width: 0%">0%</div>
+                </div>
+                <div class="small text-secondary mt-2" id="initProgressCounter">Exportiere 0/0</div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<script>
+    document.addEventListener('DOMContentLoaded', function () {
+        var totalsByScope = {
+            account_management: 12,
+            environment: 379,
+            platform: 24
+        };
+
+        var initModalElement = document.getElementById('initProgressModal');
+        if (!initModalElement || typeof bootstrap === 'undefined') {
+            return;
+        }
+
+        var progressModal = new bootstrap.Modal(initModalElement, {
+            backdrop: 'static',
+            keyboard: false
+        });
+        var progressBar = document.getElementById('initProgressBar');
+        var progressCounter = document.getElementById('initProgressCounter');
+        var progressStatus = document.getElementById('initProgressStatus');
+        var progressWorkspace = document.getElementById('initProgressWorkspace');
+        var pollId = null;
+
+        function setProgress(current, total) {
+            var safeTotal = total > 0 ? total : 1;
+            var percentage = Math.floor((current / safeTotal) * 100);
+            if (percentage > 100) {
+                percentage = 100;
+            }
+            progressBar.style.width = percentage + '%';
+            progressBar.textContent = percentage + '%';
+            progressCounter.textContent = 'Exportiere ' + current + '/' + total;
+        }
+
+        function pollProgress(progressUrl, fallbackTotal) {
+            if (!progressUrl) {
+                return;
+            }
+            if (pollId) {
+                window.clearInterval(pollId);
+            }
+            pollId = window.setInterval(function () {
+                fetch(progressUrl, {
+                    headers: {
+                        'X-Requested-With': 'XMLHttpRequest'
+                    }
+                })
+                    .then(function (response) {
+                        return response.json();
+                    })
+                    .then(function (payload) {
+                        var total = payload.total || fallbackTotal || 100;
+                        var current = payload.current || 0;
+                        setProgress(current, total);
+                        if (payload.resource) {
+                            progressStatus.textContent = 'Exportiere: ' + payload.resource;
+                        } else if (payload.status === 'done') {
+                            progressStatus.textContent = 'Export abgeschlossen.';
+                        } else if (payload.status === 'failed') {
+                            progressStatus.textContent = 'Export mit Fehlern beendet.';
+                        } else {
+                            progressStatus.textContent = 'Exportiere Objekte...';
+                        }
+                    })
+                    .catch(function () {
+                        progressStatus.textContent = 'Warte auf Export-Status...';
+                    });
+            }, 700);
+        }
+
+        document.querySelectorAll('form[data-init-progress="true"]').forEach(function (formElement) {
+            formElement.addEventListener('submit', function (event) {
+                if (formElement.dataset.progressStarted === '1') {
+                    return;
+                }
+
+                event.preventDefault();
+                formElement.dataset.progressStarted = '1';
+
+                var scope = formElement.dataset.scope || 'account_management';
+                var workspaceName = formElement.dataset.workspace || 'workspace';
+                var progressUrl = formElement.dataset.progressUrl || '';
+                var explicitTotal = parseInt(formElement.dataset.exportTotal || '', 10);
+                var total = Number.isFinite(explicitTotal) && explicitTotal > 0 ? explicitTotal : (totalsByScope[scope] || 100);
+
+                progressWorkspace.textContent = 'Workspace: ' + workspaceName;
+                progressStatus.textContent = 'Init gestartet. Exportiere Objekte...';
+                setProgress(0, total);
+                progressModal.show();
+                pollProgress(progressUrl, total);
+
+                fetch(formElement.action, {
+                    method: 'POST',
+                    body: new FormData(formElement),
+                    headers: {
+                        'X-Requested-With': 'XMLHttpRequest'
+                    }
+                })
+                    .then(function (response) {
+                        return response.json();
+                    })
+                    .then(function (payload) {
+                        if (pollId) {
+                            window.clearInterval(pollId);
+                        }
+                        if (payload && payload.redirect_url) {
+                            window.location.assign(payload.redirect_url);
+                            return;
+                        }
+                        window.location.reload();
+                    })
+                    .catch(function () {
+                        if (pollId) {
+                            window.clearInterval(pollId);
+                        }
+                        formElement.dataset.progressStarted = '0';
+                        formElement.submit();
+                    });
+            });
+        });
+
+        window.addEventListener('beforeunload', function () {
+            if (pollId) {
+                window.clearInterval(pollId);
+            }
+        });
+    });
+</script>

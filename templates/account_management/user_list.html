@@ -6,10 +6,6 @@
         <h2 class="h3 mb-1">Account Management</h2>
         <p class="text-secondary mb-0">User werden aus dem IAM-Sync geladen und mit Terraform-Gruppeninformationen kombiniert.</p>
     </div>
-    <form action="{% url 'account_management:sync_users' %}" method="post">
-        {% csrf_token %}
-        <button class="btn btn-outline-dark" type="submit">IAM API Sync (optional)</button>
-    </form>
 </div>
 
 {% include 'account_management/_section_nav.html' %}

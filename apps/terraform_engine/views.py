@@ -19,6 +19,21 @@ from .services import TerraformExecutionService, sync_terraform_workspaces
 INIT_SUMMARY_CACHE_TIMEOUT_SECONDS = 60
 
 
+def _resolve_next_view_name(request, default='terraform_engine:overview'):
+	next_key = (request.GET.get('next') or request.POST.get('next') or '').strip().lower()
+	mapping = {
+		'overview': 'terraform_engine:overview',
+		'environment': 'terraform_engine:environment_overview',
+		'platform': 'terraform_engine:platform_overview',
+		'account_users': 'account_management:user_list',
+		'account_policies': 'account_management:policy_list',
+		'account_boundaries': 'account_management:boundary_list',
+		'account_groups': 'account_management:role_list',
+		'account_iam': 'account_management:iam_overview',
+	}
+	return mapping.get(next_key, default)
+
+
 def _reference_script_name(workspace):
 	if workspace.workspace_name == 'account-management':
 		return 'export-account.ps1'
@@ -465,6 +480,8 @@ class EnvironmentOverviewView(TemplateView):
 		for workspace in all_workspaces:
 			if workspace.scope == TerraformWorkspace.WorkspaceScope.ACCOUNT_MANAGEMENT:
 				continue
+			_annotate_data_freshness(workspace)
+			workspace.expected_export_total = _expected_export_total(workspace)
 			workspace.init_summary = _build_init_summary(workspace)
 			workspace_view_data[str(workspace.pk)] = _serialize_init_summary(workspace.init_summary)
 			group_key = workspace.workspace_group
@@ -503,6 +520,8 @@ class PlatformOverviewView(TemplateView):
 		for workspace in all_workspaces:
 			if workspace.scope == TerraformWorkspace.WorkspaceScope.ACCOUNT_MANAGEMENT:
 				continue
+			_annotate_data_freshness(workspace)
+			workspace.expected_export_total = _expected_export_total(workspace)
 			workspace.init_summary = _build_init_summary(workspace)
 			workspace_view_data[str(workspace.pk)] = _serialize_init_summary(workspace.init_summary)
 			group_key = workspace.workspace_group
@@ -533,6 +552,7 @@ class PlatformOverviewView(TemplateView):
 class TerraformSyncView(View):
 	def post(self, request, pk, *args, **kwargs):
 		workspace = get_object_or_404(TerraformWorkspace, pk=pk)
+		redirect_target = _resolve_next_view_name(request)
 		results = sync_terraform_workspaces(
 			selected_workspace_ids=[workspace.id],
 			run_reference_export=True,
@@ -546,7 +566,7 @@ class TerraformSyncView(View):
 		else:
 			reason = result.get('reason', 'Unbekannter Grund')
 			messages.warning(request, f'Workspace {workspace.workspace_name} synchronisiert ohne Export: {reason}')
-		return redirect('terraform_engine:overview')
+		return redirect(redirect_target)
 
 
 class TerraformCommandView(View):
@@ -555,6 +575,7 @@ class TerraformCommandView(View):
 	def post(self, request, pk, *args, **kwargs):
 		workspace = get_object_or_404(TerraformWorkspace, pk=pk)
 		is_ajax = request.headers.get('x-requested-with') == 'XMLHttpRequest'
+		redirect_target = _resolve_next_view_name(request)
 		result = TerraformExecutionService().execute(workspace, self.command)
 		if self.command == TerraformExecution.CommandType.INIT:
 			request.session['terraform_init_summary_overlay'] = _build_init_summary(workspace)
@@ -566,10 +587,10 @@ class TerraformCommandView(View):
 			return JsonResponse(
 				{
 					'ok': result.returncode == 0,
-					'redirect_url': reverse('terraform_engine:overview'),
+					'redirect_url': reverse(redirect_target),
 				}
 			)
-		return redirect('terraform_engine:overview')
+		return redirect(redirect_target)
 
 
 class TerraformProgressView(View):

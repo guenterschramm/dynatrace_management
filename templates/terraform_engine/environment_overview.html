@@ -44,12 +44,37 @@
 				{% with work=group.environment_workspace %}
 					{% if work %}
 						<div class="tab-pane fade {% if forloop.first %}show active{% endif %}" id="env-pane-{{ work.pk }}" role="tabpanel" aria-labelledby="env-tab-{{ work.pk }}" tabindex="0">
-							<div class="mb-3">
-								<div class="fw-semibold">{{ work.workspace_name }}</div>
-								<div class="small text-secondary">{{ work.workspace_dir }}</div>
-								{% if group.environment and group.environment.environment_url %}
-									<div class="small"><a class="link-secondary" href="{{ group.environment.environment_url }}" target="_blank" rel="noreferrer">{{ group.environment.environment_url }}</a></div>
-								{% endif %}
+							<div class="d-flex flex-column flex-lg-row justify-content-between align-items-lg-start gap-3 mb-3">
+								<div>
+									<div class="fw-semibold">{{ work.workspace_name }}</div>
+									<div class="small text-secondary">{{ work.workspace_dir }}</div>
+									{% if group.environment and group.environment.environment_url %}
+										<div class="small"><a class="link-secondary" href="{{ group.environment.environment_url }}" target="_blank" rel="noreferrer">{{ group.environment.environment_url }}</a></div>
+									{% endif %}
+									<div class="mt-2">
+										<span class="badge {{ work.data_freshness.badge_class }}">{{ work.data_freshness.label }}</span>
+										{% if work.data_freshness.timestamp %}
+											<div class="small text-secondary mt-1">{{ work.data_freshness.timestamp|localtime|date:'Y-m-d H:i:s' }}</div>
+										{% endif %}
+									</div>
+								</div>
+								<div class="d-flex flex-column align-items-lg-end gap-1">
+									<span class="small text-uppercase text-secondary fw-semibold">Terraform Actions</span>
+									<div class="d-inline-flex gap-2">
+										<form action="{% url 'terraform_engine:init' work.pk %}?next=environment" method="post" data-init-progress="true" data-scope="{{ work.scope }}" data-workspace="{{ work.workspace_name }}" data-export-total="{{ work.expected_export_total }}" data-progress-url="{% url 'terraform_engine:progress' work.pk %}">
+											{% csrf_token %}
+											<button class="btn btn-sm btn-outline-secondary" type="submit">Init</button>
+										</form>
+										<form action="{% url 'terraform_engine:plan' work.pk %}?next=environment" method="post">
+											{% csrf_token %}
+											<button class="btn btn-sm btn-dark" type="submit">Plan</button>
+										</form>
+										<form action="{% url 'terraform_engine:sync' work.pk %}?next=environment" method="post">
+											{% csrf_token %}
+											<button class="btn btn-sm btn-outline-dark" type="submit">Apply</button>
+										</form>
+									</div>
+								</div>
 							</div>
 							<div class="list-group">
 								{% for module in work.init_summary.modules %}
@@ -67,6 +92,24 @@
 					{% endif %}
 				{% endwith %}
 			{% endfor %}
+		</div>
+	</div>
+</div>
+
+<div class="modal fade" id="initProgressModal" tabindex="-1" aria-labelledby="initProgressModalLabel" aria-hidden="true">
+	<div class="modal-dialog modal-dialog-centered">
+		<div class="modal-content border-0 shadow">
+			<div class="modal-header">
+				<h5 class="modal-title" id="initProgressModalLabel">Terraform Init laeuft</h5>
+			</div>
+			<div class="modal-body">
+				<p class="mb-2" id="initProgressWorkspace">Workspace wird vorbereitet...</p>
+				<p class="small text-secondary mb-2" id="initProgressStatus">Exportiere Objekte...</p>
+				<div class="progress" role="progressbar" aria-label="Init Export Fortschritt" aria-valuemin="0" aria-valuemax="100">
+					<div class="progress-bar progress-bar-striped progress-bar-animated" id="initProgressBar" style="width: 0%">0%</div>
+				</div>
+				<div class="small text-secondary mt-2" id="initProgressCounter">Exportiere 0/0</div>
+			</div>
 		</div>
 	</div>
 </div>
@@ -124,6 +167,86 @@
 		var modalElement = document.getElementById('moduleDetailsModal');
 		if (!modalElement) {
 			return;
+		}
+
+		var totalsByScope = {
+			account_management: 12,
+			environment: 379,
+			platform: 24
+		};
+		var initModalElement = document.getElementById('initProgressModal');
+		var progressModal = null;
+		var progressBar = null;
+		var progressCounter = null;
+		var progressStatus = null;
+		var progressWorkspace = null;
+		var timerId = null;
+		var pollId = null;
+
+		if (initModalElement) {
+			progressModal = new bootstrap.Modal(initModalElement, {
+				backdrop: 'static',
+				keyboard: false
+			});
+			progressBar = document.getElementById('initProgressBar');
+			progressCounter = document.getElementById('initProgressCounter');
+			progressStatus = document.getElementById('initProgressStatus');
+			progressWorkspace = document.getElementById('initProgressWorkspace');
+		}
+
+		function setProgress(current, total) {
+			if (!progressBar || !progressCounter) {
+				return;
+			}
+			var safeTotal = total > 0 ? total : 1;
+			var percentage = Math.floor((current / safeTotal) * 100);
+			if (percentage > 100) {
+				percentage = 100;
+			}
+			progressBar.style.width = percentage + '%';
+			progressBar.textContent = percentage + '%';
+			progressCounter.textContent = 'Exportiere ' + current + '/' + total;
+		}
+
+		function pollProgress(progressUrl, fallbackTotal) {
+			if (!progressUrl) {
+				return;
+			}
+			if (pollId) {
+				window.clearInterval(pollId);
+			}
+			pollId = window.setInterval(function () {
+				fetch(progressUrl, {
+					headers: {
+						'X-Requested-With': 'XMLHttpRequest'
+					}
+				})
+					.then(function (response) {
+						return response.json();
+					})
+					.then(function (payload) {
+						var total = payload.total || fallbackTotal || 100;
+						var current = payload.current || 0;
+						setProgress(current, total);
+						if (!progressStatus) {
+							return;
+						}
+						if (payload.resource) {
+							progressStatus.textContent = 'Exportiere: ' + payload.resource;
+						} else if (payload.status === 'done') {
+							progressStatus.textContent = 'Export abgeschlossen.';
+						} else if (payload.status === 'failed') {
+							progressStatus.textContent = 'Export mit Fehlern beendet.';
+						} else {
+							progressStatus.textContent = 'Exportiere Objekte...';
+						}
+					})
+					.catch(function () {
+						if (progressStatus) {
+							progressStatus.textContent = 'Warte auf Export-Status...';
+						}
+					});
+			}, 700);
 		}
 		var modal = new bootstrap.Modal(modalElement);
 
@@ -210,6 +333,74 @@
 			button.addEventListener('click', function () {
 				openModule(button.dataset.workspaceId, button.dataset.moduleName || '');
 			});
+		});
+
+		document.querySelectorAll('form[data-init-progress="true"]').forEach(function (formElement) {
+			formElement.addEventListener('submit', function (event) {
+				if (!progressModal || formElement.dataset.progressStarted === '1') {
+					return;
+				}
+
+				event.preventDefault();
+				formElement.dataset.progressStarted = '1';
+
+				var scope = formElement.dataset.scope || 'environment';
+				var workspaceName = formElement.dataset.workspace || 'workspace';
+				var progressUrl = formElement.dataset.progressUrl || '';
+				var explicitTotal = parseInt(formElement.dataset.exportTotal || '', 10);
+				var total = Number.isFinite(explicitTotal) && explicitTotal > 0 ? explicitTotal : (totalsByScope[scope] || 100);
+
+				if (progressWorkspace) {
+					progressWorkspace.textContent = 'Workspace: ' + workspaceName;
+				}
+				if (progressStatus) {
+					progressStatus.textContent = 'Init gestartet. Exportiere Objekte...';
+				}
+				setProgress(0, total);
+				progressModal.show();
+				pollProgress(progressUrl, total);
+
+				if (timerId) {
+					window.clearInterval(timerId);
+				}
+
+				fetch(formElement.action, {
+					method: 'POST',
+					body: new FormData(formElement),
+					headers: {
+						'X-Requested-With': 'XMLHttpRequest'
+					}
+				})
+					.then(function (response) {
+						return response.json();
+					})
+					.then(function (payload) {
+						if (pollId) {
+							window.clearInterval(pollId);
+						}
+						if (payload && payload.redirect_url) {
+							window.location.assign(payload.redirect_url);
+							return;
+						}
+						window.location.reload();
+					})
+					.catch(function () {
+						if (pollId) {
+							window.clearInterval(pollId);
+						}
+						formElement.dataset.progressStarted = '0';
+						formElement.submit();
+					});
+			});
+		});
+
+		window.addEventListener('beforeunload', function () {
+			if (timerId) {
+				window.clearInterval(timerId);
+			}
+			if (pollId) {
+				window.clearInterval(pollId);
+			}
 		});
 	});
 </script>

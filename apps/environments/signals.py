@@ -1,3 +1,4 @@
+from django.conf import settings
 from django.db.models.signals import post_save
 from django.dispatch import receiver
 
@@ -8,4 +9,7 @@ from .models import Environment
 
 @receiver(post_save, sender=Environment)
 def ensure_workspace(sender, instance, created, **kwargs):
+    if not getattr(settings, 'AUTO_SYNC_TERRAFORM_ON_ENV_SAVE', False):
+        return
+
     sync_terraform_workspaces()

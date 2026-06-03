@@ -131,6 +131,7 @@ DT_ACCOUNT_SSL_VERIFY = os.getenv('DT_ACCOUNT_SSL_VERIFY', 'true').lower() == 't
 DT_ACCOUNT_CA_BUNDLE = os.getenv('DT_ACCOUNT_CA_BUNDLE', '')
 DT_ENV_SSL_VERIFY = os.getenv('DT_ENV_SSL_VERIFY', 'true').lower() == 'true'
 DT_ENV_CA_BUNDLE = os.getenv('DT_ENV_CA_BUNDLE', '')
+AUTO_SYNC_TERRAFORM_ON_ENV_SAVE = os.getenv('AUTO_SYNC_TERRAFORM_ON_ENV_SAVE', 'false').lower() == 'true'
 
 
 def _discover_terraform_provider_version():

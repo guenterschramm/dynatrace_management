@@ -1,14 +1,11 @@
 from datetime import datetime, timezone as dt_timezone
 
-from django.contrib import messages
-from django.shortcuts import redirect
 from django.utils import timezone
-from django.views import View
 from django.views.generic import TemplateView
 
 from apps.terraform_engine.models import TerraformWorkspace
 
-from .services import DynatraceAccountSyncService, TerraformAccountDataService
+from .services import TerraformAccountDataService
 
 
 class TerraformAccountContextMixin:
@@ -85,6 +82,68 @@ class TerraformAccountContextMixin:
 			'account_data_freshness': freshness,
 		}
 
+	def _build_iam_summary(self, workspace):
+		summary = {
+			'workspace_id': workspace.pk if workspace else None,
+			'workspace_name': workspace.workspace_name if workspace else '',
+			'modules': [],
+		}
+		if workspace is None:
+			return summary
+
+		modules_root = workspace.workspace_dir / 'modules'
+		scaffold_names = {'main.tf', 'variables.tf', 'outputs.tf', '___providers___.tf', '___variables___.tf'}
+		if not modules_root.exists():
+			return summary
+
+		module_dirs = sorted(
+			[item for item in modules_root.iterdir() if item.is_dir()],
+			key=lambda item: item.name,
+		)
+		for module_dir in module_dirs:
+			tf_files = sorted(path for path in module_dir.glob('*.tf'))
+			exported_files = [path.name for path in tf_files if path.name not in scaffold_names]
+			objects = []
+			for exported_file in exported_files:
+				candidate = module_dir / exported_file
+				try:
+					content = candidate.read_text(encoding='utf-8', errors='replace')
+				except Exception:
+					content = ''
+				objects.append(
+					{
+						'name': candidate.stem,
+						'file_name': exported_file,
+						'content': content,
+					}
+				)
+
+			summary['modules'].append(
+				{
+					'name': module_dir.name,
+					'loaded_count': len(exported_files),
+					'objects': objects,
+				}
+			)
+
+		return summary
+
+
+class AccountIamOverviewView(TerraformAccountContextMixin, TemplateView):
+	template_name = 'account_management/iam_overview.html'
+
+	def get_context_data(self, **kwargs):
+		context = super().get_context_data(**kwargs)
+		base = self._base_context()
+		workspace = base['account_workspace']
+		iam_summary = self._build_iam_summary(workspace)
+
+		context['section'] = 'iam'
+		context['iam_summary'] = iam_summary
+		context['workspace_view_data'] = {str(iam_summary['workspace_id']): iam_summary} if iam_summary['workspace_id'] else {}
+		context.update(base)
+		return context
+
 
 class AccountUserListView(TerraformAccountContextMixin, TemplateView):
 	template_name = 'account_management/user_list.html'
@@ -133,16 +192,3 @@ class AccountRoleListView(TerraformAccountContextMixin, TemplateView):
 		context.update(self._base_context())
 		return context
 
-
-class AccountUserSyncView(View):
-	def post(self, request, *args, **kwargs):
-		try:
-			result = DynatraceAccountSyncService().sync_users()
-		except Exception as exc:
-			messages.error(request, f'IAM-Sync fehlgeschlagen: {exc}')
-		else:
-			messages.success(
-				request,
-				f"IAM-Sync abgeschlossen. Neu: {result['created']}, aktualisiert: {result['updated']}",
-			)
-		return redirect('account_management:user_list')
