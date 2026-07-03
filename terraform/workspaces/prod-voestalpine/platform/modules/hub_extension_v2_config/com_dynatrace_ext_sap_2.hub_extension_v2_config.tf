@@ -3,7 +3,7 @@ resource "dynatrace_hub_extension_v2_config" "com_dynatrace_ext_sap_2" {
   scope = "ag_group-default"
   value = jsonencode({
       "activationContext": "REMOTE",
-      "description": "SAP_ERP_VPE",
+      "description": "SAP_ERP_VPR",
       "enabled": false,
       "featureSets": [
         "Job Metrics",
@@ -21,11 +21,11 @@ resource "dynatrace_hub_extension_v2_config" "com_dynatrace_ext_sap_2" {
         "clientno": "100",
         "connect_via": "message_server",
         "debug": false,
-        "msgroup": "VPE",
-        "mshost": "vadsvpescs.voestalpine.root.local",
-        "msport": "8110",
-        "mssysname": "VPE",
-        "password": "***b5ce52dec62f7845***",
+        "msgroup": "VPR",
+        "mshost": "vadsvprscs.voestalpine.root.local",
+        "msport": "8130",
+        "mssysname": "VPR",
+        "password": "***00615d14ba98b813***",
         "pollAll": true,
         "pollLess": false,
         "rfc": "Per function call",

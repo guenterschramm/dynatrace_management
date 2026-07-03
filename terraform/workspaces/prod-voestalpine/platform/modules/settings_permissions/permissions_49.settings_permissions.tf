@@ -1,4 +1,4 @@
 resource "dynatrace_settings_permissions" "permissions_49" {
-  all_users          = "read"
-  settings_object_id = "vu9U3hXa3q0AAAABACNidWlsdGluOm9wZW5waXBlbGluZS5sb2dzLnBpcGVsaW5lcwAGdGVuYW50AAZ0ZW5hbnQAJDBmNTI4MmNjLTU3ZDMtM2Y5Mi04NGU0LWNjZmIxM2UzY2JkOL7vVN4V2t6t"
+  all_users          = "none"
+  settings_object_id = "vu9U3hXa3q0AAAABACNhcHA6ZHluYXRyYWNlLnNlcnZpY2Vub3c6Y29ubmVjdGlvbgAGdGVuYW50AAZ0ZW5hbnQAJDE5MGZkYjNjLTY4OTUtM2VmYS04MWI1LTY5M2QyNzFiYWQ2M77vVN4V2t6t"
 }

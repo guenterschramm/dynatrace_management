@@ -1,30 +1,30 @@
 resource "dynatrace_hub_extension_v2_config" "com_dynatrace_custom_python-certificate-monitor_2" {
   name  = "com.dynatrace.custom.python-certificate-monitor"
-  scope = "HOST_GROUP-76B585663184C4C0"
+  scope = "HOST_GROUP-F8254B0A4393DA8D"
   value = jsonencode({
       "activationContext": "LOCAL",
       "activationTags": [],
-      "description": "PAM SSL Certificate",
+      "description": "Bee4IT SSL Certificate",
       "enabled": true,
       "featureSets": [
         "enhanced_metric"
       ],
       "pythonLocal": {
+        "active_port_discovery": {
+          "enable_active_port_discovery": true
+        },
         "additional_sni": {
           "additional_sni_bool": false
         },
         "advanced_alert_configuration": {
           "enable_alert_creation": true,
           "expired_certificate_threshold": 7,
-          "raise_domain_connection_alerts": false,
-          "raise_oa_connection_alerts": false,
           "suppress_old_expired_certificate": true
         },
         "alerting_configuration": {
           "check_interval": 1,
           "days_event_stage_1": 30,
-          "days_event_stage_2": 10,
-          "timeout_bool": false
+          "days_event_stage_2": 10
         },
         "check_hosts": {
           "check_host_domain": false

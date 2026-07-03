@@ -83,14 +83,12 @@ class TerraformAccountContextMixin:
 			last_plan = workspace.executions.filter(command=TerraformExecution.CommandType.PLAN).first()
 			last_plan_succeeded = last_plan.succeeded if last_plan else False
 			modules_root = workspace.workspace_dir / 'modules'
-			scaffold_names = {'main.tf', 'variables.tf', 'outputs.tf', '___providers___.tf', '___variables___.tf'}
 			if modules_root.exists():
 				for module_dir in modules_root.iterdir():
 					if not module_dir.is_dir():
 						continue
 					changed = _get_module_changed_tf_files(workspace, module_dir.name)
-					tf_files = [p.name for p in module_dir.glob('*.tf') if p.name not in scaffold_names]
-					total_modified_count += sum(1 for f in tf_files if f in changed)
+					total_modified_count += len(changed)
 		return {
 			'source_root': data['source_root'],
 			'resource_count': data['resource_count'],
@@ -120,6 +118,7 @@ class TerraformAccountContextMixin:
 		)
 		for module_dir in module_dirs:
 			tf_files = sorted(path for path in module_dir.glob('*.tf'))
+			changed_files = _get_module_changed_tf_files(workspace, module_dir.name)
 			exported_files = [path.name for path in tf_files if path.name not in scaffold_names]
 			objects = []
 			for exported_file in exported_files:
@@ -133,6 +132,7 @@ class TerraformAccountContextMixin:
 						'name': candidate.stem,
 						'file_name': exported_file,
 						'content': content,
+						'created': exported_file in changed_files,
 					}
 				)
 
@@ -140,6 +140,7 @@ class TerraformAccountContextMixin:
 				{
 					'name': module_dir.name,
 					'loaded_count': len(exported_files),
+					'modified_count': len(changed_files),
 					'details_url': reverse('terraform_engine:module_details', args=[workspace.pk, module_dir.name]),
 					'save_url': reverse('terraform_engine:module_object_update', args=[workspace.pk, module_dir.name]),
 					'objects': objects,

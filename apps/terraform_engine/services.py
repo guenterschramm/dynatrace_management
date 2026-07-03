@@ -4,6 +4,7 @@ import json
 import os
 import stat
 import re
+import hashlib
 from pathlib import Path
 
 from django.conf import settings
@@ -43,6 +44,69 @@ ACCOUNT_MANAGEMENT_MODULES = (
     'user',
     'user_group',
 )
+
+SCAFFOLD_TF_FILE_NAMES = {'main.tf', 'variables.tf', 'outputs.tf', '___providers___.tf', '___variables___.tf'}
+ALLOWED_DOCUMENT_TYPES = {'dashboard', 'notebook', 'launchpad'}
+ALLOWED_PLATFORM_BUCKET_TABLES = {'logs', 'spans', 'events', 'bizevents'}
+
+
+def _extract_quoted_assignment(content, field_name):
+    match = re.search(rf'\b{re.escape(field_name)}\s*=\s*"([^"]+)"', content, re.IGNORECASE)
+    if not match:
+        return ''
+    return (match.group(1) or '').strip()
+
+
+def _is_supported_platform_object(module_name, candidate):
+    if module_name not in {'document', 'platform_bucket'}:
+        return True
+
+    try:
+        content = candidate.read_text(encoding='utf-8', errors='replace')
+    except Exception:
+        return False
+
+    if module_name == 'document':
+        content_lower = content.lower()
+        if '"importedwithcode": false' not in content_lower or 'custom_id' in content_lower:
+            return False
+        document_type = _extract_quoted_assignment(content, 'type').lower()
+        return document_type in ALLOWED_DOCUMENT_TYPES
+
+    if module_name == 'platform_bucket':
+        if candidate.stem.startswith('default_'):
+            return False
+        table_name = _extract_quoted_assignment(content, 'table').lower()
+        return table_name in ALLOWED_PLATFORM_BUCKET_TABLES
+
+    return True
+
+
+def _sanitize_platform_exported_objects(workspace):
+    if workspace.scope != TerraformWorkspace.WorkspaceScope.PLATFORM:
+        return 0
+
+    modules_root = workspace.workspace_dir / 'modules'
+    if not modules_root.exists() or not modules_root.is_dir():
+        return 0
+
+    removed_count = 0
+    for module_name in ('document', 'platform_bucket'):
+        module_dir = modules_root / module_name
+        if not module_dir.exists() or not module_dir.is_dir():
+            continue
+        for candidate in module_dir.glob('*.tf'):
+            if candidate.name in SCAFFOLD_TF_FILE_NAMES:
+                continue
+            if _is_supported_platform_object(module_name, candidate):
+                continue
+            try:
+                candidate.unlink()
+                removed_count += 1
+            except Exception:
+                continue
+
+    return removed_count
 
 
 class TerraformRunner:
@@ -244,6 +308,35 @@ def _render_main_tf(workspace):
         *module_blocks,
         '# Dynatrace resources are attached in subsequent implementation steps.',
         '# Example target domains: alerting profiles, settings objects, platform settings.',
+    ])
+
+
+def _render_scoped_main_tf(workspace, module_name):
+    if workspace.scope == TerraformWorkspace.WorkspaceScope.ACCOUNT_MANAGEMENT:
+        return '\n'.join([
+            '# Scoped terraform module execution',
+            f'module "{module_name}" {{',
+            f'  source = "{_module_source_for_workspace(module_name)}"',
+            '}',
+        ])
+
+    environment = workspace.environment
+    environment_name = environment.name if environment else workspace.workspace_name
+    environment_type = environment.environment_type if environment else workspace.scope
+    return '\n'.join([
+        '# Scoped terraform module execution',
+        'locals {',
+        f'  environment_name = "{environment_name}"',
+        f'  environment_type = "{environment_type}"',
+        f'  workspace_scope = "{workspace.scope}"',
+        '}',
+        '',
+        f'module "{module_name}" {{',
+        f'  source = "{_module_source_for_workspace(module_name)}"',
+        f'  object_file = "${{path.root}}/objects/{module_name}.json"',
+        '  environment_name = local.environment_name',
+        '  environment_type = local.environment_type',
+        '}',
     ])
 
 
@@ -613,6 +706,10 @@ def run_legacy_export_script(workspace):
     reason = ''
     object_file_count = None
 
+    removed_unsupported_count = 0
+    if success:
+        removed_unsupported_count = _sanitize_platform_exported_objects(workspace)
+
     if (workspace.workspace_dir / 'modules').exists():
         object_files = [
             path
@@ -626,6 +723,8 @@ def run_legacy_export_script(workspace):
             _sync_reference_module(workspace, module_name)
         if success and object_file_count == 0:
             reason = 'Export completed with 0 object files. Check credentials, tenant scope, and resource availability.'
+    elif success and removed_unsupported_count > 0:
+        reason = f'Filtered {removed_unsupported_count} unsupported platform objects (provider schema mismatch).'
 
     progress_payload = {}
     if progress_file.exists():
@@ -802,6 +901,10 @@ class TerraformExecutionService:
 
         provider_export_result = {'ran': False, 'success': True}
 
+        if command == TerraformExecution.CommandType.INIT and run_provider_export:
+            # Init is treated as a fresh import baseline: remove existing object files first.
+            self._reset_workspace_modules_for_init(workspace)
+
         if run_provider_export and workspace.scope in (
             TerraformWorkspace.WorkspaceScope.ACCOUNT_MANAGEMENT,
             TerraformWorkspace.WorkspaceScope.ENVIRONMENT,
@@ -829,14 +932,24 @@ class TerraformExecutionService:
         workspace.save(update_fields=['status', 'last_command', 'last_run_at', 'updated_at'])
 
         if command in (TerraformExecution.CommandType.PLAN, TerraformExecution.CommandType.APPLY):
-            init_result = self.runner.init(workspace.workspace_dir)
+            if target_module:
+                init_result, result = self._run_module_scoped_command(workspace, command, target_module)
+            else:
+                init_result = self.runner.init(workspace.workspace_dir)
+                if init_result.returncode == 0:
+                    if command == TerraformExecution.CommandType.APPLY:
+                        result = self.runner.apply(workspace.workspace_dir, target_module=target_module)
+                    else:
+                        result = self.runner.plan(workspace.workspace_dir, target_module=target_module)
+                else:
+                    result = init_result
+
             self._create_execution_log(workspace, TerraformExecution.CommandType.INIT, init_result)
             if init_result.returncode != 0:
                 workspace.status = TerraformWorkspace.WorkspaceStatus.FAILED
                 workspace.save(update_fields=['status', 'updated_at'])
                 return init_result
-
-        if command == TerraformExecution.CommandType.INIT:
+        elif command == TerraformExecution.CommandType.INIT:
             result = self.runner.init(workspace.workspace_dir)
         elif command == TerraformExecution.CommandType.APPLY:
             result = self.runner.apply(workspace.workspace_dir, target_module=target_module)
@@ -879,6 +992,9 @@ class TerraformExecutionService:
         succeeded = result.returncode == 0
         self._create_execution_log(workspace, command, result)
 
+        if succeeded and command in (TerraformExecution.CommandType.INIT, TerraformExecution.CommandType.APPLY):
+            self._write_workspace_change_baseline(workspace)
+
         workspace.status = (
             TerraformWorkspace.WorkspaceStatus.READY
             if succeeded
@@ -886,3 +1002,75 @@ class TerraformExecutionService:
         )
         workspace.save(update_fields=['status', 'updated_at'])
         return result
+
+    def _run_module_scoped_command(self, workspace, command, target_module):
+        main_tf_path = workspace.workspace_dir / 'main.tf'
+        scoped_main_tf = _render_scoped_main_tf(workspace, target_module)
+        original_main_tf = ''
+
+        try:
+            if main_tf_path.exists():
+                original_main_tf = main_tf_path.read_text(encoding='utf-8')
+            main_tf_path.write_text(f'{scoped_main_tf}\n', encoding='utf-8')
+
+            init_result = self.runner.init(workspace.workspace_dir)
+            if init_result.returncode != 0:
+                return init_result, init_result
+
+            if command == TerraformExecution.CommandType.APPLY:
+                command_result = self.runner.apply(workspace.workspace_dir, target_module=target_module)
+            else:
+                command_result = self.runner.plan(workspace.workspace_dir, target_module=target_module)
+            return init_result, command_result
+        finally:
+            try:
+                if original_main_tf:
+                    main_tf_path.write_text(original_main_tf, encoding='utf-8')
+                else:
+                    ensure_workspace_files(workspace)
+            except Exception:
+                pass
+
+    def _reset_workspace_modules_for_init(self, workspace):
+        modules_root = workspace.workspace_dir / 'modules'
+        if not modules_root.exists() or not modules_root.is_dir():
+            return
+
+        for module_dir in modules_root.iterdir():
+            if not module_dir.is_dir():
+                continue
+            for candidate in module_dir.glob('*.tf'):
+                if candidate.name in SCAFFOLD_TF_FILE_NAMES:
+                    continue
+                try:
+                    candidate.unlink()
+                except Exception:
+                    continue
+
+    def _write_workspace_change_baseline(self, workspace):
+        baseline_path = workspace.workspace_dir / '.change-baseline.json'
+        modules_root = workspace.workspace_dir / 'modules'
+        payload = {
+            'workspace': workspace.workspace_name,
+            'captured_at': timezone.now().isoformat(),
+            'modules': {},
+        }
+
+        if modules_root.exists() and modules_root.is_dir():
+            for module_dir in sorted([item for item in modules_root.iterdir() if item.is_dir()], key=lambda item: item.name):
+                files = {}
+                for tf_file in sorted(module_dir.glob('*.tf'), key=lambda item: item.name):
+                    if tf_file.name in SCAFFOLD_TF_FILE_NAMES:
+                        continue
+                    try:
+                        file_bytes = tf_file.read_bytes()
+                    except Exception:
+                        continue
+                    files[tf_file.name] = hashlib.sha256(file_bytes).hexdigest()
+                payload['modules'][module_dir.name] = files
+
+        try:
+            baseline_path.write_text(json.dumps(payload, ensure_ascii=True, sort_keys=True), encoding='utf-8')
+            return True
+        except Exception:
+            return False

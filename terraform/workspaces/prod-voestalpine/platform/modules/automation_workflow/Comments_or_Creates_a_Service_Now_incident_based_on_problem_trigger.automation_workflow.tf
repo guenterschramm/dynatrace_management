@@ -57,46 +57,6 @@ resource "dynatrace_automation_workflow" "Comments_or_Creates_a_Service_Now_inci
   title                  = "Comments or Creates a Service Now incident based on problem trigger"
   tasks {
     task {
-      name        = "search_incident"
-      description = "Searches for an incident in ServiceNow"
-      action      = "dynatrace.servicenow:snow-search-incidents"
-      input       = jsonencode({
-              "connectionId": "vu9U3hXa3q0AAAABACNhcHA6ZHluYXRyYWNlLnNlcnZpY2Vub3c6Y29ubmVjdGlvbgAGdGVuYW50AAZ0ZW5hbnQAJDE5MGZkYjNjLTY4OTUtM2VmYS04MWI1LTY5M2QyNzFiYWQ2M77vVN4V2t6t",
-              "sysparmFields": "",
-              "sysparmLimit": "1",
-              "sysparmQuery": "correlation_id=DT_{{ event()[\"event.id\"] }}"
-        })
-    }
-    task {
-      name        = "comment_on_incident"
-      description = "Comments on the incident"
-      action      = "dynatrace.servicenow:snow-update-record"
-      input       = jsonencode({
-              "connectionId": "vu9U3hXa3q0AAAABACNhcHA6ZHluYXRyYWNlLnNlcnZpY2Vub3c6Y29ubmVjdGlvbgAGdGVuYW50AAZ0ZW5hbnQAJDE5MGZkYjNjLTY4OTUtM2VmYS04MWI1LTY5M2QyNzFiYWQ2M77vVN4V2t6t",
-              "fields": [
-                    {
-                          "id": "36c3e9ce-6029-44ac-be25-7ea9404e4f48",
-                          "key": "comments",
-                          "type": "journal_input",
-                          "value": "Comment on incident: {{ result(\"search_incident\")[0].sys_id }}"
-                    },
-                    {
-                          "id": "ab7ac4ac-30b5-44fb-aa61-e626151de236",
-                          "key": "number",
-                          "type": "string",
-                          "value": "{{ result(\"search_incident\")[0].number }}"
-                    }
-              ],
-              "sysId": "{{ result(\"search_incident\")[0].sys_id }}",
-              "tableName": "incident"
-        })
-      conditions {
-        states = {
-          search_incident = "OK"
-        }
-      }
-    }
-    task {
       name        = "create_new_incident"
       description = "Creates a new incident, only if comment failed"
       action      = "dynatrace.servicenow:snow-create-record"
@@ -162,10 +122,50 @@ resource "dynatrace_automation_workflow" "Comments_or_Creates_a_Service_Now_inci
               "tableName": "incident"
         })
       conditions {
+        else = "STOP"
         states = {
           comment_on_incident = "NOK"
         }
-        else = "STOP"
+      }
+    }
+    task {
+      name        = "search_incident"
+      description = "Searches for an incident in ServiceNow"
+      action      = "dynatrace.servicenow:snow-search-incidents"
+      input       = jsonencode({
+              "connectionId": "vu9U3hXa3q0AAAABACNhcHA6ZHluYXRyYWNlLnNlcnZpY2Vub3c6Y29ubmVjdGlvbgAGdGVuYW50AAZ0ZW5hbnQAJDE5MGZkYjNjLTY4OTUtM2VmYS04MWI1LTY5M2QyNzFiYWQ2M77vVN4V2t6t",
+              "sysparmFields": "",
+              "sysparmLimit": "1",
+              "sysparmQuery": "correlation_id=DT_{{ event()[\"event.id\"] }}"
+        })
+    }
+    task {
+      name        = "comment_on_incident"
+      description = "Comments on the incident"
+      action      = "dynatrace.servicenow:snow-update-record"
+      input       = jsonencode({
+              "connectionId": "vu9U3hXa3q0AAAABACNhcHA6ZHluYXRyYWNlLnNlcnZpY2Vub3c6Y29ubmVjdGlvbgAGdGVuYW50AAZ0ZW5hbnQAJDE5MGZkYjNjLTY4OTUtM2VmYS04MWI1LTY5M2QyNzFiYWQ2M77vVN4V2t6t",
+              "fields": [
+                    {
+                          "id": "36c3e9ce-6029-44ac-be25-7ea9404e4f48",
+                          "key": "comments",
+                          "type": "journal_input",
+                          "value": "Comment on incident: {{ result(\"search_incident\")[0].sys_id }}"
+                    },
+                    {
+                          "id": "ab7ac4ac-30b5-44fb-aa61-e626151de236",
+                          "key": "number",
+                          "type": "string",
+                          "value": "{{ result(\"search_incident\")[0].number }}"
+                    }
+              ],
+              "sysId": "{{ result(\"search_incident\")[0].sys_id }}",
+              "tableName": "incident"
+        })
+      conditions {
+        states = {
+          search_incident = "OK"
+        }
       }
     }
   }

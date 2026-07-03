@@ -76,11 +76,11 @@
 											{% csrf_token %}
 											<button class="btn btn-sm btn-outline-dark" type="submit">Init</button>
 										</form>
-										<form action="{% url 'terraform_engine:plan' work.pk %}?next=platform" method="post">
-											{% csrf_token %}
-											<button class="btn btn-sm btn-outline-dark" type="submit" data-workspace-plan-button="true" data-workspace-id="{{ work.pk }}" disabled>Plan</button>
-										</form>
-										<form action="{% url 'terraform_engine:sync' work.pk %}?next=platform" method="post">
+									<form action="{% url 'terraform_engine:plan' work.pk %}?next=platform" method="post" data-workspace-action="plan" data-workspace-id="{{ work.pk }}">
+										{% csrf_token %}
+										<button class="btn btn-sm btn-outline-dark" type="submit" data-workspace-plan-button="true" data-workspace-id="{{ work.pk }}" disabled>Plan</button>
+									</form>
+									<form action="{% url 'terraform_engine:sync' work.pk %}?next=platform" method="post" data-workspace-action="apply" data-workspace-id="{{ work.pk }}">
 											{% csrf_token %}
 											<button class="btn btn-sm btn-outline-dark" type="submit" data-workspace-apply-button="true" data-workspace-id="{{ work.pk }}" disabled>Apply</button>
 										</form>
@@ -94,7 +94,7 @@
 											<button type="button" class="btn btn-link p-0 text-start text-decoration-none" data-open-module="true" data-workspace-id="{{ work.pk }}" data-module-name="{{ module.name }}">
 												<span class="fw-semibold">{{ module.name }}</span>
 												<span class="badge text-bg-warning ms-2{% if not module.modified_count %} d-none{% endif %}" data-module-modified-badge="true">{{ module.modified_count|default:0 }} geaendert</span>
-												<span class="badge text-bg-success ms-2">{{ module.loaded_count }} objekte</span>
+										<span class="badge text-bg-success ms-2" data-module-count-badge="true">{{ module.loaded_count }} objekte</span>
 											</button>
 											<div class="d-inline-flex gap-2">
 												<form action="{% url 'terraform_engine:init' work.pk %}?next=platform" method="post" data-init-progress="true" data-scope="{{ work.scope }}" data-workspace="{{ work.workspace_name }}" data-export-total="{{ work.expected_export_total }}" data-progress-url="{% url 'terraform_engine:progress' work.pk %}">
@@ -190,6 +190,25 @@
 			</div>
 			<div class="modal-footer">
 				<button type="button" class="btn btn-dark" data-bs-dismiss="modal">Close</button>
+			</div>
+		</div>
+	</div>
+</div>
+
+<div class="modal fade" id="planResultModal" tabindex="-1" aria-labelledby="planResultModalLabel" aria-hidden="true">
+	<div class="modal-dialog modal-dialog-centered modal-lg">
+		<div class="modal-content border-0 shadow">
+			<div class="modal-header">
+				<h5 class="modal-title" id="planResultModalLabel">Terraform Plan</h5>
+				<button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+			</div>
+			<div class="modal-body">
+				<div id="planResultStatus" class="mb-2">Plan laeuft...</div>
+				<pre id="planResultOutput" class="small bg-light border rounded p-2 mb-0" style="max-height: 40vh; overflow: auto; white-space: pre-wrap;"></pre>
+			</div>
+			<div class="modal-footer">
+				<button type="button" class="btn btn-outline-dark" data-bs-dismiss="modal">Schliessen</button>
+				<button type="button" class="btn btn-dark" id="planResultApplyButton" style="display: none;">Apply jetzt ausfuehren</button>
 			</div>
 		</div>
 	</div>
@@ -346,6 +365,140 @@
 		var isEditing = false;
 		var isNewObjectDraft = false;
 		var createdFiles = {};
+		var deletedFiles = {};
+		var plannedWorkspaces = {};
+		var currentPlanApplyForm = null;
+
+		var planResultModalElement = document.getElementById('planResultModal');
+		var planResultModal = planResultModalElement ? new bootstrap.Modal(planResultModalElement) : null;
+		var planResultStatus = document.getElementById('planResultStatus');
+		var planResultOutput = document.getElementById('planResultOutput');
+		var planResultApplyButton = document.getElementById('planResultApplyButton');
+
+		function buildChangeKey(workspaceId, moduleName, fileName) {
+			return String(workspaceId || '') + '::' + String(moduleName || '') + '::' + String(fileName || '');
+		}
+
+		function countLocalChangesForWorkspace(workspaceId) {
+			var prefix = String(workspaceId || '') + '::';
+			var created = Object.keys(createdFiles).filter(function (key) {
+				return key.indexOf(prefix) === 0;
+			}).length;
+			var deleted = Object.keys(deletedFiles).filter(function (key) {
+				return key.indexOf(prefix) === 0;
+			}).length;
+			return {
+				created: created,
+				deleted: deleted,
+				total: created + deleted,
+			};
+		}
+
+		function countLocalChangesForModule(workspaceId, moduleName) {
+			var prefix = String(workspaceId || '') + '::' + String(moduleName || '') + '::';
+			var created = Object.keys(createdFiles).filter(function (key) {
+				return key.indexOf(prefix) === 0;
+			}).length;
+			var deleted = Object.keys(deletedFiles).filter(function (key) {
+				return key.indexOf(prefix) === 0;
+			}).length;
+			return {
+				created: created,
+				deleted: deleted,
+				total: created + deleted,
+			};
+		}
+
+		function updateModuleActionButtons(workspaceId, moduleName, hasChanges, hasLocalChanges) {
+			var ws = summaryData[String(workspaceId)] || {};
+			var planApproved = plannedWorkspaces[String(workspaceId)] === true || (ws.last_plan_succeeded === true && !hasLocalChanges);
+			var planFormSelector = 'form[data-module-action="plan"][data-workspace-id="' + workspaceId + '"][data-module-name="' + moduleName + '"]';
+			var applyFormSelector = 'form[data-module-action="apply"][data-workspace-id="' + workspaceId + '"][data-module-name="' + moduleName + '"]';
+
+			document.querySelectorAll(planFormSelector + ' [data-module-plan-button]').forEach(function (button) {
+				button.disabled = !hasChanges;
+			});
+			document.querySelectorAll(applyFormSelector + ' [data-module-apply-button]').forEach(function (button) {
+				button.disabled = !(hasChanges && planApproved);
+			});
+		}
+
+		function updateModuleRowState(workspaceId, moduleName) {
+			var ws = summaryData[String(workspaceId)] || {};
+			var modules = ws.modules || [];
+			var module = modules.find(function (item) {
+				return item && item.name === moduleName;
+			}) || {};
+			var serverModifiedCount = module.modified_count || 0;
+			var local = countLocalChangesForModule(workspaceId, moduleName);
+			var modifiedCount = serverModifiedCount + local.total;
+
+			document.querySelectorAll('[data-module-row][data-workspace-id="' + workspaceId + '"][data-module-name="' + moduleName + '"] [data-module-modified-badge]').forEach(function (badge) {
+				if (modifiedCount > 0) {
+					badge.textContent = modifiedCount + ' geaendert';
+					badge.classList.remove('d-none');
+				} else {
+					badge.classList.add('d-none');
+				}
+			});
+
+			updateModuleActionButtons(workspaceId, moduleName, modifiedCount > 0, local.total > 0);
+		}
+
+		function showPlanResultModal(message, outputText, canApply, applyForm) {
+			if (!planResultModal) {
+				return;
+			}
+			if (planResultStatus) {
+				planResultStatus.textContent = message || '';
+			}
+			if (planResultOutput) {
+				planResultOutput.textContent = outputText || '';
+			}
+			currentPlanApplyForm = canApply ? applyForm : null;
+			if (planResultApplyButton) {
+				planResultApplyButton.style.display = canApply ? '' : 'none';
+			}
+			planResultModal.show();
+		}
+
+		function updateWorkspacePlanApplyButtons() {
+			if (!currentWorkspaceId) {
+				return;
+			}
+			var workspaceKey = String(currentWorkspaceId);
+			var ws = summaryData[workspaceKey] || {};
+			var serverChanges = (ws.total_modified_count || 0) > 0;
+			var localChanges = countLocalChangesForWorkspace(currentWorkspaceId);
+			var hasChanges = serverChanges || localChanges.total > 0;
+			var planApproved = plannedWorkspaces[workspaceKey] === true || (ws.last_plan_succeeded === true && localChanges.total === 0);
+
+			var planBtn = document.querySelector('[data-workspace-plan-button][data-workspace-id="' + currentWorkspaceId + '"]');
+			if (planBtn) {
+				planBtn.disabled = !hasChanges;
+			}
+			var applyBtn = document.querySelector('[data-workspace-apply-button][data-workspace-id="' + currentWorkspaceId + '"]');
+			if (applyBtn) {
+				applyBtn.disabled = !(hasChanges && planApproved);
+			}
+
+			(ws.modules || []).forEach(function (module) {
+				if (!module || !module.name) {
+					return;
+				}
+				updateModuleRowState(currentWorkspaceId, module.name);
+			});
+		}
+
+		Object.keys(summaryData).forEach(function (wsId) {
+			var ws = summaryData[wsId] || {};
+			(ws.modules || []).forEach(function (module) {
+				if (!module || !module.name) {
+					return;
+				}
+				updateModuleRowState(wsId, module.name);
+			});
+		});
 
 		function getCookie(name) {
 			var cookieValue = null;
@@ -547,8 +700,11 @@
 					savedObject.created = result.payload.created || false;
 					
 					if (savedObject.created) {
-						createdFiles[savedObject.file_name] = true;
+						var createdKey = buildChangeKey(currentWorkspaceId, currentModule.name || '', savedObject.file_name);
+						createdFiles[createdKey] = true;
+						delete deletedFiles[createdKey];
 					}
+					plannedWorkspaces[String(currentWorkspaceId)] = false;
 
 					var existingIndex = (currentModule.objects || []).findIndex(function (item) {
 						return item.file_name === savedObject.file_name;
@@ -565,16 +721,9 @@
 					currentModule.loaded_count = currentModule.objects.length;
 					moduleCount.textContent = String(currentModule.loaded_count);
 					
-					var modifiedCount = (currentModule.objects || []).filter(function (obj) { return obj.created; }).length;
-					document.querySelectorAll('[data-module-row][data-workspace-id="' + currentWorkspaceId + '"][data-module-name="' + (currentModule.name || '') + '"] [data-module-modified-badge]').forEach(function (badge) {
-						if (modifiedCount > 0) {
-							badge.textContent = modifiedCount + ' geaendert';
-							badge.classList.remove('d-none');
-						} else {
-							badge.classList.add('d-none');
-						}
-					});
+					updateModuleRowState(currentWorkspaceId, currentModule.name || '');
 					
+					updateWorkspacePlanApplyButtons();
 					renderObjectList(currentModule, savedObject.file_name);
 				})
 				.catch(function (error) {
@@ -625,12 +774,13 @@
 							return;
 						}
 						module.save_url = payload.save_url || module.save_url || '';
-					module.objects = (payload.objects || []).map(function (obj) {
-						if (createdFiles[obj.file_name]) {
-							obj.created = true;
-						}
-						return obj;
-					});
+						module.objects = (payload.objects || []).map(function (obj) {
+							var objectKey = buildChangeKey(workspaceId, module.name || '', obj.file_name || '');
+							if (createdFiles[objectKey]) {
+								obj.created = true;
+							}
+							return obj;
+						});
 						module.loaded_count = payload.loaded_count || module.loaded_count || 0;
 						openModule(workspaceId, selectedModuleName);
 					})
@@ -756,20 +906,20 @@
 						currentModule.objects = (currentModule.objects || []).filter(function (item) {
 							return item.file_name !== fileName;
 						});
-						delete createdFiles[fileName];
+						var deletedKey = buildChangeKey(currentWorkspaceId, currentModule.name || '', fileName);
+						delete createdFiles[deletedKey];
+						deletedFiles[deletedKey] = true;
+						plannedWorkspaces[String(currentWorkspaceId)] = false;
 						currentModule.loaded_count = currentModule.objects.length;
 						moduleCount.textContent = String(currentModule.loaded_count);
 
-						var modifiedCount = (currentModule.objects || []).filter(function (obj) { return obj.created; }).length;
-						document.querySelectorAll('[data-module-row][data-workspace-id="' + currentWorkspaceId + '"][data-module-name="' + (currentModule.name || '') + '"] [data-module-modified-badge]').forEach(function (badge) {
-							if (modifiedCount > 0) {
-								badge.textContent = modifiedCount + ' geaendert';
-								badge.classList.remove('d-none');
-							} else {
-								badge.classList.add('d-none');
-							}
+						document.querySelectorAll('[data-module-row][data-workspace-id="' + currentWorkspaceId + '"][data-module-name="' + (currentModule.name || '') + '"] [data-module-count-badge]').forEach(function (badge) {
+							badge.textContent = currentModule.loaded_count + ' objekte';
 						});
 
+						updateModuleRowState(currentWorkspaceId, currentModule.name || '');
+
+						updateWorkspacePlanApplyButtons();
 						renderObjectList(currentModule, '');
 					})
 					.catch(function (error) {
@@ -782,6 +932,68 @@
 	document.querySelectorAll('[data-open-module="true"]').forEach(function (button) {
 		button.addEventListener('click', function () {
 			openModule(button.dataset.workspaceId, button.dataset.moduleName || '');
+		});
+	});
+
+	if (planResultApplyButton) {
+		planResultApplyButton.addEventListener('click', function () {
+			if (!currentPlanApplyForm) {
+				return;
+			}
+			planResultModal.hide();
+			currentPlanApplyForm.submit();
+		});
+	}
+
+	document.querySelectorAll('form[data-module-action="plan"], form[data-workspace-action="plan"]').forEach(function (formElement) {
+		formElement.addEventListener('submit', function (event) {
+			event.preventDefault();
+
+			var workspaceId = String(formElement.dataset.workspaceId || '');
+			var moduleName = formElement.dataset.moduleName || '';
+			var applyFormSelector = moduleName
+				? 'form[data-module-action="apply"][data-workspace-id="' + workspaceId + '"][data-module-name="' + moduleName + '"]'
+				: 'form[data-workspace-action="apply"][data-workspace-id="' + workspaceId + '"]';
+			var applyForm = document.querySelector(applyFormSelector);
+
+			showPlanResultModal('Terraform Plan laeuft...', '', false, null);
+
+			fetch(formElement.action, {
+				method: 'POST',
+				body: new FormData(formElement),
+				headers: {
+					'X-Requested-With': 'XMLHttpRequest'
+				}
+			})
+				.then(function (response) {
+					return response.json().then(function (payload) {
+						return {
+							ok: response.ok,
+							payload: payload || {}
+						};
+					});
+				})
+				.then(function (result) {
+					if (!result.ok) {
+						throw new Error(result.payload.error || result.payload.message || 'Terraform Plan fehlgeschlagen.');
+					}
+					if (workspaceId) {
+						plannedWorkspaces[workspaceId] = result.payload.ok === true;
+					}
+					currentWorkspaceId = workspaceId;
+					updateWorkspacePlanApplyButtons();
+
+					var output = ((result.payload.stdout || '') + '\n' + (result.payload.stderr || '')).trim();
+					showPlanResultModal(
+						result.payload.message || (result.payload.ok ? 'Terraform Plan erfolgreich.' : 'Terraform Plan fehlgeschlagen.'),
+						output,
+						result.payload.ok === true,
+						applyForm
+					);
+				})
+				.catch(function (error) {
+					showPlanResultModal(error.message || 'Terraform Plan fehlgeschlagen.', '', false, null);
+				});
 		});
 	});
 

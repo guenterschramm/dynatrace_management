@@ -1,10 +1,10 @@
 resource "dynatrace_hub_extension_v2_config" "com_dynatrace_extension_memcached_2" {
   name  = "com.dynatrace.extension.memcached"
-  scope = "HOST-E35D35EA4ACC0205"
+  scope = "HOST-48D8D0E1FD5ADEE0"
   value = jsonencode({
       "activationContext": "LOCAL",
       "activationTags": [],
-      "description": "xECM Steel - Memcached (Backend 3)",
+      "description": "xECM Steel - Memcached (Backend 1)",
       "enabled": true,
       "featureSets": [
         "Connections",

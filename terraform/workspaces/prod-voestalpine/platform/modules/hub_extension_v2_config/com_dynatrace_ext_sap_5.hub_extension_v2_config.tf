@@ -3,7 +3,7 @@ resource "dynatrace_hub_extension_v2_config" "com_dynatrace_ext_sap_5" {
   scope = "ag_group-default"
   value = jsonencode({
       "activationContext": "REMOTE",
-      "description": "SAP_ERP_VPG",
+      "description": "SAP_ERP_VQG",
       "enabled": false,
       "featureSets": [
         "Job Metrics",
@@ -22,12 +22,12 @@ resource "dynatrace_hub_extension_v2_config" "com_dynatrace_ext_sap_5" {
         "connect_via": "app_server",
         "debug": false,
         "instance": "66",
-        "password": "***3b985bdcc32e1c95***",
+        "password": "***c5dc6d35e5c10214***",
         "pollAll": false,
         "pollLess": false,
         "rfc": "Per function call",
         "rum": true,
-        "server": "vadsvpg.voestalpine.root.local",
+        "server": "vadsvqg.voestalpine.root.local",
         "tasks": [],
         "timeoutMin": 25,
         "useHostName": true,

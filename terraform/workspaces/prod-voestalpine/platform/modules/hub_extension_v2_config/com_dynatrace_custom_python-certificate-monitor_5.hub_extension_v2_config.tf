@@ -1,10 +1,10 @@
 resource "dynatrace_hub_extension_v2_config" "com_dynatrace_custom_python-certificate-monitor_5" {
   name  = "com.dynatrace.custom.python-certificate-monitor"
-  scope = "HOST_GROUP-0A0A9B6358002D55"
+  scope = "HOST_GROUP-43F6C4407DC19AD5"
   value = jsonencode({
       "activationContext": "LOCAL",
       "activationTags": [],
-      "description": "Webhosting SSL Certificate",
+      "description": "PCD_PW_Portal SSL Certificate",
       "enabled": true,
       "featureSets": [
         "enhanced_metric"

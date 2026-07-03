@@ -1,10 +1,10 @@
 resource "dynatrace_hub_extension_v2_config" "com_dynatrace_custom_python-certificate-monitor_3" {
   name  = "com.dynatrace.custom.python-certificate-monitor"
-  scope = "HOST_GROUP-C345CA5D0D760424"
+  scope = "HOST_GROUP-76B585663184C4C0"
   value = jsonencode({
       "activationContext": "LOCAL",
       "activationTags": [],
-      "description": "xECM Steel SSL Certificate",
+      "description": "PAM SSL Certificate",
       "enabled": true,
       "featureSets": [
         "enhanced_metric"

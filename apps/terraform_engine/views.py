@@ -1,7 +1,7 @@
 from datetime import datetime, timezone as dt_timezone
+import hashlib
 import json
 import re
-import subprocess
 
 from django.conf import settings
 from django.contrib import messages
@@ -14,7 +14,7 @@ from django.views import View
 from django.views.generic import TemplateView
 
 from .models import TerraformExecution, TerraformWorkspace
-from .services import TerraformExecutionService, sync_terraform_workspaces
+from .services import TerraformExecutionService
 
 
 INIT_SUMMARY_CACHE_TIMEOUT_SECONDS = 60
@@ -26,12 +26,22 @@ HIDDEN_ENVIRONMENT_MODULES = {
 	'openpipeline_v2_metrics_pipelines',
 }
 
+ALLOWED_DOCUMENT_TYPES = {'dashboard', 'notebook', 'launchpad'}
+ALLOWED_PLATFORM_BUCKET_TABLES = {'logs', 'spans', 'events', 'bizevents'}
+
 
 def _is_hidden_environment_module(workspace, module_name):
 	return (
 		workspace.scope == TerraformWorkspace.WorkspaceScope.ENVIRONMENT
 		and module_name in HIDDEN_ENVIRONMENT_MODULES
 	)
+
+
+def _extract_quoted_assignment(content, field_name):
+	match = re.search(rf'\b{re.escape(field_name)}\s*=\s*"([^"]+)"', content, re.IGNORECASE)
+	if not match:
+		return ''
+	return (match.group(1) or '').strip()
 
 
 def _resolve_next_view_name(request, default='terraform_engine:overview'):
@@ -164,7 +174,47 @@ def _workspace_content_stamp(workspace):
 		if script_mtime > latest_mtime:
 			latest_mtime = script_mtime
 
+	baseline_path = workspace.workspace_dir / '.change-baseline.json'
+	if baseline_path.exists():
+		file_count += 1
+		try:
+			baseline_mtime = baseline_path.stat().st_mtime_ns
+		except OSError:
+			baseline_mtime = 0
+		if baseline_mtime > latest_mtime:
+			latest_mtime = baseline_mtime
+
 	return f'{file_count}:{latest_mtime}'
+
+
+def _read_workspace_change_baseline(workspace):
+	baseline_path = workspace.workspace_dir / '.change-baseline.json'
+	if not baseline_path.exists():
+		return {}
+	try:
+		payload = json.loads(baseline_path.read_text(encoding='utf-8-sig'))
+	except Exception:
+		return {}
+	modules = payload.get('modules')
+	if not isinstance(modules, dict):
+		return {}
+	cleaned = {}
+	for module_name, files in modules.items():
+		if not isinstance(module_name, str) or not isinstance(files, dict):
+			continue
+		cleaned[module_name] = {
+			file_name: file_hash
+			for file_name, file_hash in files.items()
+			if isinstance(file_name, str) and isinstance(file_hash, str)
+		}
+	return cleaned
+
+
+def _hash_file(path):
+	try:
+		return hashlib.sha256(path.read_bytes()).hexdigest()
+	except Exception:
+		return None
 
 
 def _read_module_objects(workspace, module_name):
@@ -203,35 +253,26 @@ def _read_module_objects(workspace, module_name):
 	return objects
 
 
-def _get_module_changed_tf_files(workspace, module_name):
+def _get_module_changed_tf_files(workspace, module_name, changed_since=None):
 	module_dir = workspace.workspace_dir / 'modules' / module_name
 	if not module_dir.exists() or not module_dir.is_dir():
 		return set()
 
-	try:
-		result = subprocess.run(
-			['git', '-C', str(settings.BASE_DIR), 'status', '--porcelain', '--', str(module_dir)],
-			capture_output=True,
-			text=True,
-			check=False,
-			timeout=5,
-		)
-	except Exception:
-		return set()
+	baseline_modules = _read_workspace_change_baseline(workspace)
+	baseline_files = baseline_modules.get(module_name, {})
 
-	if result.returncode != 0:
-		return set()
+	current_files = {}
+	for candidate in module_dir.glob('*.tf'):
+		if candidate.name in {'main.tf', 'variables.tf', 'outputs.tf', '___providers___.tf', '___variables___.tf'}:
+			continue
+		hash_value = _hash_file(candidate)
+		if hash_value is None:
+			continue
+		current_files[candidate.name] = hash_value
 
 	changed = set()
-	for raw_line in (result.stdout or '').splitlines():
-		line = raw_line.strip()
-		if not line or len(line) < 4:
-			continue
-		path_part = line[3:]
-		if ' -> ' in path_part:
-			path_part = path_part.split(' -> ', 1)[1]
-		file_name = path_part.replace('\\', '/').split('/')[-1]
-		if file_name.endswith('.tf'):
+	for file_name in set(current_files.keys()) | set(baseline_files.keys()):
+		if current_files.get(file_name) != baseline_files.get(file_name):
 			changed.add(file_name)
 
 	return changed
@@ -250,7 +291,14 @@ def _is_editable_platform_module_object(workspace, module_name, candidate):
 		return True
 
 	if module_name == 'platform_bucket':
-		return not candidate.stem.startswith('default_')
+		if candidate.stem.startswith('default_'):
+			return False
+		try:
+			content = candidate.read_text(encoding='utf-8', errors='replace')
+		except Exception:
+			return False
+		table_name = _extract_quoted_assignment(content, 'table').lower()
+		return table_name in ALLOWED_PLATFORM_BUCKET_TABLES
 
 	if module_name != 'document':
 		return True
@@ -261,7 +309,10 @@ def _is_editable_platform_module_object(workspace, module_name, candidate):
 		return False
 
 	content_lower = content.lower()
-	return '"importedwithcode": false' in content_lower and 'custom_id' not in content_lower
+	if '"importedwithcode": false' not in content_lower or 'custom_id' in content_lower:
+		return False
+	document_type = _extract_quoted_assignment(content, 'type').lower()
+	return document_type in ALLOWED_DOCUMENT_TYPES
 
 
 def _build_init_summary(workspace, include_object_content=False):
@@ -336,7 +387,16 @@ def _build_init_summary(workspace, include_object_content=False):
 				for path in tf_files
 				if path.name not in scaffold_names and _is_editable_platform_module_object(workspace, module_dir.name, path)
 			]
-			modified_count = sum(1 for file_name in exported_files if file_name in changed_files)
+			# Count modified files from git status, including deletions of exported objects.
+			changed_relevant_files = set()
+			for file_name in changed_files:
+				if file_name in scaffold_names:
+					continue
+				candidate = module_dir / file_name
+				if candidate.exists() and not _is_editable_platform_module_object(workspace, module_dir.name, candidate):
+					continue
+				changed_relevant_files.add(file_name)
+			modified_count = len(changed_relevant_files)
 			objects = []
 			if include_object_content and exported_files:
 				objects = _read_module_objects(workspace, module_dir.name)
@@ -724,19 +784,22 @@ class TerraformSyncView(View):
 				)
 			return redirect(redirect_target)
 
-		results = sync_terraform_workspaces(
-			selected_workspace_ids=[workspace.id],
-			run_reference_export=True,
+		result = TerraformExecutionService().execute(
+			workspace,
+			TerraformExecution.CommandType.APPLY,
+			run_provider_export=False,
 		)
-		result = results.get(workspace.workspace_name, {})
-		if result.get('ran') and result.get('success'):
-			messages.success(request, f'Workspace {workspace.workspace_name} wurde synchronisiert und exportiert.')
-		elif result.get('ran') and not result.get('success'):
-			reason = (result.get('stderr') or result.get('stdout') or '').strip()
-			messages.error(request, f'Workspace {workspace.workspace_name} synchronisiert, Export fehlgeschlagen: {reason[:300]}')
+		if result.returncode == 0:
+			messages.success(request, f'Terraform apply fuer {workspace.workspace_name} erfolgreich.')
 		else:
-			reason = result.get('reason', 'Unbekannter Grund')
-			messages.warning(request, f'Workspace {workspace.workspace_name} synchronisiert ohne Export: {reason}')
+			messages.error(request, f'Terraform apply fuer {workspace.workspace_name} fehlgeschlagen.')
+		if is_ajax:
+			return JsonResponse(
+				{
+					'ok': result.returncode == 0,
+					'redirect_url': reverse(redirect_target),
+				}
+			)
 		return redirect(redirect_target)
 
 
@@ -766,14 +829,23 @@ class TerraformCommandView(View):
 			request.session['terraform_init_summary_overlay'] = _serialize_init_summary(_build_init_summary(workspace))
 		target_suffix = f' (Modul {module_name})' if module_name else ''
 		if result.returncode == 0:
-			messages.success(request, f'Terraform {self.command}{target_suffix} fuer {workspace.workspace_name} erfolgreich.')
+			status_message = f'Terraform {self.command}{target_suffix} fuer {workspace.workspace_name} erfolgreich.'
+			messages.success(request, status_message)
 		else:
-			messages.error(request, f'Terraform {self.command}{target_suffix} fuer {workspace.workspace_name} fehlgeschlagen.')
+			status_message = f'Terraform {self.command}{target_suffix} fuer {workspace.workspace_name} fehlgeschlagen.'
+			messages.error(request, status_message)
 		if is_ajax:
 			return JsonResponse(
 				{
 					'ok': result.returncode == 0,
 					'redirect_url': reverse(redirect_target),
+					'command': self.command,
+					'workspace_name': workspace.workspace_name,
+					'module_name': module_name,
+					'message': status_message,
+					'exit_code': result.returncode,
+					'stdout': result.stdout or '',
+					'stderr': result.stderr or '',
 				}
 			)
 		return redirect(redirect_target)
