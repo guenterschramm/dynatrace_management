@@ -1,5 +1,6 @@
 from datetime import datetime, timezone as dt_timezone
 
+from django.urls import reverse
 from django.utils import timezone
 from django.views.generic import TemplateView
 
@@ -122,6 +123,8 @@ class TerraformAccountContextMixin:
 				{
 					'name': module_dir.name,
 					'loaded_count': len(exported_files),
+					'details_url': reverse('terraform_engine:module_details', args=[workspace.pk, module_dir.name]),
+					'save_url': reverse('terraform_engine:module_object_update', args=[workspace.pk, module_dir.name]),
 					'objects': objects,
 				}
 			)

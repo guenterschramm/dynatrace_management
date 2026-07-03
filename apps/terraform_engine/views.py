@@ -18,6 +18,20 @@ from .services import TerraformExecutionService, sync_terraform_workspaces
 
 INIT_SUMMARY_CACHE_TIMEOUT_SECONDS = 60
 
+HIDDEN_ENVIRONMENT_MODULES = {
+	'openpipeline_v2_logs_ingestsources',
+	'openpipeline_v2_logs_pipelines',
+	'openpipeline_v2_metrics_ingestsources',
+	'openpipeline_v2_metrics_pipelines',
+}
+
+
+def _is_hidden_environment_module(workspace, module_name):
+	return (
+		workspace.scope == TerraformWorkspace.WorkspaceScope.ENVIRONMENT
+		and module_name in HIDDEN_ENVIRONMENT_MODULES
+	)
+
 
 def _resolve_next_view_name(request, default='terraform_engine:overview'):
 	next_key = (request.GET.get('next') or request.POST.get('next') or '').strip().lower()
@@ -153,6 +167,9 @@ def _workspace_content_stamp(workspace):
 
 
 def _read_module_objects(workspace, module_name):
+	if _is_hidden_environment_module(workspace, module_name):
+		return []
+
 	modules_root = workspace.workspace_dir / 'modules'
 	module_dir = modules_root / module_name
 	if not module_dir.exists() or not module_dir.is_dir():
@@ -160,7 +177,11 @@ def _read_module_objects(workspace, module_name):
 
 	scaffold_names = {'main.tf', 'variables.tf', 'outputs.tf', '___providers___.tf', '___variables___.tf'}
 	tf_files = sorted(path for path in module_dir.glob('*.tf'))
-	exported_files = [path.name for path in tf_files if path.name not in scaffold_names]
+	exported_files = [
+		path.name
+		for path in tf_files
+		if path.name not in scaffold_names and _is_editable_platform_module_object(workspace, module_name, path)
+	]
 	objects = []
 	for exported_file in exported_files:
 		candidate = module_dir / exported_file
@@ -177,6 +198,33 @@ def _read_module_objects(workspace, module_name):
 			}
 		)
 	return objects
+
+
+def _is_editable_platform_module_object(workspace, module_name, candidate):
+	if workspace.scope == TerraformWorkspace.WorkspaceScope.ENVIRONMENT:
+		if module_name in ('log_storage', 'log_processing'):
+			return not candidate.stem.lower().startswith('_built-in')
+		if module_name == 'log_sensitive_data_masking':
+			stem = candidate.stem.lower()
+			return not (stem.startswith('_built-in') or stem.startswith('_outdated-built-in'))
+		return True
+
+	if workspace.scope != TerraformWorkspace.WorkspaceScope.PLATFORM:
+		return True
+
+	if module_name == 'platform_bucket':
+		return not candidate.stem.startswith('default_')
+
+	if module_name != 'document':
+		return True
+
+	try:
+		content = candidate.read_text(encoding='utf-8', errors='replace')
+	except Exception:
+		return False
+
+	content_lower = content.lower()
+	return '"importedwithcode": false' in content_lower and 'custom_id' not in content_lower
 
 
 def _build_init_summary(workspace, include_object_content=False):
@@ -237,8 +285,14 @@ def _build_init_summary(workspace, include_object_content=False):
 		summary['module_count'] = len(module_dirs)
 		summary['present_module_count'] = summary['module_count']
 		for module_dir in module_dirs:
+			if _is_hidden_environment_module(workspace, module_dir.name):
+				continue
 			tf_files = sorted(path for path in module_dir.glob('*.tf'))
-			exported_files = [path.name for path in tf_files if path.name not in scaffold_names]
+			exported_files = [
+				path.name
+				for path in tf_files
+				if path.name not in scaffold_names and _is_editable_platform_module_object(workspace, module_dir.name, path)
+			]
 			objects = []
 			if include_object_content and exported_files:
 				objects = _read_module_objects(workspace, module_dir.name)
@@ -344,6 +398,7 @@ def _append_module_detail_urls(summary):
 		if not module_name:
 			continue
 		module['details_url'] = reverse('terraform_engine:module_details', args=[workspace_id, module_name])
+		module['save_url'] = reverse('terraform_engine:module_object_update', args=[workspace_id, module_name])
 	return summary
 
 
@@ -592,8 +647,16 @@ class TerraformSyncView(View):
 		workspace = get_object_or_404(TerraformWorkspace, pk=pk)
 		redirect_target = _resolve_next_view_name(request)
 		module_name = (request.POST.get('module_name') or '').strip()
+		is_ajax = request.headers.get('x-requested-with') == 'XMLHttpRequest'
 
 		if module_name:
+			if _is_hidden_environment_module(workspace, module_name):
+				message = f'Modul {module_name} ist systemverwaltet und darf nicht veraendert werden.'
+				messages.warning(request, message)
+				if is_ajax:
+					return JsonResponse({'ok': False, 'redirect_url': reverse(redirect_target), 'error': message}, status=400)
+				return redirect(redirect_target)
+
 			result = TerraformExecutionService().execute(
 				workspace,
 				TerraformExecution.CommandType.APPLY,
@@ -604,6 +667,13 @@ class TerraformSyncView(View):
 				messages.success(request, f'Terraform apply fuer Modul {module_name} in {workspace.workspace_name} erfolgreich.')
 			else:
 				messages.error(request, f'Terraform apply fuer Modul {module_name} in {workspace.workspace_name} fehlgeschlagen.')
+			if is_ajax:
+				return JsonResponse(
+					{
+						'ok': result.returncode == 0,
+						'redirect_url': reverse(redirect_target),
+					}
+				)
 			return redirect(redirect_target)
 
 		results = sync_terraform_workspaces(
@@ -630,6 +700,13 @@ class TerraformCommandView(View):
 		is_ajax = request.headers.get('x-requested-with') == 'XMLHttpRequest'
 		redirect_target = _resolve_next_view_name(request)
 		module_name = (request.POST.get('module_name') or '').strip()
+		if module_name and _is_hidden_environment_module(workspace, module_name):
+			message = f'Modul {module_name} ist systemverwaltet und darf nicht veraendert werden.'
+			messages.warning(request, message)
+			if is_ajax:
+				return JsonResponse({'ok': False, 'redirect_url': reverse(redirect_target), 'error': message}, status=400)
+			return redirect(redirect_target)
+
 		request.session.pop('terraform_init_summary_overlay', None)
 		result = TerraformExecutionService().execute(
 			workspace,
@@ -663,6 +740,8 @@ class TerraformProgressView(View):
 class TerraformModuleDetailsView(View):
 	def get(self, request, pk, module_name, *args, **kwargs):
 		workspace = get_object_or_404(TerraformWorkspace, pk=pk)
+		if _is_hidden_environment_module(workspace, module_name):
+			return JsonResponse({'error': 'Module ist ausgeblendet.'}, status=404)
 		objects = _read_module_objects(workspace, module_name)
 		return JsonResponse(
 			{
@@ -673,6 +752,32 @@ class TerraformModuleDetailsView(View):
 				'objects': objects,
 			}
 		)
+
+
+class TerraformModuleObjectUpdateView(View):
+	def post(self, request, pk, module_name, *args, **kwargs):
+		workspace = get_object_or_404(TerraformWorkspace, pk=pk)
+		if _is_hidden_environment_module(workspace, module_name):
+			return JsonResponse({'ok': False, 'error': 'Module ist systemverwaltet.'}, status=403)
+		module_dir = workspace.workspace_dir / 'modules' / module_name
+		if not module_dir.exists() or not module_dir.is_dir():
+			return JsonResponse({'ok': False, 'error': 'Module nicht gefunden.'}, status=404)
+
+		file_name = (request.POST.get('file_name') or '').strip()
+		content = request.POST.get('content')
+		if not file_name:
+			return JsonResponse({'ok': False, 'error': 'Dateiname fehlt.'}, status=400)
+		if content is None:
+			return JsonResponse({'ok': False, 'error': 'Inhalt fehlt.'}, status=400)
+		if '/' in file_name or '\\' in file_name or not file_name.endswith('.tf'):
+			return JsonResponse({'ok': False, 'error': 'Ungueltiger Dateiname.'}, status=400)
+
+		target_file = module_dir / file_name
+		if not target_file.exists() or not target_file.is_file():
+			return JsonResponse({'ok': False, 'error': 'Objektdatei nicht gefunden.'}, status=404)
+
+		target_file.write_text(content, encoding='utf-8')
+		return JsonResponse({'ok': True})
 
 
 class TerraformPlanView(TerraformCommandView):

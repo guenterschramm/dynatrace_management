@@ -1,6 +1,6 @@
 from django.urls import path
 
-from .views import EnvironmentOverviewView, PlatformOverviewView, TerraformInitView, TerraformModuleDetailsView, TerraformOverviewView, TerraformPlanView, TerraformProgressView, TerraformSyncView
+from .views import EnvironmentOverviewView, PlatformOverviewView, TerraformInitView, TerraformModuleDetailsView, TerraformModuleObjectUpdateView, TerraformOverviewView, TerraformPlanView, TerraformProgressView, TerraformSyncView
 
 app_name = 'terraform_engine'
 
@@ -13,4 +13,5 @@ urlpatterns = [
 	path('<int:pk>/plan/', TerraformPlanView.as_view(), name='plan'),
 	path('<int:pk>/progress/', TerraformProgressView.as_view(), name='progress'),
 	path('<int:pk>/module/<str:module_name>/', TerraformModuleDetailsView.as_view(), name='module_details'),
+	path('<int:pk>/module/<str:module_name>/object/', TerraformModuleObjectUpdateView.as_view(), name='module_object_update'),
 ]

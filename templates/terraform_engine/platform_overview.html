@@ -13,6 +13,17 @@
 		gap: 0.75rem;
 	}
 
+	.module-details-layout > div {
+		min-width: 0;
+	}
+
+	#moduleDetailsObjectList .list-group-item {
+		display: block;
+		white-space: nowrap;
+		overflow: hidden;
+		text-overflow: ellipsis;
+	}
+
 	@media (max-width: 991.98px) {
 		.module-details-layout {
 			grid-template-columns: 1fr;
@@ -352,7 +363,7 @@
 				var fileName = item.file_name || item.name || '';
 				return Math.max(maxLength, fileName.length);
 			}, 0);
-			var objectColumnWidth = Math.max(240, Math.min(560, (longestFileNameLength * 8) + 64));
+			var objectColumnWidth = Math.max(240, Math.min(420, (longestFileNameLength * 8) + 64));
 			if (moduleDetailsLayout) {
 				moduleDetailsLayout.style.setProperty('--objects-col-width', objectColumnWidth + 'px');
 			}
@@ -361,6 +372,7 @@
 				button.type = 'button';
 				button.className = 'list-group-item list-group-item-action';
 				button.textContent = item.file_name || item.name || '-';
+				button.title = item.file_name || item.name || '-';
 				button.addEventListener('click', function () {
 					objectList.querySelectorAll('.active').forEach(function (entry) {
 						entry.classList.remove('active');

@@ -13,6 +13,17 @@
 		gap: 0.75rem;
 	}
 
+	.module-details-layout > div {
+		min-width: 0;
+	}
+
+	#moduleDetailsObjectList .list-group-item {
+		display: block;
+		white-space: nowrap;
+		overflow: hidden;
+		text-overflow: ellipsis;
+	}
+
 	@media (max-width: 991.98px) {
 		.module-details-layout {
 			grid-template-columns: 1fr;
@@ -79,9 +90,10 @@
 							<div class="list-group">
 								{% for module in work.init_summary.modules %}
 									{% if module.loaded_count > 0 %}
-										<div class="list-group-item d-flex flex-column flex-lg-row justify-content-between align-items-lg-center gap-2">
+										<div class="list-group-item d-flex flex-column flex-lg-row justify-content-between align-items-lg-center gap-2" data-module-row="true" data-workspace-id="{{ work.pk }}" data-module-name="{{ module.name }}">
 											<button type="button" class="btn btn-link p-0 text-start text-decoration-none" data-open-module="true" data-workspace-id="{{ work.pk }}" data-module-name="{{ module.name }}">
-												<span class="fw-semibold">{{ module.name }}</span>
+												<span class="fw-semibold" data-module-label="true">{{ module.name }}</span>
+												<span class="badge text-bg-warning ms-2 d-none" data-module-modified-badge="true">0 geaendert</span>
 												<span class="badge text-bg-success ms-2">{{ module.loaded_count }} objekte</span>
 											</button>
 											<div class="d-inline-flex gap-2">
@@ -90,15 +102,15 @@
 													<input type="hidden" name="module_name" value="{{ module.name }}">
 													<button class="btn btn-sm btn-outline-secondary" type="submit">Init</button>
 												</form>
-												<form action="{% url 'terraform_engine:plan' work.pk %}?next=environment" method="post">
+												<form action="{% url 'terraform_engine:plan' work.pk %}?next=environment" method="post" data-module-action="plan" data-workspace-id="{{ work.pk }}" data-module-name="{{ module.name }}">
 													{% csrf_token %}
 													<input type="hidden" name="module_name" value="{{ module.name }}">
-													<button class="btn btn-sm btn-dark" type="submit">Plan</button>
+													<button class="btn btn-sm btn-dark" type="submit" data-module-plan-button="true" disabled>Plan</button>
 												</form>
-												<form action="{% url 'terraform_engine:sync' work.pk %}?next=environment" method="post">
+												<form action="{% url 'terraform_engine:sync' work.pk %}?next=environment" method="post" data-module-action="apply" data-workspace-id="{{ work.pk }}" data-module-name="{{ module.name }}">
 													{% csrf_token %}
 													<input type="hidden" name="module_name" value="{{ module.name }}">
-													<button class="btn btn-sm btn-outline-dark" type="submit">Apply</button>
+													<button class="btn btn-sm btn-outline-dark" type="submit" data-module-apply-button="true" disabled>Apply</button>
 												</form>
 											</div>
 										</div>
@@ -155,8 +167,13 @@
 							<div class="small text-secondary mb-2">Details</div>
 							<div class="mb-2">Object: <strong id="moduleDetailsObjectName">-</strong></div>
 							<div class="mb-3">File: <strong id="moduleDetailsObjectFile">-</strong></div>
+							<div class="mb-2 d-inline-flex gap-2">
+								<button type="button" class="btn btn-sm btn-outline-secondary" id="moduleDetailsEditButton">Edit</button>
+								<button type="button" class="btn btn-sm btn-dark" id="moduleDetailsSaveButton" disabled>Save</button>
+								<button type="button" class="btn btn-sm btn-outline-dark" id="moduleDetailsDiscardButton" disabled>Discard</button>
+							</div>
 							<div class="small text-secondary mb-1">Terraform file content</div>
-							<pre class="small bg-light p-2 border rounded mb-0" id="moduleDetailsObjectContent">-</pre>
+							<textarea class="form-control form-control-sm font-monospace" rows="16" id="moduleDetailsObjectContent" disabled></textarea>
 						</div>
 					</div>
 				</div>
@@ -352,7 +369,7 @@
 				var fileName = item.file_name || item.name || '';
 				return Math.max(maxLength, fileName.length);
 			}, 0);
-			var objectColumnWidth = Math.max(240, Math.min(560, (longestFileNameLength * 8) + 64));
+			var objectColumnWidth = Math.max(240, Math.min(420, (longestFileNameLength * 8) + 64));
 			if (moduleDetailsLayout) {
 				moduleDetailsLayout.style.setProperty('--objects-col-width', objectColumnWidth + 'px');
 			}
@@ -361,6 +378,7 @@
 				button.type = 'button';
 				button.className = 'list-group-item list-group-item-action';
 				button.textContent = item.file_name || item.name || '-';
+				button.title = item.file_name || item.name || '-';
 				button.addEventListener('click', function () {
 					objectList.querySelectorAll('.active').forEach(function (entry) {
 						entry.classList.remove('active');
