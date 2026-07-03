@@ -2,6 +2,7 @@ resource "dynatrace_document" "VMware_Extension_Overview" {
   name      = "VMware Extension Overview"
   type      = "dashboard"
   content   = jsonencode({
+      "annotations": [],
       "importedWithCode": false,
       "layouts": {
         "10": {
@@ -143,7 +144,7 @@ resource "dynatrace_document" "VMware_Extension_Overview" {
           "y": 40
         },
         "41": {
-          "h": 3,
+          "h": 5,
           "w": 6,
           "x": 20,
           "y": 4
@@ -224,6 +225,24 @@ resource "dynatrace_document" "VMware_Extension_Overview" {
           "visualization": "honeycomb",
           "visualizationSettings": {
             "autoSelectVisualization": false,
+            "coloring": {
+              "colorRules": [
+                {
+                  "colorMode": "custom-color",
+                  "comparator": "=",
+                  "customColor": "#2F6863",
+                  "field": "host_connected_state",
+                  "value": "connected"
+                },
+                {
+                  "colorMode": "custom-color",
+                  "comparator": "=",
+                  "customColor": "#C4233B",
+                  "field": "host_connected_state",
+                  "value": "disconnected"
+                }
+              ]
+            },
             "honeycomb": {
               "colorMode": "custom-colors",
               "customColors": [
@@ -248,32 +267,6 @@ resource "dynatrace_document" "VMware_Extension_Overview" {
                 "host_connected_state"
               ]
             },
-            "thresholds": [
-              {
-                "field": "host.connected.state",
-                "id": "0",
-                "isEnabled": true,
-                "rules": [
-                  {
-                    "color": "#7dc540",
-                    "comparator": "=",
-                    "id": "0",
-                    "label": "",
-                    "value": "connected"
-                  },
-                  {
-                    "color": {
-                      "Default": "var(--dt-colors-charts-loglevel-emergency-default, #ae132d)"
-                    },
-                    "comparator": "=",
-                    "id": "1",
-                    "label": "",
-                    "value": "disconnected"
-                  }
-                ],
-                "title": ""
-              }
-            ],
             "unitsOverrides": [
               {
                 "added": 0,
@@ -308,6 +301,19 @@ resource "dynatrace_document" "VMware_Extension_Overview" {
           "type": "data",
           "visualization": "singleValue",
           "visualizationSettings": {
+            "coloring": {
+              "colorRules": [
+                {
+                  "colorMode": "custom-color",
+                  "comparator": "\u003e",
+                  "customColor": {
+                    "Default": "var(--dt-colors-charts-categorical-color-01-default, #134fc9)"
+                  },
+                  "field": "count()",
+                  "value": 0
+                }
+              ]
+            },
             "singleValue": {
               "colorThresholdTarget": "background",
               "label": "countDistinct(`dt.entity.vmware:datastore`)",
@@ -323,25 +329,6 @@ resource "dynatrace_document" "VMware_Extension_Overview" {
                 "isVisible": false
               }
             },
-            "thresholds": [
-              {
-                "field": "count()",
-                "id": "0",
-                "isEnabled": true,
-                "rules": [
-                  {
-                    "color": {
-                      "Default": "var(--dt-colors-charts-categorical-color-01-default, #134fc9)"
-                    },
-                    "comparator": "\u003e",
-                    "id": "0",
-                    "label": "",
-                    "value": 0
-                  }
-                ],
-                "title": ""
-              }
-            ],
             "unitsOverrides": [
               {
                 "added": 0,
@@ -405,34 +392,6 @@ resource "dynatrace_document" "VMware_Extension_Overview" {
                 ]
               ]
             },
-            "thresholds": [
-              {
-                "field": "average",
-                "id": "0",
-                "isEnabled": true,
-                "rules": [
-                  {
-                    "color": "#7dc540",
-                    "comparator": "≥",
-                    "id": "0",
-                    "label": ""
-                  },
-                  {
-                    "color": "#f5d30f",
-                    "comparator": "≥",
-                    "id": "1",
-                    "label": ""
-                  },
-                  {
-                    "color": "#dc172a",
-                    "comparator": "≥",
-                    "id": "2",
-                    "label": ""
-                  }
-                ],
-                "title": ""
-              }
-            ],
             "unitsOverrides": [
               {
                 "added": 0,
@@ -536,66 +495,47 @@ resource "dynatrace_document" "VMware_Extension_Overview" {
               "categoryOverrides": {},
               "truncationMode": "middle"
             },
-            "thresholds": [
-              {
-                "field": "Average CPU %",
-                "id": "0",
-                "isEnabled": true,
-                "rules": [
-                  {
-                    "color": "#2F6863",
-                    "comparator": "≥",
-                    "id": "0",
-                    "label": "",
-                    "value": 0
-                  },
-                  {
-                    "color": "#f5d30f",
-                    "comparator": "≥",
-                    "id": "1",
-                    "label": "",
-                    "value": 75
-                  },
-                  {
-                    "color": "#C4233B",
-                    "comparator": "≥",
-                    "id": "2",
-                    "label": "",
-                    "value": 90
-                  }
-                ],
-                "title": ""
-              },
-              {
-                "field": "Average Memory %",
-                "id": "1",
-                "isEnabled": false,
-                "rules": [
-                  {
-                    "color": "#7dc540",
-                    "comparator": "≥",
-                    "id": "0",
-                    "label": "",
-                    "value": 0
-                  },
-                  {
-                    "color": "#f5d30f",
-                    "comparator": "≥",
-                    "id": "1",
-                    "label": "",
-                    "value": 60
-                  },
-                  {
-                    "color": "#dc172a",
-                    "comparator": "≥",
-                    "id": "2",
-                    "label": "",
-                    "value": 90
-                  }
-                ],
-                "title": ""
-              }
-            ],
+            "coloring": {
+              "colorRules": [
+                {
+                  "colorMode": "color-palette",
+                  "colorPalette": "categorical",
+                  "comparator": "= *value*",
+                  "field": "DT.name",
+                  "type": "string",
+                  "value": ""
+                }
+              ],
+              "thresholdRules": [
+                {
+                  "color": "#2F6863",
+                  "colorMode": "single-color",
+                  "max": 75,
+                  "min": 0,
+                  "mode": "range",
+                  "position": "left",
+                  "strokeOnly": false
+                },
+                {
+                  "color": "#f5d30f",
+                  "colorMode": "single-color",
+                  "max": 90,
+                  "min": 75,
+                  "mode": "range",
+                  "position": "left",
+                  "strokeOnly": false
+                },
+                {
+                  "color": "#C4233B",
+                  "colorMode": "single-color",
+                  "max": null,
+                  "min": 90,
+                  "mode": "range",
+                  "position": "left",
+                  "strokeOnly": false
+                }
+              ]
+            },
             "unitsOverrides": [
               {
                 "added": 0,
@@ -663,34 +603,6 @@ resource "dynatrace_document" "VMware_Extension_Overview" {
                 "dt.entity.vmware:host.name"
               ]
             },
-            "thresholds": [
-              {
-                "field": "average",
-                "id": "0",
-                "isEnabled": true,
-                "rules": [
-                  {
-                    "color": "#7dc540",
-                    "comparator": "≥",
-                    "id": "0",
-                    "label": ""
-                  },
-                  {
-                    "color": "#f5d30f",
-                    "comparator": "≥",
-                    "id": "1",
-                    "label": ""
-                  },
-                  {
-                    "color": "#dc172a",
-                    "comparator": "≥",
-                    "id": "2",
-                    "label": ""
-                  }
-                ],
-                "title": ""
-              }
-            ],
             "unitsOverrides": [
               {
                 "added": 0,
@@ -747,34 +659,6 @@ resource "dynatrace_document" "VMware_Extension_Overview" {
                 "dt.entity.vmware:host.name"
               ]
             },
-            "thresholds": [
-              {
-                "field": "average",
-                "id": "0",
-                "isEnabled": true,
-                "rules": [
-                  {
-                    "color": "#7dc540",
-                    "comparator": "≥",
-                    "id": "0",
-                    "label": ""
-                  },
-                  {
-                    "color": "#f5d30f",
-                    "comparator": "≥",
-                    "id": "1",
-                    "label": ""
-                  },
-                  {
-                    "color": "#dc172a",
-                    "comparator": "≥",
-                    "id": "2",
-                    "label": ""
-                  }
-                ],
-                "title": ""
-              }
-            ],
             "unitsOverrides": [
               {
                 "added": 0,
@@ -828,66 +712,47 @@ resource "dynatrace_document" "VMware_Extension_Overview" {
               "categoryOverrides": {},
               "truncationMode": "middle"
             },
-            "thresholds": [
-              {
-                "field": "Average CPU %",
-                "id": "0",
-                "isEnabled": true,
-                "rules": [
-                  {
-                    "color": "#2F6863",
-                    "comparator": "≥",
-                    "id": "0",
-                    "label": "",
-                    "value": 0
-                  },
-                  {
-                    "color": "#f5d30f",
-                    "comparator": "≥",
-                    "id": "1",
-                    "label": "",
-                    "value": 75
-                  },
-                  {
-                    "color": "#C4233B",
-                    "comparator": "≥",
-                    "id": "2",
-                    "label": "",
-                    "value": 90
-                  }
-                ],
-                "title": ""
-              },
-              {
-                "field": "Average Memory %",
-                "id": "1",
-                "isEnabled": false,
-                "rules": [
-                  {
-                    "color": "#7dc540",
-                    "comparator": "≥",
-                    "id": "0",
-                    "label": "",
-                    "value": 0
-                  },
-                  {
-                    "color": "#f5d30f",
-                    "comparator": "≥",
-                    "id": "1",
-                    "label": "",
-                    "value": 60
-                  },
-                  {
-                    "color": "#dc172a",
-                    "comparator": "≥",
-                    "id": "2",
-                    "label": "",
-                    "value": 90
-                  }
-                ],
-                "title": ""
-              }
-            ],
+            "coloring": {
+              "colorRules": [
+                {
+                  "colorMode": "color-palette",
+                  "colorPalette": "categorical",
+                  "comparator": "= *value*",
+                  "field": "DT.name",
+                  "type": "string",
+                  "value": ""
+                }
+              ],
+              "thresholdRules": [
+                {
+                  "color": "#2F6863",
+                  "colorMode": "single-color",
+                  "max": 75,
+                  "min": 0,
+                  "mode": "range",
+                  "position": "left",
+                  "strokeOnly": false
+                },
+                {
+                  "color": "#f5d30f",
+                  "colorMode": "single-color",
+                  "max": 90,
+                  "min": 75,
+                  "mode": "range",
+                  "position": "left",
+                  "strokeOnly": false
+                },
+                {
+                  "color": "#C4233B",
+                  "colorMode": "single-color",
+                  "max": null,
+                  "min": 90,
+                  "mode": "range",
+                  "position": "left",
+                  "strokeOnly": false
+                }
+              ]
+            },
             "unitsOverrides": [
               {
                 "added": 0,
@@ -955,34 +820,6 @@ resource "dynatrace_document" "VMware_Extension_Overview" {
                 "dt.entity.vmware:virtualmachine.name"
               ]
             },
-            "thresholds": [
-              {
-                "field": "average",
-                "id": "0",
-                "isEnabled": true,
-                "rules": [
-                  {
-                    "color": "#7dc540",
-                    "comparator": "≥",
-                    "id": "0",
-                    "label": ""
-                  },
-                  {
-                    "color": "#f5d30f",
-                    "comparator": "≥",
-                    "id": "1",
-                    "label": ""
-                  },
-                  {
-                    "color": "#dc172a",
-                    "comparator": "≥",
-                    "id": "2",
-                    "label": ""
-                  }
-                ],
-                "title": ""
-              }
-            ],
             "unitsOverrides": [
               {
                 "added": 0,
@@ -1039,34 +876,6 @@ resource "dynatrace_document" "VMware_Extension_Overview" {
                 "dt.entity.vmware:virtualmachine.name"
               ]
             },
-            "thresholds": [
-              {
-                "field": "average",
-                "id": "0",
-                "isEnabled": true,
-                "rules": [
-                  {
-                    "color": "#7dc540",
-                    "comparator": "≥",
-                    "id": "0",
-                    "label": ""
-                  },
-                  {
-                    "color": "#f5d30f",
-                    "comparator": "≥",
-                    "id": "1",
-                    "label": ""
-                  },
-                  {
-                    "color": "#dc172a",
-                    "comparator": "≥",
-                    "id": "2",
-                    "label": ""
-                  }
-                ],
-                "title": ""
-              }
-            ],
             "unitsOverrides": [
               {
                 "added": 0,
@@ -1105,8 +914,50 @@ resource "dynatrace_document" "VMware_Extension_Overview" {
           "type": "data",
           "visualization": "table",
           "visualizationSettings": {
+            "coloring": {
+              "colorRules": [
+                {
+                  "colorMode": "custom-color",
+                  "comparator": "≥",
+                  "customColor": "#2F6863",
+                  "field": "Used %",
+                  "metadata": {
+                    "applyTo": "cell",
+                    "fields": [
+                      "Used %"
+                    ]
+                  },
+                  "value": 0
+                },
+                {
+                  "colorMode": "custom-color",
+                  "comparator": "≥",
+                  "customColor": "#f5d30f",
+                  "field": "Used %",
+                  "metadata": {
+                    "applyTo": "cell",
+                    "fields": [
+                      "Used %"
+                    ]
+                  },
+                  "value": 70
+                },
+                {
+                  "colorMode": "custom-color",
+                  "comparator": "≥",
+                  "customColor": "#C4233B",
+                  "field": "Used %",
+                  "metadata": {
+                    "applyTo": "cell",
+                    "fields": [
+                      "Used %"
+                    ]
+                  },
+                  "value": 90
+                }
+              ]
+            },
             "table": {
-              "colorThresholdTarget": "background",
               "columnWidths": {
                 "[\"Capacity\"]": 201.890625,
                 "[\"Datastore Name\"]": 236,
@@ -1132,37 +983,6 @@ resource "dynatrace_document" "VMware_Extension_Overview" {
                 ]
               ]
             },
-            "thresholds": [
-              {
-                "field": "Used %",
-                "id": "0",
-                "isEnabled": true,
-                "rules": [
-                  {
-                    "color": "#2F6863",
-                    "comparator": "≥",
-                    "id": "0",
-                    "label": "",
-                    "value": 0
-                  },
-                  {
-                    "color": "#f5d30f",
-                    "comparator": "≥",
-                    "id": "1",
-                    "label": "",
-                    "value": 70
-                  },
-                  {
-                    "color": "#C4233B",
-                    "comparator": "≥",
-                    "id": "2",
-                    "label": "",
-                    "value": 90
-                  }
-                ],
-                "title": ""
-              }
-            ],
             "unitsOverrides": [
               {
                 "added": 0,
@@ -1237,34 +1057,6 @@ resource "dynatrace_document" "VMware_Extension_Overview" {
                 "dt.entity.vmware:datastore.name"
               ]
             },
-            "thresholds": [
-              {
-                "field": "used",
-                "id": "0",
-                "isEnabled": true,
-                "rules": [
-                  {
-                    "color": "#7dc540",
-                    "comparator": "≥",
-                    "id": "0",
-                    "label": ""
-                  },
-                  {
-                    "color": "#f5d30f",
-                    "comparator": "≥",
-                    "id": "1",
-                    "label": ""
-                  },
-                  {
-                    "color": "#dc172a",
-                    "comparator": "≥",
-                    "id": "2",
-                    "label": ""
-                  }
-                ],
-                "title": ""
-              }
-            ],
             "unitsOverrides": [
               {
                 "added": 0,
@@ -1297,9 +1089,7 @@ resource "dynatrace_document" "VMware_Extension_Overview" {
           "title": "vCenter Triggered Alarms \u0026 Events",
           "type": "data",
           "visualization": "table",
-          "visualizationSettings": {
-            "thresholds": []
-          }
+          "visualizationSettings": {}
         },
         "28": {
           "content": "### Overview of VMware extension data\n\nStart here to navigate to the extension configuration and/or entity pages to view charts displaying data collected for vSphere Clusters, ESXi Hosts, VMs, and more. \n\nIf you don't see data: ⚙️ [Configure extension](/ui/apps/dynatrace.extensions.manager/configurations/com.dynatrace.vmware-integration/configs)\n",
@@ -1351,66 +1141,47 @@ resource "dynatrace_document" "VMware_Extension_Overview" {
               "categoryOverrides": {},
               "truncationMode": "middle"
             },
-            "thresholds": [
-              {
-                "field": "Average CPU %",
-                "id": "0",
-                "isEnabled": true,
-                "rules": [
-                  {
-                    "color": "#2F6863",
-                    "comparator": "≥",
-                    "id": "0",
-                    "label": "",
-                    "value": 0
-                  },
-                  {
-                    "color": "#f5d30f",
-                    "comparator": "≥",
-                    "id": "1",
-                    "label": "",
-                    "value": 75
-                  },
-                  {
-                    "color": "#C4233B",
-                    "comparator": "≥",
-                    "id": "2",
-                    "label": "",
-                    "value": 90
-                  }
-                ],
-                "title": ""
-              },
-              {
-                "field": "Average Memory %",
-                "id": "1",
-                "isEnabled": false,
-                "rules": [
-                  {
-                    "color": "#7dc540",
-                    "comparator": "≥",
-                    "id": "0",
-                    "label": "",
-                    "value": 0
-                  },
-                  {
-                    "color": "#f5d30f",
-                    "comparator": "≥",
-                    "id": "1",
-                    "label": "",
-                    "value": 60
-                  },
-                  {
-                    "color": "#dc172a",
-                    "comparator": "≥",
-                    "id": "2",
-                    "label": "",
-                    "value": 90
-                  }
-                ],
-                "title": ""
-              }
-            ],
+            "coloring": {
+              "colorRules": [
+                {
+                  "colorMode": "color-palette",
+                  "colorPalette": "categorical",
+                  "comparator": "= *value*",
+                  "field": "DT.name",
+                  "type": "string",
+                  "value": ""
+                }
+              ],
+              "thresholdRules": [
+                {
+                  "color": "#2F6863",
+                  "colorMode": "single-color",
+                  "max": 75,
+                  "min": 0,
+                  "mode": "range",
+                  "position": "left",
+                  "strokeOnly": false
+                },
+                {
+                  "color": "#f5d30f",
+                  "colorMode": "single-color",
+                  "max": 90,
+                  "min": 75,
+                  "mode": "range",
+                  "position": "left",
+                  "strokeOnly": false
+                },
+                {
+                  "color": "#C4233B",
+                  "colorMode": "single-color",
+                  "max": null,
+                  "min": 90,
+                  "mode": "range",
+                  "position": "left",
+                  "strokeOnly": false
+                }
+              ]
+            },
             "unitsOverrides": [
               {
                 "added": 0,
@@ -1457,6 +1228,19 @@ resource "dynatrace_document" "VMware_Extension_Overview" {
           "visualization": "singleValue",
           "visualizationSettings": {
             "autoSelectVisualization": false,
+            "coloring": {
+              "colorRules": [
+                {
+                  "colorMode": "custom-color",
+                  "comparator": "\u003e",
+                  "customColor": {
+                    "Default": "var(--dt-colors-charts-categorical-color-01-default, #134fc9)"
+                  },
+                  "field": "count()",
+                  "value": 0
+                }
+              ]
+            },
             "singleValue": {
               "colorThresholdTarget": "background",
               "label": "host_info",
@@ -1472,25 +1256,6 @@ resource "dynatrace_document" "VMware_Extension_Overview" {
                 "isVisible": false
               }
             },
-            "thresholds": [
-              {
-                "field": "count()",
-                "id": "0",
-                "isEnabled": true,
-                "rules": [
-                  {
-                    "color": {
-                      "Default": "var(--dt-colors-charts-categorical-color-01-default, #134fc9)"
-                    },
-                    "comparator": "\u003e",
-                    "id": "0",
-                    "label": "",
-                    "value": 0
-                  }
-                ],
-                "title": ""
-              }
-            ],
             "unitsOverrides": [
               {
                 "added": 0,
@@ -1540,66 +1305,47 @@ resource "dynatrace_document" "VMware_Extension_Overview" {
               "categoryOverrides": {},
               "truncationMode": "middle"
             },
-            "thresholds": [
-              {
-                "field": "Average CPU %",
-                "id": "0",
-                "isEnabled": true,
-                "rules": [
-                  {
-                    "color": "#2F6863",
-                    "comparator": "≥",
-                    "id": "0",
-                    "label": "",
-                    "value": 0
-                  },
-                  {
-                    "color": "#f5d30f",
-                    "comparator": "≥",
-                    "id": "1",
-                    "label": "",
-                    "value": 75
-                  },
-                  {
-                    "color": "#C4233B",
-                    "comparator": "≥",
-                    "id": "2",
-                    "label": "",
-                    "value": 90
-                  }
-                ],
-                "title": ""
-              },
-              {
-                "field": "Average Memory %",
-                "id": "1",
-                "isEnabled": false,
-                "rules": [
-                  {
-                    "color": "#7dc540",
-                    "comparator": "≥",
-                    "id": "0",
-                    "label": "",
-                    "value": 0
-                  },
-                  {
-                    "color": "#f5d30f",
-                    "comparator": "≥",
-                    "id": "1",
-                    "label": "",
-                    "value": 60
-                  },
-                  {
-                    "color": "#dc172a",
-                    "comparator": "≥",
-                    "id": "2",
-                    "label": "",
-                    "value": 90
-                  }
-                ],
-                "title": ""
-              }
-            ],
+            "coloring": {
+              "colorRules": [
+                {
+                  "colorMode": "color-palette",
+                  "colorPalette": "categorical",
+                  "comparator": "= *value*",
+                  "field": "DT.name",
+                  "type": "string",
+                  "value": ""
+                }
+              ],
+              "thresholdRules": [
+                {
+                  "color": "#2F6863",
+                  "colorMode": "single-color",
+                  "max": 75,
+                  "min": 0,
+                  "mode": "range",
+                  "position": "left",
+                  "strokeOnly": false
+                },
+                {
+                  "color": "#f5d30f",
+                  "colorMode": "single-color",
+                  "max": 90,
+                  "min": 75,
+                  "mode": "range",
+                  "position": "left",
+                  "strokeOnly": false
+                },
+                {
+                  "color": "#C4233B",
+                  "colorMode": "single-color",
+                  "max": null,
+                  "min": 90,
+                  "mode": "range",
+                  "position": "left",
+                  "strokeOnly": false
+                }
+              ]
+            },
             "unitsOverrides": [
               {
                 "added": 0,
@@ -1627,7 +1373,7 @@ resource "dynatrace_document" "VMware_Extension_Overview" {
           }
         },
         "41": {
-          "content": "**🔗 Navigate to the Infrastructure \u0026 Operations App to view the entities:**\n* [vCenters](/ui/apps/dynatrace.infraops/explorer/com.dynatrace.vmware-integration)\n",
+          "content": "**🔗 Navigate to the Infrastructure \u0026 Operations App to view the entities:**\n* [vCenters](/ui/apps/dynatrace.infraops/technology/virtualization/com.dynatrace.vmware-integration/vmware:vcenter)\n* [Datacenters](/ui/apps/dynatrace.infraops/technology/virtualization/com.dynatrace.vmware-integration/vmware:datacenter)\n* [Clusters](/ui/apps/dynatrace.infraops/technology/virtualization/com.dynatrace.vmware-integration/vmware:cluster)\n* [ESXi Hosts](/ui/apps/dynatrace.infraops/technology/virtualization/com.dynatrace.vmware-integration/vmware:host)\n* [Virtual Machines](/ui/apps/dynatrace.infraops/technology/virtualization/com.dynatrace.vmware-integration/vmware:virtualmachine)\n* [Datastores](/ui/apps/dynatrace.infraops/technology/virtualization/com.dynatrace.vmware-integration/vmware:datastore)\n",
           "type": "markdown"
         },
         "42": {
@@ -1649,6 +1395,19 @@ resource "dynatrace_document" "VMware_Extension_Overview" {
           "type": "data",
           "visualization": "singleValue",
           "visualizationSettings": {
+            "coloring": {
+              "colorRules": [
+                {
+                  "colorMode": "custom-color",
+                  "comparator": "\u003e",
+                  "customColor": {
+                    "Default": "var(--dt-colors-charts-categorical-color-01-default, #134fc9)"
+                  },
+                  "field": "count()",
+                  "value": 0
+                }
+              ]
+            },
             "singleValue": {
               "colorThresholdTarget": "background",
               "label": "countDistinct(`dt.entity.vmware:virtualmachine`)",
@@ -1664,25 +1423,6 @@ resource "dynatrace_document" "VMware_Extension_Overview" {
                 "isVisible": false
               }
             },
-            "thresholds": [
-              {
-                "field": "count()",
-                "id": "0",
-                "isEnabled": true,
-                "rules": [
-                  {
-                    "color": {
-                      "Default": "var(--dt-colors-charts-categorical-color-01-default, #134fc9)"
-                    },
-                    "comparator": "\u003e",
-                    "id": "0",
-                    "label": "",
-                    "value": 0
-                  }
-                ],
-                "title": ""
-              }
-            ],
             "unitsOverrides": [
               {
                 "added": 0,
@@ -1717,6 +1457,19 @@ resource "dynatrace_document" "VMware_Extension_Overview" {
           "type": "data",
           "visualization": "singleValue",
           "visualizationSettings": {
+            "coloring": {
+              "colorRules": [
+                {
+                  "colorMode": "custom-color",
+                  "comparator": "\u003e",
+                  "customColor": {
+                    "Default": "var(--dt-colors-charts-categorical-color-01-default, #134fc9)"
+                  },
+                  "field": "count()",
+                  "value": 0
+                }
+              ]
+            },
             "singleValue": {
               "colorThresholdTarget": "background",
               "label": "countDistinct(`dt.entity.vmware:virtualmachine`)",
@@ -1732,25 +1485,6 @@ resource "dynatrace_document" "VMware_Extension_Overview" {
                 "isVisible": false
               }
             },
-            "thresholds": [
-              {
-                "field": "count()",
-                "id": "0",
-                "isEnabled": true,
-                "rules": [
-                  {
-                    "color": {
-                      "Default": "var(--dt-colors-charts-categorical-color-01-default, #134fc9)"
-                    },
-                    "comparator": "\u003e",
-                    "id": "0",
-                    "label": "",
-                    "value": 0
-                  }
-                ],
-                "title": ""
-              }
-            ],
             "unitsOverrides": [
               {
                 "added": 0,
@@ -1790,6 +1524,19 @@ resource "dynatrace_document" "VMware_Extension_Overview" {
           "visualization": "singleValue",
           "visualizationSettings": {
             "autoSelectVisualization": false,
+            "coloring": {
+              "colorRules": [
+                {
+                  "colorMode": "custom-color",
+                  "comparator": "\u003e",
+                  "customColor": {
+                    "Default": "var(--dt-colors-charts-categorical-color-01-default, #134fc9)"
+                  },
+                  "field": "count()",
+                  "value": 0
+                }
+              ]
+            },
             "singleValue": {
               "colorThresholdTarget": "background",
               "label": "countDistinct(`dt.entity.vmware:cluster`)",
@@ -1805,25 +1552,6 @@ resource "dynatrace_document" "VMware_Extension_Overview" {
                 "isVisible": false
               }
             },
-            "thresholds": [
-              {
-                "field": "count()",
-                "id": "0",
-                "isEnabled": true,
-                "rules": [
-                  {
-                    "color": {
-                      "Default": "var(--dt-colors-charts-categorical-color-01-default, #134fc9)"
-                    },
-                    "comparator": "\u003e",
-                    "id": "0",
-                    "label": "",
-                    "value": 0
-                  }
-                ],
-                "title": ""
-              }
-            ],
             "unitsOverrides": [
               {
                 "added": 0,
@@ -1858,6 +1586,19 @@ resource "dynatrace_document" "VMware_Extension_Overview" {
           "type": "data",
           "visualization": "singleValue",
           "visualizationSettings": {
+            "coloring": {
+              "colorRules": [
+                {
+                  "colorMode": "custom-color",
+                  "comparator": "\u003e",
+                  "customColor": {
+                    "Default": "var(--dt-colors-charts-categorical-color-01-default, #134fc9)"
+                  },
+                  "field": "count()",
+                  "value": 0
+                }
+              ]
+            },
             "singleValue": {
               "colorThresholdTarget": "background",
               "label": "host_info",
@@ -1873,25 +1614,6 @@ resource "dynatrace_document" "VMware_Extension_Overview" {
                 "isVisible": false
               }
             },
-            "thresholds": [
-              {
-                "field": "count()",
-                "id": "0",
-                "isEnabled": true,
-                "rules": [
-                  {
-                    "color": {
-                      "Default": "var(--dt-colors-charts-categorical-color-01-default, #134fc9)"
-                    },
-                    "comparator": "\u003e",
-                    "id": "0",
-                    "label": "",
-                    "value": 0
-                  }
-                ],
-                "title": ""
-              }
-            ],
             "unitsOverrides": [
               {
                 "added": 0,
@@ -1926,6 +1648,19 @@ resource "dynatrace_document" "VMware_Extension_Overview" {
           "type": "data",
           "visualization": "singleValue",
           "visualizationSettings": {
+            "coloring": {
+              "colorRules": [
+                {
+                  "colorMode": "custom-color",
+                  "comparator": "\u003e",
+                  "customColor": {
+                    "Default": "var(--dt-colors-charts-categorical-color-01-default, #134fc9)"
+                  },
+                  "field": "count()",
+                  "value": 0
+                }
+              ]
+            },
             "singleValue": {
               "colorThresholdTarget": "background",
               "label": "countDistinct(`dt.entity.vmware:virtualmachine`)",
@@ -1941,25 +1676,6 @@ resource "dynatrace_document" "VMware_Extension_Overview" {
                 "isVisible": false
               }
             },
-            "thresholds": [
-              {
-                "field": "count()",
-                "id": "0",
-                "isEnabled": true,
-                "rules": [
-                  {
-                    "color": {
-                      "Default": "var(--dt-colors-charts-categorical-color-01-default, #134fc9)"
-                    },
-                    "comparator": "\u003e",
-                    "id": "0",
-                    "label": "",
-                    "value": 0
-                  }
-                ],
-                "title": ""
-              }
-            ],
             "unitsOverrides": [
               {
                 "added": 0,
@@ -1994,6 +1710,19 @@ resource "dynatrace_document" "VMware_Extension_Overview" {
           "type": "data",
           "visualization": "singleValue",
           "visualizationSettings": {
+            "coloring": {
+              "colorRules": [
+                {
+                  "colorMode": "custom-color",
+                  "comparator": "\u003e",
+                  "customColor": {
+                    "Default": "var(--dt-colors-charts-categorical-color-01-default, #134fc9)"
+                  },
+                  "field": "count()",
+                  "value": 0
+                }
+              ]
+            },
             "singleValue": {
               "colorThresholdTarget": "background",
               "label": "countDistinct(`dt.entity.vmware:host`)",
@@ -2009,25 +1738,6 @@ resource "dynatrace_document" "VMware_Extension_Overview" {
                 "isVisible": false
               }
             },
-            "thresholds": [
-              {
-                "field": "count()",
-                "id": "0",
-                "isEnabled": true,
-                "rules": [
-                  {
-                    "color": {
-                      "Default": "var(--dt-colors-charts-categorical-color-01-default, #134fc9)"
-                    },
-                    "comparator": "\u003e",
-                    "id": "0",
-                    "label": "",
-                    "value": 0
-                  }
-                ],
-                "title": ""
-              }
-            ],
             "unitsOverrides": [
               {
                 "added": 0,
@@ -2063,6 +1773,19 @@ resource "dynatrace_document" "VMware_Extension_Overview" {
           "visualization": "singleValue",
           "visualizationSettings": {
             "autoSelectVisualization": false,
+            "coloring": {
+              "colorRules": [
+                {
+                  "colorMode": "custom-color",
+                  "comparator": "\u003e",
+                  "customColor": {
+                    "Default": "var(--dt-colors-charts-categorical-color-01-default, #134fc9)"
+                  },
+                  "field": "count()",
+                  "value": 0
+                }
+              ]
+            },
             "singleValue": {
               "colorThresholdTarget": "background",
               "label": "countDistinct(`dt.entity.vmware:host`)",
@@ -2078,25 +1801,6 @@ resource "dynatrace_document" "VMware_Extension_Overview" {
                 "isVisible": false
               }
             },
-            "thresholds": [
-              {
-                "field": "count()",
-                "id": "0",
-                "isEnabled": true,
-                "rules": [
-                  {
-                    "color": {
-                      "Default": "var(--dt-colors-charts-categorical-color-01-default, #134fc9)"
-                    },
-                    "comparator": "\u003e",
-                    "id": "0",
-                    "label": "",
-                    "value": 0
-                  }
-                ],
-                "title": ""
-              }
-            ],
             "unitsOverrides": [
               {
                 "added": 0,
@@ -2114,8 +1818,8 @@ resource "dynatrace_document" "VMware_Extension_Overview" {
         }
       },
       "variables": [],
-      "version": 20
+      "version": 21
     })
-  custom_id = "com-dynatrace-vmware-integration-overview-1280978514"
+  custom_id = "com-dynatrace-vmware-integration-overview"
   # private = false
 }

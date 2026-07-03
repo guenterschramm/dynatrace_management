@@ -1,6 +1,7 @@
 resource "dynatrace_metric_events" "SQL_Server_high_log_usage" {
-  enabled = false
-  summary = "SQL Server high log usage"
+  enabled                    = false
+  event_entity_dimension_key = "dt.entity.sql:sql_server_database"
+  summary                    = "SQL Server high log usage"
   event_template {
     description   = "The {metricname} value of {severity} was {alert_condition} threshold of {threshold}."
     # davis_merge = false
@@ -18,6 +19,6 @@ resource "dynatrace_metric_events" "SQL_Server_high_log_usage" {
   }
   query_definition {
     type            = "METRIC_SELECTOR"
-    metric_selector = "sql-server.databases.log.percentUsed:splitBy(device,database):avg:auto:sort(value(avg,descending)):limit(100)"
+    metric_selector = "sql-server.databases.log.percentUsed:splitBy(device,database,\"dt.entity.sql:sql_server_database\"):avg:auto:sort(value(avg,descending)):limit(100)"
   }
 }

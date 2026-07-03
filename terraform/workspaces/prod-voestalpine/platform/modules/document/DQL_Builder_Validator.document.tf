@@ -2,6 +2,7 @@ resource "dynatrace_document" "DQL_Builder_Validator" {
   name    = "DQL Builder & Validator"
   type    = "dashboard"
   content = jsonencode({
+      "annotations": [],
       "importedWithCode": true,
       "layouts": {
         "0": {
@@ -80,93 +81,7 @@ resource "dynatrace_document" "DQL_Builder_Validator" {
           "type": "code",
           "visualization": "raw",
           "visualizationSettings": {
-            "autoSelectVisualization": false,
-            "chartSettings": {
-              "categoricalBarChartSettings": {
-                "categoryAxisLabel": "element",
-                "categoryAxisTickLayout": "horizontal",
-                "colorPaletteMode": "multi-color",
-                "groupMode": "stacked",
-                "layout": "vertical",
-                "scale": "absolute",
-                "tooltipVariant": "single",
-                "valueAxisLabel": ""
-              },
-              "categoryOverrides": {},
-              "circleChartSettings": {
-                "groupingThresholdType": "relative",
-                "groupingThresholdValue": 0,
-                "valueType": "relative"
-              },
-              "colorPalette": "categorical",
-              "curve": "linear",
-              "gapPolicy": "gap",
-              "pointsDisplay": "auto",
-              "truncationMode": "middle",
-              "xAxisScaling": "analyzedTimeframe"
-            },
-            "dataMapping": {},
-            "histogram": {
-              "colorPalette": "categorical",
-              "dataMappings": [],
-              "displayedFields": [
-                "element"
-              ],
-              "legend": "auto",
-              "variant": "single",
-              "yAxis": {
-                "label": "Frequency",
-                "scale": "linear"
-              }
-            },
-            "honeycomb": {
-              "colorMode": "color-palette",
-              "colorPalette": "categorical",
-              "dataMappings": {},
-              "displayedFields": [],
-              "legend": {
-                "hidden": false,
-                "position": "auto"
-              },
-              "shape": "hexagon"
-            },
-            "icon": {
-              "icon": "",
-              "showIcon": false
-            },
-            "label": {
-              "showLabel": false
-            },
-            "singleValue": {
-              "alignment": "center",
-              "autoscale": true,
-              "colorThresholdTarget": "value",
-              "label": "element",
-              "prefixIcon": "",
-              "recordField": "element",
-              "showLabel": true,
-              "sparklineSettings": {},
-              "trend": {
-                "isVisible": true,
-                "trendType": "auto"
-              }
-            },
-            "table": {
-              "columnTypeOverrides": [],
-              "columnWidths": {},
-              "enableSparklines": false,
-              "hiddenColumns": [],
-              "lineWrapIds": [],
-              "linewrapEnabled": false,
-              "monospacedFontColumns": [],
-              "monospacedFontEnabled": false,
-              "rowDensity": "condensed"
-            },
-            "thresholds": [],
-            "valueBoundaries": {
-              "max": "auto",
-              "min": "auto"
-            }
+            "autoSelectVisualization": false
           }
         },
         "10": {
@@ -186,82 +101,6 @@ resource "dynatrace_document" "DQL_Builder_Validator" {
           "type": "code",
           "visualization": "table",
           "visualizationSettings": {
-            "chartSettings": {
-              "categoricalBarChartSettings": {
-                "categoryAxis": [
-                  "entity.name",
-                  "id"
-                ],
-                "categoryAxisLabel": "entity.name,id",
-                "categoryAxisTickLayout": "horizontal",
-                "colorPaletteMode": "multi-color",
-                "groupMode": "stacked",
-                "layout": "vertical",
-                "scale": "absolute",
-                "tooltipVariant": "single",
-                "valueAxis": [],
-                "valueAxisLabel": ""
-              },
-              "categoryOverrides": {},
-              "circleChartSettings": {
-                "groupingThresholdType": "relative",
-                "groupingThresholdValue": 0,
-                "valueType": "relative"
-              },
-              "colorPalette": "categorical",
-              "curve": "linear",
-              "gapPolicy": "gap",
-              "pointsDisplay": "auto",
-              "truncationMode": "middle",
-              "xAxisScaling": "analyzedTimeframe"
-            },
-            "histogram": {
-              "colorPalette": "categorical",
-              "dataMappings": [],
-              "displayedFields": [],
-              "legend": "auto",
-              "variant": "single",
-              "yAxis": {
-                "label": "Frequency",
-                "scale": "linear"
-              }
-            },
-            "honeycomb": {
-              "colorMode": "color-palette",
-              "colorPalette": "categorical",
-              "dataMappings": {
-                "value": "entity.name"
-              },
-              "displayedFields": [
-                "entity.name",
-                "id"
-              ],
-              "legend": {
-                "hidden": false,
-                "position": "auto"
-              },
-              "shape": "hexagon"
-            },
-            "icon": {
-              "icon": "",
-              "showIcon": false
-            },
-            "label": {
-              "showLabel": false
-            },
-            "singleValue": {
-              "alignment": "center",
-              "autoscale": true,
-              "colorThresholdTarget": "value",
-              "label": "element",
-              "prefixIcon": "",
-              "recordField": "element",
-              "showLabel": true,
-              "trend": {
-                "isVisible": true,
-                "trendType": "auto"
-              }
-            },
             "table": {
               "columnTypeOverrides": [
                 {
@@ -375,8 +214,6 @@ resource "dynatrace_document" "DQL_Builder_Validator" {
               "columnWidths": {
                 "[\"entity.name\"]": 317
               },
-              "enableSparklines": false,
-              "hiddenColumns": [],
               "lineWrapIds": [
                 [
                   "entity.name"
@@ -682,7 +519,6 @@ resource "dynatrace_document" "DQL_Builder_Validator" {
                   "awsNameTag"
                 ]
               ],
-              "linewrapEnabled": false,
               "monospacedFontColumns": [
                 [
                   "entity.name"
@@ -988,13 +824,7 @@ resource "dynatrace_document" "DQL_Builder_Validator" {
                   "awsNameTag"
                 ]
               ],
-              "monospacedFontEnabled": true,
-              "rowDensity": "condensed"
-            },
-            "thresholds": [],
-            "valueBoundaries": {
-              "max": "auto",
-              "min": "auto"
+              "monospacedFontEnabled": true
             }
           }
         },
@@ -1018,64 +848,6 @@ resource "dynatrace_document" "DQL_Builder_Validator" {
           "visualization": "table",
           "visualizationSettings": {
             "autoSelectVisualization": false,
-            "chartSettings": {
-              "categoricalBarChartSettings": {
-                "categoryAxisTickLayout": "horizontal",
-                "colorPaletteMode": "multi-color",
-                "groupMode": "stacked",
-                "layout": "horizontal",
-                "scale": "absolute",
-                "valueAxisScale": "linear"
-              },
-              "categoryOverrides": {},
-              "circleChartSettings": {
-                "groupingThresholdType": "relative",
-                "groupingThresholdValue": 0,
-                "valueType": "relative"
-              },
-              "colorPalette": "categorical",
-              "curve": "linear",
-              "gapPolicy": "gap",
-              "pointsDisplay": "auto",
-              "truncationMode": "middle",
-              "valueRepresentation": "absolute"
-            },
-            "histogram": {
-              "colorPalette": "categorical",
-              "dataMappings": [],
-              "legend": {
-                "position": "auto"
-              },
-              "truncationMode": "middle",
-              "variant": "single",
-              "yAxis": {
-                "isLabelVisible": true,
-                "label": "Frequency",
-                "scale": "linear"
-              }
-            },
-            "honeycomb": {
-              "colorMode": "color-palette",
-              "colorPalette": "categorical",
-              "dataMappings": {},
-              "displayedFields": [],
-              "legend": {
-                "hidden": false,
-                "position": "auto",
-                "ratio": "auto"
-              },
-              "shape": "hexagon",
-              "truncationMode": "middle"
-            },
-            "singleValue": {
-              "alignment": "center",
-              "autoscale": true,
-              "colorThresholdTarget": "value",
-              "isIconVisible": false,
-              "label": "",
-              "prefixIcon": "AnalyticsIcon",
-              "showLabel": true
-            },
             "table": {
               "columnOrder": [
                 "[\"entity.name\"]",
@@ -1148,20 +920,7 @@ resource "dynatrace_document" "DQL_Builder_Validator" {
                   "id": 129688.19999999925,
                   "value": "log-content"
                 }
-              ],
-              "columnWidths": {},
-              "enableSparklines": false,
-              "hiddenColumns": [],
-              "lineWrapIds": [],
-              "linewrapEnabled": false,
-              "monospacedFontColumns": [],
-              "monospacedFontEnabled": false,
-              "rowDensity": "condensed"
-            },
-            "thresholds": [],
-            "valueBoundaries": {
-              "max": "auto",
-              "min": "auto"
+              ]
             }
           }
         },
@@ -1177,92 +936,7 @@ resource "dynatrace_document" "DQL_Builder_Validator" {
           "title": "DQL Validation Results 🔍",
           "type": "code",
           "visualization": "raw",
-          "visualizationSettings": {
-            "chartSettings": {
-              "categoricalBarChartSettings": {
-                "categoryAxisLabel": "element",
-                "categoryAxisTickLayout": "horizontal",
-                "colorPaletteMode": "multi-color",
-                "groupMode": "stacked",
-                "layout": "vertical",
-                "scale": "absolute",
-                "tooltipVariant": "single",
-                "valueAxisLabel": ""
-              },
-              "categoryOverrides": {},
-              "circleChartSettings": {
-                "groupingThresholdType": "relative",
-                "groupingThresholdValue": 0,
-                "valueType": "relative"
-              },
-              "colorPalette": "categorical",
-              "curve": "linear",
-              "gapPolicy": "gap",
-              "pointsDisplay": "auto",
-              "truncationMode": "middle",
-              "xAxisScaling": "analyzedTimeframe"
-            },
-            "histogram": {
-              "colorPalette": "categorical",
-              "dataMappings": [],
-              "displayedFields": [
-                "valid"
-              ],
-              "legend": "auto",
-              "variant": "single",
-              "yAxis": {
-                "label": "Frequency",
-                "scale": "linear"
-              }
-            },
-            "honeycomb": {
-              "colorMode": "color-palette",
-              "colorPalette": "categorical",
-              "dataMappings": {},
-              "displayedFields": [],
-              "legend": {
-                "hidden": false,
-                "position": "auto"
-              },
-              "shape": "hexagon"
-            },
-            "icon": {
-              "icon": "",
-              "showIcon": false
-            },
-            "label": {
-              "showLabel": false
-            },
-            "singleValue": {
-              "alignment": "center",
-              "autoscale": true,
-              "colorThresholdTarget": "value",
-              "label": "element",
-              "prefixIcon": "",
-              "recordField": "element",
-              "showLabel": true,
-              "trend": {
-                "isVisible": true,
-                "trendType": "auto"
-              }
-            },
-            "table": {
-              "columnTypeOverrides": [],
-              "columnWidths": {},
-              "enableSparklines": false,
-              "hiddenColumns": [],
-              "lineWrapIds": [],
-              "linewrapEnabled": false,
-              "monospacedFontColumns": [],
-              "monospacedFontEnabled": false,
-              "rowDensity": "condensed"
-            },
-            "thresholds": [],
-            "valueBoundaries": {
-              "max": "auto",
-              "min": "auto"
-            }
-          }
+          "visualizationSettings": {}
         },
         "3": {
           "content": "##### DQL Verifier for Advanced Users 🛠️\nPlease input your DQL under the `custom_dql_input` variable field located at the top.\n",
@@ -1280,96 +954,7 @@ resource "dynatrace_document" "DQL_Builder_Validator" {
           "title": "Preview of User Inputted DQL 📝",
           "type": "code",
           "visualization": "raw",
-          "visualizationSettings": {
-            "chartSettings": {
-              "categoricalBarChartSettings": {
-                "categoryAxis": [
-                  "element"
-                ],
-                "categoryAxisLabel": "element",
-                "categoryAxisTickLayout": "horizontal",
-                "colorPaletteMode": "multi-color",
-                "groupMode": "stacked",
-                "layout": "vertical",
-                "scale": "absolute",
-                "tooltipVariant": "single",
-                "valueAxis": [],
-                "valueAxisLabel": ""
-              },
-              "categoryOverrides": {},
-              "circleChartSettings": {
-                "groupingThresholdType": "relative",
-                "groupingThresholdValue": 0,
-                "valueType": "relative"
-              },
-              "colorPalette": "categorical",
-              "curve": "linear",
-              "gapPolicy": "gap",
-              "pointsDisplay": "auto",
-              "truncationMode": "middle",
-              "xAxisScaling": "analyzedTimeframe"
-            },
-            "histogram": {
-              "colorPalette": "categorical",
-              "dataMappings": [],
-              "displayedFields": [
-                "element"
-              ],
-              "legend": "auto",
-              "variant": "single",
-              "yAxis": {
-                "label": "Frequency",
-                "scale": "linear"
-              }
-            },
-            "honeycomb": {
-              "colorMode": "color-palette",
-              "colorPalette": "categorical",
-              "dataMappings": {},
-              "displayedFields": [],
-              "legend": {
-                "hidden": false,
-                "position": "auto"
-              },
-              "shape": "hexagon"
-            },
-            "icon": {
-              "icon": "",
-              "showIcon": false
-            },
-            "label": {
-              "showLabel": false
-            },
-            "singleValue": {
-              "alignment": "center",
-              "autoscale": true,
-              "colorThresholdTarget": "value",
-              "label": "element",
-              "prefixIcon": "",
-              "recordField": "element",
-              "showLabel": true,
-              "trend": {
-                "isVisible": true,
-                "trendType": "auto"
-              }
-            },
-            "table": {
-              "columnTypeOverrides": [],
-              "columnWidths": {},
-              "enableSparklines": false,
-              "hiddenColumns": [],
-              "lineWrapIds": [],
-              "linewrapEnabled": false,
-              "monospacedFontColumns": [],
-              "monospacedFontEnabled": false,
-              "rowDensity": "condensed"
-            },
-            "thresholds": [],
-            "valueBoundaries": {
-              "max": "auto",
-              "min": "auto"
-            }
-          }
+          "visualizationSettings": {}
         },
         "5": {
           "content": "# DQL Builder \u0026 Validator 🛠️✅\n\nEasily Generate DQL commands with DQL builder and validator tools! \n\nVersion: 2.1 \n\n--- \n--- \n \n\n###### Beginners 🧩 \nPlease select an entity or GRAIL data object type from the `data_object` drop-down and then select one or more fields from the `data_object-fields` drop-down to auto-generate, execute and output the fetched results.\n\n\n--- \n \n###### Advanced Users 📐\nPlease input your prepared DQL query into the `custom_dql_input` variable to validate and view results.",
@@ -1398,101 +983,6 @@ resource "dynatrace_document" "DQL_Builder_Validator" {
           "type": "data",
           "visualization": "table",
           "visualizationSettings": {
-            "chartSettings": {
-              "categoricalBarChartSettings": {
-                "categoryAxis": [
-                  "entity.name",
-                  "id",
-                  "TagKey",
-                  "TagValue",
-                  "Callers",
-                  "metaDataKey",
-                  "metaDataValue"
-                ],
-                "categoryAxisLabel": "entity.name,id,TagKey,TagValue,Callers,metaDataKey,metaDataValue",
-                "categoryAxisTickLayout": "horizontal",
-                "colorPaletteMode": "multi-color",
-                "groupMode": "stacked",
-                "layout": "vertical",
-                "scale": "absolute",
-                "tooltipVariant": "single",
-                "valueAxis": [],
-                "valueAxisLabel": ""
-              },
-              "categoryOverrides": {},
-              "circleChartSettings": {
-                "groupingThresholdType": "relative",
-                "groupingThresholdValue": 0,
-                "valueType": "relative"
-              },
-              "colorPalette": "categorical",
-              "curve": "linear",
-              "gapPolicy": "gap",
-              "pointsDisplay": "auto",
-              "truncationMode": "middle",
-              "xAxisScaling": "analyzedTimeframe"
-            },
-            "dataMapping": {},
-            "histogram": {
-              "colorPalette": "categorical",
-              "dataMappings": [],
-              "displayedFields": [
-                "entity.name",
-                "TagKey",
-                "TagValue",
-                "Callers",
-                "metaDataKey",
-                "metaDataValue"
-              ],
-              "legend": "auto",
-              "variant": "single",
-              "yAxis": {
-                "label": "Frequency",
-                "scale": "linear"
-              }
-            },
-            "honeycomb": {
-              "colorMode": "color-palette",
-              "colorPalette": "categorical",
-              "dataMappings": {
-                "value": "entity.name"
-              },
-              "displayedFields": [
-                "entity.name",
-                "id",
-                "TagKey",
-                "TagValue",
-                "Callers",
-                "metaDataKey",
-                "metaDataValue"
-              ],
-              "legend": {
-                "hidden": false,
-                "position": "auto"
-              },
-              "shape": "hexagon"
-            },
-            "icon": {
-              "icon": "",
-              "showIcon": false
-            },
-            "label": {
-              "showLabel": false
-            },
-            "singleValue": {
-              "alignment": "center",
-              "autoscale": true,
-              "colorThresholdTarget": "value",
-              "label": "entity.name",
-              "prefixIcon": "",
-              "recordField": "entity.name",
-              "showLabel": true,
-              "sparklineSettings": {},
-              "trend": {
-                "isVisible": true,
-                "trendType": "auto"
-              }
-            },
             "table": {
               "columnTypeOverrides": [
                 {
@@ -1520,18 +1010,7 @@ resource "dynatrace_document" "DQL_Builder_Validator" {
                 "[\"lastSeen\"]": 122.26875305175781,
                 "[\"metaDataKey\"]": 127.07499694824219
               },
-              "enableSparklines": false,
-              "hiddenColumns": [],
-              "lineWrapIds": [],
-              "linewrapEnabled": false,
-              "monospacedFontColumns": [],
-              "monospacedFontEnabled": true,
-              "rowDensity": "condensed"
-            },
-            "thresholds": [],
-            "valueBoundaries": {
-              "max": "auto",
-              "min": "auto"
+              "monospacedFontEnabled": true
             }
           }
         }
@@ -1543,7 +1022,7 @@ resource "dynatrace_document" "DQL_Builder_Validator" {
           "key": "data_object_name",
           "multiple": false,
           "type": "query",
-          "version": 1,
+          "version": 2,
           "visible": true
         },
         {
@@ -1552,7 +1031,7 @@ resource "dynatrace_document" "DQL_Builder_Validator" {
           "key": "data_object",
           "multiple": false,
           "type": "query",
-          "version": 1,
+          "version": 2,
           "visible": false
         },
         {
@@ -1561,18 +1040,18 @@ resource "dynatrace_document" "DQL_Builder_Validator" {
           "key": "data_object_fields",
           "multiple": true,
           "type": "query",
-          "version": 1,
+          "version": 2,
           "visible": true
         },
         {
           "defaultValue": "Type your custom DQL",
           "key": "custom_dql_input",
           "type": "text",
-          "version": 1,
+          "version": 2,
           "visible": true
         }
       ],
-      "version": 18
+      "version": 21
     })
   private = true
 }

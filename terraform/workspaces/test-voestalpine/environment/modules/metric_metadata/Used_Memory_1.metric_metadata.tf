@@ -1,36 +1,18 @@
-resource "dynatrace_metric_metadata" "Used_Memory_1" {
-  description  = "Juniper SNMP Running Application Memory Use"
-  display_name = "Used Memory"
-  metric_id    = "metric-com.dynatrace.extension.juniper.generic.app.running.memory"
-  unit         = "KiloByte"
+resource "dynatrace_metric_metadata" "Used_memory_1" {
+  description        = "The host memory in bytes currently in use (not including TMM). This is for a single host system."
+  display_name       = "Used memory"
+  metric_id          = "metric-com.dynatrace.extension.f5.bigip.sys.host.memory.used"
+  source_entity_type = "f5:instance"
+  tags               = [ "F5", "Memory" ]
+  unit               = "Byte"
   dimensions {
     dimension {
-      display_name = "Device.address"
-      key          = "device.address"
+      display_name = "F5 Instance name"
+      key          = "instance.name"
     }
-    dimension {
-      display_name = "Device.port"
-      key          = "device.port"
-    }
-    dimension {
-      display_name = "System.contact"
-      key          = "system.contact"
-    }
-    dimension {
-      display_name = "System.name"
-      key          = "system.name"
-    }
-    dimension {
-      display_name = "System.location"
-      key          = "system.location"
-    }
-    dimension {
-      display_name = "Application Name"
-      key          = "app.name"
-    }
-    dimension {
-      display_name = "Application User"
-      key          = "app.user"
-    }
+  }
+  metric_properties {
+    min_value  = 0
+    value_type = "error"
   }
 }

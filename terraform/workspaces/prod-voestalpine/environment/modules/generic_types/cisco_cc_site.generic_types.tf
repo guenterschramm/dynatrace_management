@@ -1,7 +1,7 @@
 resource "dynatrace_generic_types" "cisco_cc_site" {
   name         = "cisco_cc:site"
   enabled      = true
-  created_by   = "com.dynatrace.extension.cisco-cc 2.2.1"
+  created_by   = "com.dynatrace.extension.cisco-cc 3.0.3"
   display_name = "Catalyst Site"
   insert_after = "vu9U3hXa3q0AAAABACZidWlsdGluOm1vbml0b3JlZGVudGl0aWVzLmdlbmVyaWMudHlwZQAGdGVuYW50AAZ0ZW5hbnQAJGE3NmRkYjZmLTljNjItNWFiYi1iNzQzLTAxYTJhMDdjOWNiN77vVN4V2t6t"
   rules {
@@ -217,7 +217,8 @@ resource "dynatrace_generic_types" "cisco_cc_site" {
           key = "center"
         }
         required_dimension {
-          key = "site_id"
+          key           = "site_id"
+          value_pattern = "$exists()"
         }
       }
       sources {

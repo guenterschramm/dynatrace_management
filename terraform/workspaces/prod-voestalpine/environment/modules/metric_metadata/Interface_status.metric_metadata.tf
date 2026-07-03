@@ -1,38 +1,40 @@
 resource "dynatrace_metric_metadata" "Interface_status" {
-  description        = "A state metric representing a network interface, whose value is always 1 and its dimensions indicate its state details."
+  description        = "Interface status"
   display_name       = "Interface status"
-  metric_id          = "metric-com.dynatrace.extension.network_device.if.status"
-  source_entity_type = "network:interface"
-  tags               = [ "NetworkInterface" ]
+  metric_id          = "metric-fortigate.interface.status"
+  source_entity_type = "fortinet:fortigate_interface"
   unit               = "State"
   dimensions {
     dimension {
-      display_name = "Device name"
-      key          = "sys.name"
+      display_name = "URL"
+      key          = "url"
     }
     dimension {
-      display_name = "Device address"
-      key          = "device.address"
+      display_name = "Alias"
+      key          = "alias"
     }
     dimension {
-      display_name = "Operational state"
-      key          = "oper.status"
+      display_name = "Interface"
+      key          = "if.name"
     }
     dimension {
-      display_name = "Admin state"
-      key          = "admin.status"
-    }
-    dimension {
-      display_name = "Bandwidth"
-      key          = "if.speed"
-    }
-    dimension {
-      display_name = "MAC address"
+      display_name = "MAC Address"
       key          = "mac.address"
     }
     dimension {
-      display_name = "Interface name"
-      key          = "if.name"
+      display_name = "Interface ID"
+      key          = "if.id"
     }
+    dimension {
+      display_name = "Status"
+      key          = "oper.status"
+    }
+    dimension {
+      display_name = "Device Address"
+      key          = "device.address"
+    }
+  }
+  metric_properties {
+    value_type = "unknown"
   }
 }

@@ -916,7 +916,7 @@ resource "dynatrace_json_dashboard" "_Kubernetes_Overview-User_Experience_owned_
           "configured": true,
           "customName": "User satisfaction by Apdex ",
           "metricExpressions": [
-            "resolution=Inf\u0026(builtin:apps.web.actionCount.category:filter(and(or(eq(\"Apdex category\",FRUSTRATED),eq(\"Apdex category\",TOLERATING),eq(\"Apdex category\",SATISFIED)))):splitBy(\"Apdex category\"):value:sort(value(sum,descending)):limit(20)):limit(100):names"
+            "resolution=Inf\u0026(builtin:apps.web.actionCount.category:filter(and(or(eq(\"Apdex category\",SATISFIED),eq(\"Apdex category\",TOLERATING),eq(\"Apdex category\",FRUSTRATED)))):splitBy(\"Apdex category\"):value:sort(value(sum,descending)):limit(20)):limit(100):names"
           ],
           "name": "User satisfaction by Apdex ",
           "queries": [

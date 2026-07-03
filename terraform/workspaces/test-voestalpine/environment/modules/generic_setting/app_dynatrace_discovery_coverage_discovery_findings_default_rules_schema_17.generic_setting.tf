@@ -5,35 +5,22 @@ resource "dynatrace_generic_setting" "app_dynatrace_discovery_coverage_discovery
       "rule": {
         "actions": [
           {
-            "name": "setMonitoringMode",
+            "name": "enableLogIngestRule",
             "parameters": [
               {
-                "name": "mode",
-                "value": "AT_LEAST_INFRA"
-              }
-            ]
-          },
-          {
-            "name": "activateExtension",
-            "parameters": [
-              {
-                "name": "extensionName",
-                "value": "com.dynatrace.extension.sql-server"
-              },
-              {
-                "name": "defaultPort",
-                "value": "1433"
+                "name": "ruleName",
+                "value": "[Built-in] Kubernetes default namespaces logs"
               }
             ]
           }
         ],
-        "category": "Databases",
-        "description": "MSSQL databases are an important part of your infrastructure.\n        Infrastructure Mode and a database extension are highly recommended. Without\n        adequate monitoring, Davis can only tell that the database is the rootcause,\n        not why the database is causing slow performance.",
-        "environmentScope": false,
-        "id": "undermonitored-msssql-db-0",
-        "priority": "WARNING",
-        "query": "fetch dt.entity.process_group_instance, from:-15m\n        | filter matchesValue(softwareTechnologies, \"*type:MICROSOFT_SQL_SERVER*\")\n        | fieldsAdd hostid=belongs_to[dt.entity.host]\n        | lookup [ fetch dt.entity.host | fieldsAdd monitoringMode], sourceField:hostid, lookupField:id, prefix:\"host.\"\n        | fields id, entity.name, host=host.entity.name, host.id, listenPorts, ipAddress=host.ipAddress, monitoringMode=host.monitoringMode\n        | lookup [ fetch `dt.entity.sql:sql_server_host` | fieldsAdd same_as | fieldsFlatten same_as | expand hostid = same_as.dt.entity.host ], sourceField:host.id, lookupField:hostid, prefix:\"db.\"\n        | fields process.id=id, process=entity.name, host, host.id, listenPorts, ipAddress, monitoringMode, compliant=(isNotNull(db.hostid) AND in(monitoringMode, array(\"INFRASTRUCTURE\", \"FULL_STACK\")))\n        ",
-        "title": "Undermonitored MSSQL databases"
+        "category": "Logs",
+        "description": "Logs are a critical signal for Observability and Security use cases. There are multiple ways to ingest logs, but the easiest is via OneAgent. This rule looks for Kubernetes containers and determines whether logs have been detected and ingested by OneAgent. The recommended remediation action is to enable a built-in rule to ingest these logs environment wide, to ensure there are no blind spots. Alternatively, you can create your own rules at the environment, namespace, deployment, or container level.",
+        "environmentScope": true,
+        "id": "unmonitored-kubernetes-logs-0",
+        "priority": "CRITICAL",
+        "query": "fetch dt.entity.container_group_instance\n        | fieldsAdd process=contains[dt.entity.process_group_instance][0]\n        | filterOut isNull(process) or isNull(belongs_to[dt.entity.kubernetes_cluster])\n        | lookup [fetch dt.entity.process_group_instance, from:-7d\n          | fieldsAdd hostId=belongs_to[dt.entity.host],id,logMonitored=isNotNull(logPathLastUpdate) or\n            (isNotNull(logSourceState) and contains(toString(logSourceState),\"LOG_STORAGE_CONFIGURATION_STATUS_SEND_TO_STORAGE\"))\n        ], sourceField:process, lookupField:id, prefix:\"process.\"\n        | lookup [fetch dt.entity.cloud_application], sourceField:belongs_to[dt.entity.cloud_application], lookupField:id, prefix:\"deployment.\"\n        | lookup [fetch dt.entity.cloud_application_namespace], sourceField:belongs_to[dt.entity.cloud_application_namespace], lookupField:id, prefix:\"namespace.\"\n        | fields namespace=namespace.entity.name, namespace.id, deployment=deployment.entity.name, deployment.id, container=entity.name, container.id=id,\n          compliant=process.logMonitored\n        ",
+        "title": "Unmonitored Kubernetes logs"
       },
       "settings": {
         "muted": false

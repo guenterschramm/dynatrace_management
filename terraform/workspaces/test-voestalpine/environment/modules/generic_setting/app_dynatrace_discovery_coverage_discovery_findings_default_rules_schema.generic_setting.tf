@@ -5,23 +5,22 @@ resource "dynatrace_generic_setting" "app_dynatrace_discovery_coverage_discovery
       "rule": {
         "actions": [
           {
-            "instantAction": true,
-            "name": "configureLogForwardingForTechnology",
+            "name": "activateExtension",
             "parameters": [
               {
-                "name": "technology",
-                "value": "fluentd"
+                "name": "extensionName",
+                "value": "com.dynatrace.extension.istio-prometheus"
               }
             ]
           }
         ],
-        "category": "Logs",
-        "description": "Monitoring Kubernetes logs, together with other observability signals like metrics and traces, is important to assure full context for observability and troubleshooting use cases.\n    This rule detects existing fluentd instances that are not integrated with Dynatrace, and provides instructions for configuring your log forwarder to send data to logs ingest API.",
+        "category": "Kubernetes",
+        "description": "Istio service mesh and Envoy proxies are an important part of many Kubernetes deployments.\n    Monitoring via an extension is highly recommended. Without it, you and Davis may be blind to Istio/Envoy\n    internal issues.",
         "environmentScope": true,
-        "id": "unmonitored-fluentd-logs-0",
+        "id": "unmonitored-istio-0",
         "priority": "WARNING",
-        "query": "fetch dt.entity.container_group_instance\n        | fieldsAdd containerImageName, cluster_id=belongs_to[dt.entity.kubernetes_cluster]\n        | filter matchesPhrase(containerImageName,\"fluentd\")\n        | summarize tmp=count(), by: cluster_id\n        | fieldsRemove tmp\n        | fieldsAdd compliant = cluster_id in [\n          timeseries count = sum(dt.log.status_per_entity_count), by: {dt.entity.kubernetes_cluster}, from: now()-1h\n          | filterOut isNull(dt.entity.kubernetes_cluster)\n          | fields dt.entity.kubernetes_cluster\n        ]\n        | lookup [fetch dt.entity.kubernetes_cluster], sourceField:cluster_id, lookupField:id, prefix:\"kubernetes_cluster.\"\n        | fields kubernetes_cluster=kubernetes_cluster.entity.name, kubernetes_cluster.id=cluster_id, compliant\n        ",
-        "title": "Unmonitored fluentd logs"
+        "query": "fetch dt.entity.process_group_instance, from:-15m\n        | filter contains(toString(softwareTechnologies),\"type:ISTIO\")\n        | fieldsAdd cgi=belongs_to[dt.entity.container_group_instance]\n        | lookup [fetch dt.entity.container_group_instance], lookupField:id, sourceField:cgi, prefix:\"cgi.\"\n        | fieldsAdd cai=cgi.belongs_to[dt.entity.cloud_application_instance]\n        | lookup [fetch dt.entity.cloud_application_instance], lookupField:id, sourceField:cai, prefix:\"cai.\"\n        | lookup [timeseries metric=avg(istio_requests_total), by:{dt.entity.cloud_application_instance}], lookupField:dt.entity.cloud_application_instance, sourceField:cai, fields:{metric}\n        | fields process.id=id, process=entity.name, container.id=cgi.id, container=cgi.entity.name, workload.id=cai.id, workload=cai.entity.name, compliant=isNotNull(metric)",
+        "title": "Undermonitored Istio/Envoy"
       },
       "settings": {
         "muted": false

@@ -5,22 +5,35 @@ resource "dynatrace_generic_setting" "app_dynatrace_discovery_coverage_discovery
       "rule": {
         "actions": [
           {
+            "name": "setMonitoringMode",
+            "parameters": [
+              {
+                "name": "mode",
+                "value": "AT_LEAST_INFRA"
+              }
+            ]
+          },
+          {
             "name": "activateExtension",
             "parameters": [
               {
                 "name": "extensionName",
-                "value": "com.dynatrace.extension.istio-prometheus"
+                "value": "com.dynatrace.extension.sql-server"
+              },
+              {
+                "name": "defaultPort",
+                "value": "1433"
               }
             ]
           }
         ],
-        "category": "Kubernetes",
-        "description": "Istio service mesh and Envoy proxies are an important part of many Kubernetes deployments.\n    Monitoring via an extension is highly recommended. Without it, you and Davis may be blind to Istio/Envoy\n    internal issues.",
-        "environmentScope": true,
-        "id": "unmonitored-istio-0",
+        "category": "Databases",
+        "description": "MSSQL databases are an important part of your infrastructure.\n        Infrastructure Mode and a database extension are highly recommended. Without\n        adequate monitoring, Davis can only tell that the database is the rootcause,\n        not why the database is causing slow performance.",
+        "environmentScope": false,
+        "id": "undermonitored-msssql-db-0",
         "priority": "WARNING",
-        "query": "fetch dt.entity.process_group_instance, from:-15m\n        | filter contains(toString(softwareTechnologies),\"type:ISTIO\")\n        | fieldsAdd cgi=belongs_to[dt.entity.container_group_instance]\n        | lookup [fetch dt.entity.container_group_instance], lookupField:id, sourceField:cgi, prefix:\"cgi.\"\n        | fieldsAdd cai=cgi.belongs_to[dt.entity.cloud_application_instance]\n        | lookup [fetch dt.entity.cloud_application_instance], lookupField:id, sourceField:cai, prefix:\"cai.\"\n        | lookup [timeseries metric=avg(istio_requests_total), by:{dt.entity.cloud_application_instance}], lookupField:dt.entity.cloud_application_instance, sourceField:cai, fields:{metric}\n        | fields process.id=id, process=entity.name, container.id=cgi.id, container=cgi.entity.name, workload.id=cai.id, workload=cai.entity.name, compliant=isNotNull(metric)",
-        "title": "Undermonitored Istio/Envoy"
+        "query": "fetch dt.entity.process_group_instance, from:-15m\n        | filter matchesValue(softwareTechnologies, \"*type:MICROSOFT_SQL_SERVER*\")\n        | fieldsAdd hostid=belongs_to[dt.entity.host]\n        | lookup [ fetch dt.entity.host | fieldsAdd monitoringMode], sourceField:hostid, lookupField:id, prefix:\"host.\"\n        | fields id, entity.name, host=host.entity.name, host.id, listenPorts, ipAddress=host.ipAddress, monitoringMode=host.monitoringMode\n        | lookup [ fetch `dt.entity.sql:sql_server_host` | fieldsAdd same_as | fieldsFlatten same_as | expand hostid = same_as.dt.entity.host ], sourceField:host.id, lookupField:hostid, prefix:\"db.\"\n        | fields process.id=id, process=entity.name, host, host.id, listenPorts, ipAddress, monitoringMode, compliant=(isNotNull(db.hostid) AND in(monitoringMode, array(\"INFRASTRUCTURE\", \"FULL_STACK\")))\n        ",
+        "title": "Undermonitored MSSQL databases"
       },
       "settings": {
         "muted": false

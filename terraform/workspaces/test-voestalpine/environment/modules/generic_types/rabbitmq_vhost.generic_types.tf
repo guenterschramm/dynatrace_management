@@ -1,7 +1,7 @@
 resource "dynatrace_generic_types" "rabbitmq_vhost" {
   name         = "rabbitmq:vhost"
   enabled      = true
-  created_by   = "com.dynatrace.rabbitmq 2.1.7"
+  created_by   = "com.dynatrace.rabbitmq 3.0.0"
   display_name = "Virtual Host"
   insert_after = "vu9U3hXa3q0AAAABACZidWlsdGluOm1vbml0b3JlZGVudGl0aWVzLmdlbmVyaWMudHlwZQAGdGVuYW50AAZ0ZW5hbnQAJGFlZDJmNDlhLTU2OGYtNTY0MC04MTNlLWEyNzlkNDgwZTVmYr7vVN4V2t6t"
   rules {
@@ -34,6 +34,16 @@ resource "dynatrace_generic_types" "rabbitmq_vhost" {
           display_name = "Security Context"
           key          = "dt.security_context"
           pattern      = "{dt.security_context}"
+        }
+      }
+      required_dimensions {
+        required_dimension {
+          key           = "cluster"
+          value_pattern = "$exists()"
+        }
+        required_dimension {
+          key           = "vhost"
+          value_pattern = "$exists()"
         }
       }
       sources {

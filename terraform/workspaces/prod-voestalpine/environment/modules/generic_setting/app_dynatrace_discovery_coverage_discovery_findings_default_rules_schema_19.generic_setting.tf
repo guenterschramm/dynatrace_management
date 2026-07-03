@@ -5,23 +5,35 @@ resource "dynatrace_generic_setting" "app_dynatrace_discovery_coverage_discovery
       "rule": {
         "actions": [
           {
-            "name": "configureLogForwardingForCloud",
+            "name": "setMonitoringMode",
             "parameters": [
               {
-                "name": "cloudProvider",
-                "value": "gcp"
+                "name": "mode",
+                "value": "AT_LEAST_INFRA"
+              }
+            ]
+          },
+          {
+            "name": "activateExtension",
+            "parameters": [
+              {
+                "name": "extensionName",
+                "value": "com.dynatrace.extension.sql-oracle"
+              },
+              {
+                "name": "defaultPort",
+                "value": "1521"
               }
             ]
           }
         ],
-        "category": "Logs",
-        "description": "Logs are a critical signal for Observability and Security use cases. This rule looks for Google Cloud Platform integration for your account and detects if any logs are ingested. The recommended remediation action is set up GCP resource and audit log ingest to ensure there are no blind spots.",
-        "environmentScope": true,
-        "id": "unmonitored-gcp-logs-0",
-        "priority": "CRITICAL",
-        "query": "fetch `dt.entity.cloud:gcp:project`, from:-15m\n       | summarize count=count(), by:{entity.name}\n       | fields `Google Cloud project`=entity.name,id=entity.name\n       | lookup [ fetch logs | fields gcp.project.id, cloud.provider | filter cloud.provider == \"gcp\" | summarize count=count(), by:{gcp.project.id} | fields gcp.project.id, hasLogs = count \u003e 0 ],\n                  sourceField:`Google Cloud project`, lookupField: gcp.project.id\n       | fields `Google Cloud project`, id, compliant=lookup.hasLogs\n       ",
-        "title": "Unmonitored Google Cloud logs",
-        "zeroRated": true
+        "category": "Databases",
+        "description": "Oracle databases are an important part of your infrastructure.\n        Infrastructure Mode and a database extension are highly recommended. Without\n        adequate monitoring, Davis can only tell that the database is the rootcause,\n        not why the database is causing slow performance.",
+        "environmentScope": false,
+        "id": "undermonitored-oracle-db-0",
+        "priority": "WARNING",
+        "query": "fetch dt.entity.process_group_instance, from:-15m\n        | filter matchesValue(softwareTechnologies, \"*type:ORACLE_DATABASE*\") AND matchesValue(entity.detected_name, \"Oracle Listener*\")\n        | fieldsAdd hostid=belongs_to[dt.entity.host]\n        | lookup [ fetch dt.entity.host | fieldsAdd monitoringMode], sourceField:hostid, lookupField:id, prefix:\"host.\"\n        | fields id, entity.name, host=host.entity.name, host.id, listenPorts, ipAddress=host.ipAddress, monitoringMode=host.monitoringMode\n        | lookup [ fetch `dt.entity.sql:com_dynatrace_extension_sql-oracle_host` | fieldsAdd same_as | fieldsFlatten same_as | expand hostid = same_as.dt.entity.host], sourceField:host.id, lookupField:hostid, prefix:\"db.\"\n        | fields process.id=id, process=entity.name, host, host.id, listenPorts, ipAddress, monitoringMode, compliant=(isNotNull(db.hostid) AND in(monitoringMode, array(\"INFRASTRUCTURE\", \"FULL_STACK\")))\n        ",
+        "title": "Undermonitored Oracle databases"
       },
       "settings": {
         "muted": false

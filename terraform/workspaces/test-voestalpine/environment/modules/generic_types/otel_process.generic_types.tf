@@ -1,7 +1,7 @@
 resource "dynatrace_generic_types" "otel_process" {
   name         = "otel:process"
   enabled      = true
-  created_by   = "com.dynatrace.extension.opentelemetry 2.1.3"
+  created_by   = "com.dynatrace.extension.opentelemetry 3.0.3"
   display_name = "Process"
   insert_after = "vu9U3hXa3q0AAAABACZidWlsdGluOm1vbml0b3JlZGVudGl0aWVzLmdlbmVyaWMudHlwZQAGdGVuYW50AAZ0ZW5hbnQAJDAzMTM1MjdiLTRmYTgtNWY1Ni04MzcxLTJiODE3Mjk1NzE2Ob7vVN4V2t6t"
   rules {

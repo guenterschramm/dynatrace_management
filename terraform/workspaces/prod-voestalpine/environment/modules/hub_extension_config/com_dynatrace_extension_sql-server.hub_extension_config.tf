@@ -7,10 +7,11 @@ resource "dynatrace_hub_extension_config" "com_dynatrace_extension_sql-server" {
   scope             = "ag_group-default"
   value             = jsonencode({
       "activationContext": "REMOTE",
-      "description": "Content Server PROD (CSSDP)",
+      "description": "xECM Steel - Content Server PROD (CSSDP)",
       "dtAttributes": {
         "dt.cost.costcenter": "xecm",
-        "dt.cost.product": "xecm_production"
+        "dt.cost.product": "xecm_production",
+        "dt.security_context": "xECM_Steel"
       },
       "enabled": true,
       "featureSets": [
@@ -25,8 +26,7 @@ resource "dynatrace_hub_extension_config" "com_dynatrace_extension_sql-server" {
         "Queries",
         "Replication",
         "Sessions",
-        "Transaction logs",
-        "Transaction Logs"
+        "Transaction logs"
       ],
       "sqlServerRemote": {
         "endpoints": [
@@ -34,6 +34,7 @@ resource "dynatrace_hub_extension_config" "com_dynatrace_extension_sql-server" {
             "authentication": {
               "password": "***48ddf5e0a2009966***",
               "scheme": "ntlm",
+              "useCredentialVault": false,
               "username": "2217_S_2236_DYNA_P"
             },
             "databaseName": "",
@@ -50,6 +51,6 @@ resource "dynatrace_hub_extension_config" "com_dynatrace_extension_sql-server" {
         "longest-queries-timeout": "120",
         "query-interval": "1"
       },
-      "version": "2.11.5"
+      "version": "2.11.8"
     })
 }

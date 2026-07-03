@@ -1,7 +1,7 @@
 resource "dynatrace_generic_types" "wmi_iis_service_app_pool" {
   name         = "wmi:iis_service_app_pool"
   enabled      = true
-  created_by   = "com.dynatrace.extension.wmi.iis 1.2.6"
+  created_by   = "com.dynatrace.extension.wmi.iis 2.0.1"
   display_name = "IIS App Pool"
   insert_after = "vu9U3hXa3q0AAAABACZidWlsdGluOm1vbml0b3JlZGVudGl0aWVzLmdlbmVyaWMudHlwZQAGdGVuYW50AAZ0ZW5hbnQAJDVkNzM5ZmY5LWE0YWMtNTQzMS05MzhjLWM4NTA5MjBjYTBmNb7vVN4V2t6t"
   rules {

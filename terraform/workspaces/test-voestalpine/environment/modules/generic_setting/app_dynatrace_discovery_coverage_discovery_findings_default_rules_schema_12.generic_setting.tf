@@ -5,35 +5,24 @@ resource "dynatrace_generic_setting" "app_dynatrace_discovery_coverage_discovery
       "rule": {
         "actions": [
           {
-            "name": "setMonitoringMode",
+            "instantAction": true,
+            "name": "configureLogForwardingForCloud",
             "parameters": [
               {
-                "name": "mode",
-                "value": "AT_LEAST_INFRA"
-              }
-            ]
-          },
-          {
-            "name": "activateExtension",
-            "parameters": [
-              {
-                "name": "extensionName",
-                "value": "com.dynatrace.extension.jmx-kafka"
-              },
-              {
-                "name": "defaultPort",
-                "value": "9092"
+                "name": "cloudProvider",
+                "value": "azure"
               }
             ]
           }
         ],
-        "category": "Messaging",
-        "description": "Kafka is an important messaging part of your infrastructure.\n        Infrastructure Mode and an extension are highly recommended. Without\n        adequate monitoring, Davis has a limited view into your Kafka health.",
-        "environmentScope": false,
-        "id": "undermonitored-kafka-0",
-        "priority": "WARNING",
-        "query": "fetch dt.entity.process_group_instance, from:-15m\n        | filter matchesValue(softwareTechnologies, \"type:KAFKA\")\n        | fieldsAdd hostid=belongs_to[dt.entity.host]\n        | lookup [ fetch dt.entity.host | fieldsAdd monitoringMode], sourceField:hostid, lookupField:id, prefix:\"host.\"\n        | fields id, entity.name, host=host.entity.name, host.id, listenPorts, ipAddress=host.ipAddress, monitoringMode=host.monitoringMode\n        | lookup [ fetch `dt.entity.kafka:broker` | fieldsAdd hostid=runs_on[dt.entity.host]], sourceField:host.id, lookupField:hostid, prefix:\"kafka.\"\n        | fieldsAdd compliant=(isNotNull(kafka.hostid) and in(monitoringMode, array(\"INFRASTRUCTURE\", \"FULL_STACK\")))\n        | fields process.id=id, process=entity.name, host, host.id, listenPorts, ipAddress, monitoringMode, kafka.id, kafka=kafka.entity.name, compliant\n        ",
-        "title": "Undermonitored Kafka"
+        "category": "Logs",
+        "description": "Logs are a critical signal for Observability and Security use cases. This rule looks for Microsoft Azure integration for your account and detects if any logs are ingested. The recommended remediation action is set up Azure resource and activity log ingest to ensure there are no blind spots.",
+        "environmentScope": true,
+        "id": "unmonitored-azure-logs-0",
+        "priority": "CRITICAL",
+        "query": "fetch dt.entity.azure_subscription, from:-15m\n       | summarize count=count(), by:{azureSubscriptionUuid}\n       | fields `Azure subscription ID`=upper(azureSubscriptionUuid),id=azureSubscriptionUuid\n       | lookup [ fetch logs | fields azure.subscription=upper(azure.subscription), cloud.provider | filter cloud.provider == \"Azure\" OR cloud.provider == \"azure\" | summarize count=count(), by:{azure.subscription} | fields azure.subscription, hasLogs = count \u003e 0 ],\n                  sourceField:`Azure subscription ID`, lookupField: azure.subscription\n       | fields `Azure subscription ID`, id, compliant=lookup.hasLogs\n       ",
+        "title": "Unmonitored Azure logs",
+        "zeroRated": true
       },
       "settings": {
         "muted": false

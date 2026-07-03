@@ -3,7 +3,7 @@ resource "dynatrace_generic_types" "snmptraps_com_dynatrace_ext_snmp-traps" {
   enabled      = true
   created_by   = "com.dynatrace.extension.snmp-traps-generic 2.1.1"
   display_name = "SNMP Traps Device"
-  insert_after = "vu9U3hXa3q0AAAABACZidWlsdGluOm1vbml0b3JlZGVudGl0aWVzLmdlbmVyaWMudHlwZQAGdGVuYW50AAZ0ZW5hbnQAJDAzMGFkNGQyLTFlZDgtMzM0Yy1iM2QzLTkyYTA4MWVmNDJiZb7vVN4V2t6t"
+  insert_after = "vu9U3hXa3q0AAAABACZidWlsdGluOm1vbml0b3JlZGVudGl0aWVzLmdlbmVyaWMudHlwZQAGdGVuYW50AAZ0ZW5hbnQAJGUxMTc0ZDc4LTQ1NTctNWM3ZC1hYTZjLTE2ZjRlZmRmMTYyOb7vVN4V2t6t"
   rules {
     rule {
       id_pattern            = "snmp_traps_device_{device.address}"

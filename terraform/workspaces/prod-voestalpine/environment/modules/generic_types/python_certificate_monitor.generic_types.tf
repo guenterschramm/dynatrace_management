@@ -1,7 +1,7 @@
 resource "dynatrace_generic_types" "python_certificate_monitor" {
   name         = "python:certificate_monitor"
   enabled      = true
-  created_by   = "com.dynatrace.custom.python-certificate-monitor 1.10.26"
+  created_by   = "com.dynatrace.custom.python-certificate-monitor 2.0.0"
   display_name = "Certificate monitor"
   insert_after = "vu9U3hXa3q0AAAABACZidWlsdGluOm1vbml0b3JlZGVudGl0aWVzLmdlbmVyaWMudHlwZQAGdGVuYW50AAZ0ZW5hbnQAJDIxZTI2MTViLTQxNTEtNTQ4OC04ZGIzLTY5ZmUxNmYzNzFhOL7vVN4V2t6t"
   rules {
@@ -28,6 +28,16 @@ resource "dynatrace_generic_types" "python_certificate_monitor" {
           display_name = "Security context"
           key          = "dt.security_context"
           pattern      = "{dt.security_context}"
+        }
+      }
+      required_dimensions {
+        required_dimension {
+          key           = "host.name"
+          value_pattern = "$exists()"
+        }
+        required_dimension {
+          key           = "dt.entity.host"
+          value_pattern = "$exists()"
         }
       }
       sources {
@@ -62,6 +72,10 @@ resource "dynatrace_generic_types" "python_certificate_monitor" {
           key           = "source"
           value_pattern = "$eq(Domain)"
         }
+        required_dimension {
+          key           = "monitoring_config"
+          value_pattern = "$exists()"
+        }
       }
       sources {
         source {
@@ -95,6 +109,10 @@ resource "dynatrace_generic_types" "python_certificate_monitor" {
           key           = "source"
           value_pattern = "$eq(External)"
         }
+        required_dimension {
+          key           = "monitoring_config"
+          value_pattern = "$exists()"
+        }
       }
       sources {
         source {
@@ -119,6 +137,14 @@ resource "dynatrace_generic_types" "python_certificate_monitor" {
         required_dimension {
           key           = "dt.extension.name"
           value_pattern = "$eq(python_certificate_monitor)"
+        }
+        required_dimension {
+          key           = "host.name"
+          value_pattern = "$exists()"
+        }
+        required_dimension {
+          key           = "dt.entity.host"
+          value_pattern = "$exists()"
         }
       }
       sources {

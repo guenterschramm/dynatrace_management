@@ -1,7 +1,7 @@
 resource "dynatrace_generic_types" "sql_sql_server_availability_replica" {
   name         = "sql:sql_server_availability_replica"
   enabled      = true
-  created_by   = "com.dynatrace.extension.sql-server 2.11.5"
+  created_by   = "com.dynatrace.extension.sql-server 3.1.2"
   display_name = "SQL Server Availability Replica"
   insert_after = "vu9U3hXa3q0AAAABACZidWlsdGluOm1vbml0b3JlZGVudGl0aWVzLmdlbmVyaWMudHlwZQAGdGVuYW50AAZ0ZW5hbnQAJDI4NzZlZjFkLWI1ODQtNThmYi05YWZlLTAzYzEwMGY4MjUyOL7vVN4V2t6t"
   rules {

@@ -1,9 +1,9 @@
 resource "dynatrace_generic_types" "network_device_4" {
   name         = "network:device"
   enabled      = true
-  created_by   = "com.dynatrace.extension.snmp-generic-cisco-device 3.4.10"
+  created_by   = "com.dynatrace.extension.snmp-generic-cisco-device 4.0.9"
   display_name = "Network device"
-  insert_after = "vu9U3hXa3q0AAAABACZidWlsdGluOm1vbml0b3JlZGVudGl0aWVzLmdlbmVyaWMudHlwZQAGdGVuYW50AAZ0ZW5hbnQAJGUxMTc0ZDc4LTQ1NTctNWM3ZC1hYTZjLTE2ZjRlZmRmMTYyOb7vVN4V2t6t"
+  insert_after = "vu9U3hXa3q0AAAABACZidWlsdGluOm1vbml0b3JlZGVudGl0aWVzLmdlbmVyaWMudHlwZQAGdGVuYW50AAZ0ZW5hbnQAJDg5MGRhZGZiLTg2YWItNTQzMy1iMTE3LTc3MGE0YWNjNDhjMb7vVN4V2t6t"
   rules {
     rule {
       id_pattern            = "network_device_{device.address}"
@@ -102,7 +102,7 @@ resource "dynatrace_generic_types" "network_device_4" {
         attribute {
           display_name = "Services"
           key          = "services"
-          pattern      = "{services}"
+          pattern      = "{sys.services}"
         }
         attribute {
           display_name = "Interface Count"

@@ -31,7 +31,11 @@ resource "dynatrace_metric_metadata" "Average_Temperature" {
     }
     dimension {
       display_name = "Device IP Address"
-      key          = "ip_address"
+      key          = "device_ip_address"
+    }
+    dimension {
+      display_name = "Chassis MAC"
+      key          = "chassis.mac"
     }
   }
 }

@@ -5,22 +5,31 @@ resource "dynatrace_generic_setting" "app_dynatrace_discovery_coverage_discovery
       "rule": {
         "actions": [
           {
-            "name": "enableLogIngestRule",
+            "name": "setMonitoringMode",
             "parameters": [
               {
-                "name": "ruleName",
-                "value": "[Built-in] Linux system logs"
+                "name": "mode",
+                "value": "AT_LEAST_INFRA"
+              }
+            ]
+          },
+          {
+            "name": "activateExtension",
+            "parameters": [
+              {
+                "name": "extensionName",
+                "value": "com.dynatrace.extension.prom-redis-enterprise"
               }
             ]
           }
         ],
-        "category": "Logs",
-        "description": "Logs are a critical signal for Observability and Security use cases. There are multiple ways to ingest logs, but the easiest is via OneAgent. This rule looks for Linux system logs which have been detected by OneAgent but are not being ingested. The recommended remediation action is to enable a built-in rule to ingest these logs environment wide, to ensure there are no blind spots. Alternatively, you can create your own rules at the environment, host group, or host level.",
-        "environmentScope": true,
-        "id": "unmonitored-linux-system-logs-0",
-        "priority": "CRITICAL",
-        "query": "fetch dt.entity.process_group_instance, from:-7d\n        | filter processType == \"LINUX_SYSTEM\"\n        | fields hostId=belongs_to[dt.entity.host],id,logMonitored=isNotNull(logPathLastUpdate) or (isNotNull(logSourceState) and contains(toString(logSourceState),\"LOG_STORAGE_CONFIGURATION_STATUS_SEND_TO_STORAGE\"))\n        | filter id in [ fetch dt.entity.process_group_instance, from:-2h | filter processType == \"LINUX_SYSTEM\" |fields id]\n        | lookup [fetch dt.entity.host], lookupField: id, sourceField: hostId, prefix:\"host.\"\n        | fields host.id,host=host.entity.name,compliant=logMonitored\n        ",
-        "title": "Unmonitored Linux system logs"
+        "category": "Databases",
+        "description": "Redis in-memory databases are an important part of your infrastructure.\n        Infrastructure Mode and a database extension are highly recommended. Without\n        adequate monitoring, Davis can only tell that the database is the rootcause,\n        not why the database is causing slow performance.",
+        "environmentScope": false,
+        "id": "undermonitored-redis-db-0",
+        "priority": "WARNING",
+        "query": "fetch dt.entity.process_group_instance, from:-15m\n        | filter matchesValue(softwareTechnologies, \"*type:REDIS*\")\n        | fieldsAdd hostid=belongs_to[dt.entity.host]\n        | lookup [ fetch dt.entity.host | fieldsAdd monitoringMode], sourceField:hostid, lookupField:id, prefix:\"host.\"\n        | fields id, entity.name, host=host.entity.name, host.id, listenPorts, ipAddress=host.ipAddress, monitoringMode=host.monitoringMode\n        | lookup [ fetch `dt.entity.prometheus:com_dynatrace_extension_redis_node` | fieldsAdd same_as | fieldsFlatten same_as | expand hostid = same_as.dt.entity.host], sourceField:host.id, lookupField:hostid, prefix:\"db.\"\n        | fields process.id=id, process=entity.name, host, host.id, listenPorts, ipAddress, monitoringMode, compliant=(isNotNull(db.hostid) AND in(monitoringMode, array(\"INFRASTRUCTURE\", \"FULL_STACK\")))\n        ",
+        "title": "Undermonitored Redis databases"
       },
       "settings": {
         "muted": false

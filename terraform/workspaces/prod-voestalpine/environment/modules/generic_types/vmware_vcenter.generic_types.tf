@@ -1,9 +1,9 @@
 resource "dynatrace_generic_types" "vmware_vcenter" {
   name         = "vmware:vcenter"
   enabled      = true
-  created_by   = "com.dynatrace.vmware-integration 3.14.13"
+  created_by   = "com.dynatrace.vmware-integration 3.16.2"
   display_name = "VMware vCenter"
-  insert_after = "vu9U3hXa3q0AAAABACZidWlsdGluOm1vbml0b3JlZGVudGl0aWVzLmdlbmVyaWMudHlwZQAGdGVuYW50AAZ0ZW5hbnQAJDY3OGM1ZDQ5LWEwNjctNWI4My1iZTE1LWU2ZTA4MDBkN2MyNb7vVN4V2t6t"
+  insert_after = "vu9U3hXa3q0AAAABACZidWlsdGluOm1vbml0b3JlZGVudGl0aWVzLmdlbmVyaWMudHlwZQAGdGVuYW50AAZ0ZW5hbnQAJGI0MmQzOTdkLWJjZGYtNTNkZS1hNDFlLTA2NTQ4NjBkMDU3Zb7vVN4V2t6t"
   rules {
     rule {
       icon_pattern          = "vcenter"
@@ -18,6 +18,12 @@ resource "dynatrace_generic_types" "vmware_vcenter" {
           display_name = "Security Context"
           key          = "dt.security_context"
           pattern      = "{dt.security_context}"
+        }
+      }
+      required_dimensions {
+        required_dimension {
+          key           = "vcenter.address"
+          value_pattern = "$exists()"
         }
       }
       sources {
@@ -39,6 +45,12 @@ resource "dynatrace_generic_types" "vmware_vcenter" {
           display_name = "Security Context"
           key          = "dt.security_context"
           pattern      = "{dt.security_context}"
+        }
+      }
+      required_dimensions {
+        required_dimension {
+          key           = "device.address"
+          value_pattern = "$exists()"
         }
       }
       sources {

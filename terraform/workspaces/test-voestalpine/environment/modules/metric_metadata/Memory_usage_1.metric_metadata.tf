@@ -1,17 +1,20 @@
 resource "dynatrace_metric_metadata" "Memory_usage_1" {
-  description        = "The current memory used by the device, expressed as a percentage of total memory"
+  description        = "Memory usage"
   display_name       = "Memory usage"
-  metric_id          = "metric-com.dynatrace.extension.network_device.memory_usage"
-  source_entity_type = "network:device"
-  tags               = [ "NetworkDevice" ]
+  metric_id          = "metric-fortigate.memory.usage"
+  source_entity_type = "fortinet:fortigate"
   unit               = "Percent"
   dimensions {
     dimension {
-      display_name = "Device name"
-      key          = "sys.name"
+      display_name = "URL"
+      key          = "url"
     }
     dimension {
-      display_name = "Device address"
+      display_name = "Alias"
+      key          = "alias"
+    }
+    dimension {
+      display_name = "Device Address"
       key          = "device.address"
     }
   }

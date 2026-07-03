@@ -26,6 +26,8 @@ resource "dynatrace_hub_extension_config" "com_dynatrace_rabbitmq" {
               "http://localhost:15672"
             ],
             "password": "***389bc0d830fc0db2***",
+            "primaryFields": [],
+            "primaryTags": [],
             "queues_include": [
               ".*"
             ],
@@ -35,6 +37,6 @@ resource "dynatrace_hub_extension_config" "com_dynatrace_rabbitmq" {
           }
         ]
       },
-      "version": "2.1.7"
+      "version": "3.0.0"
     })
 }

@@ -1,6 +1,6 @@
 resource "dynatrace_generic_relationships" "cisco_cc_interface_SAME_AS_network_interface" {
   enabled          = true
-  created_by       = "com.dynatrace.extension.cisco-cc 2.2.1"
+  created_by       = "com.dynatrace.extension.cisco-cc 3.0.3"
   from_type        = "cisco_cc:interface"
   to_type          = "network:interface"
   type_of_relation = "SAME_AS"

@@ -3,7 +3,7 @@ resource "dynatrace_generic_types" "disk-devices_disk" {
   enabled      = true
   created_by   = "com.dynatrace.extension.disk-devices 1.0.3"
   display_name = "Disk"
-  insert_after = "vu9U3hXa3q0AAAABACZidWlsdGluOm1vbml0b3JlZGVudGl0aWVzLmdlbmVyaWMudHlwZQAGdGVuYW50AAZ0ZW5hbnQAJGI0MmQzOTdkLWJjZGYtNTNkZS1hNDFlLTA2NTQ4NjBkMDU3Zb7vVN4V2t6t"
+  insert_after = "vu9U3hXa3q0AAAABACZidWlsdGluOm1vbml0b3JlZGVudGl0aWVzLmdlbmVyaWMudHlwZQAGdGVuYW50AAZ0ZW5hbnQAJDY2NWU2NjlkLTA4MTAtNWRiYy04NDMxLWU0ZTYwMWM5NDhmMb7vVN4V2t6t"
   rules {
     rule {
       id_pattern            = "{storage.disk.kname} {dt.entity.host}"

@@ -1925,6 +1925,6 @@ resource "dynatrace_document" "Advanced_Certificate_Monitor_Dashboard" {
       ],
       "version": 19
     })
-  custom_id = "com-dynatrace-custom-python-certificate-monitor-advanced-certificate-monitor-557713934"
+  custom_id = "com-dynatrace-custom-python-certificate-monitor-advanced-certificate-monitor"
   # private = false
 }

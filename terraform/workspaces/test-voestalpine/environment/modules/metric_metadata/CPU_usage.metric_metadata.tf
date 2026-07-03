@@ -1,17 +1,20 @@
 resource "dynatrace_metric_metadata" "CPU_usage" {
-  description        = "The system's CPU usage expressed as a percentage"
+  description        = "CPU usage"
   display_name       = "CPU usage"
-  metric_id          = "metric-com.dynatrace.extension.network_device.cpu_usage"
-  source_entity_type = "network:device"
-  tags               = [ "NetworkDevice" ]
+  metric_id          = "metric-fortigate.cpu.usage"
+  source_entity_type = "fortinet:fortigate"
   unit               = "Percent"
   dimensions {
     dimension {
-      display_name = "Device name"
-      key          = "sys.name"
+      display_name = "URL"
+      key          = "url"
     }
     dimension {
-      display_name = "Device address"
+      display_name = "Alias"
+      key          = "alias"
+    }
+    dimension {
+      display_name = "Device Address"
       key          = "device.address"
     }
   }

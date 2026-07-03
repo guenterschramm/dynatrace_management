@@ -1,7 +1,7 @@
 resource "dynatrace_generic_types" "network_device_3" {
   name         = "network:device"
   enabled      = true
-  created_by   = "com.dynatrace.extension.cisco-cc 2.2.1"
+  created_by   = "com.dynatrace.extension.cisco-cc 3.0.3"
   display_name = "Network device"
   insert_after = "vu9U3hXa3q0AAAABACZidWlsdGluOm1vbml0b3JlZGVudGl0aWVzLmdlbmVyaWMudHlwZQAGdGVuYW50AAZ0ZW5hbnQAJDMzMzViNmJlLTAxMWUtNTAxMS1iZDg2LTQ3NjZlMzE4ZjcxNL7vVN4V2t6t"
   rules {
@@ -234,6 +234,21 @@ resource "dynatrace_generic_types" "network_device_3" {
           display_name = "CC Device Reachability Status"
           key          = "reachability_status"
           pattern      = "{reachability_status}"
+        }
+        attribute {
+          display_name = "CC Device Vendor"
+          key          = "vendor"
+          pattern      = "{vendor}"
+        }
+        attribute {
+          display_name = "CC Device Product Vendor"
+          key          = "product_vendor"
+          pattern      = "{product_vendor}"
+        }
+        attribute {
+          display_name = "Chassis MAC"
+          key          = "chassis_mac"
+          pattern      = "{chassis.mac}"
         }
         attribute {
           display_name = "Center Device Link"

@@ -5,24 +5,17 @@ resource "dynatrace_generic_setting" "app_dynatrace_discovery_coverage_discovery
       "rule": {
         "actions": [
           {
-            "instantAction": true,
-            "name": "configureLogForwardingForCloud",
-            "parameters": [
-              {
-                "name": "cloudProvider",
-                "value": "aws"
-              }
-            ]
+            "name": "installDynatraceOperator",
+            "parameters": []
           }
         ],
-        "category": "Logs",
-        "description": "Logs are a critical signal for Observability and Security use cases. This rule looks for AWS integration for your account and detects if any logs are ingested. The recommended remediation action is set up AWS log ingest to ensure there are no blind spots. There are multiple ways to ingest resource and activity logs from AWS.",
+        "category": "Kubernetes",
+        "description": "Kubernetes is the 'operating system' of the modern cloud. As such, it's important from a platform engineering perspective to monitor Kubernetes, not just your workloads. Dynatrace monitors Kubernetes using an Operator. This rule detects Kubernetes clusters which are not monitored using the Operator and opens a new tab to the Kubernetes app, so that you can install the Operator.",
         "environmentScope": true,
-        "id": "unmonitored-aws-logs-0",
+        "id": "unmonitored-kubernetes-cluster-0",
         "priority": "CRITICAL",
-        "query": "fetch dt.entity.aws_credentials, from:-15m\n       | summarize count=count(), by:{awsAccountId}\n       | fields `Account ID`=awsAccountId, id=awsAccountId\n       | lookup [ fetch logs | filter cloud.provider == \"aws\" | summarize count=count(), by:{aws.account.id} | fields aws.account.id, hasLogs = count \u003e 0 ],\n                  sourceField:`Account ID`, lookupField: aws.account.id\n       | fields `Account ID`, id, compliant=lookup.hasLogs\n       ",
-        "title": "Unmonitored AWS logs",
-        "zeroRated": true
+        "query": "fetch dt.entity.process_group_instance, from:-15m\n        | filter contains(toString(softwareTechnologies),\"type:KUBERNETES\")\n        | fieldsAdd hostId=belongs_to[dt.entity.host]\n        | lookup [fetch dt.entity.host | fieldsAdd compliant=isNotNull(contains[dt.entity.kubernetes_node])], lookupField:id, sourceField:hostId, prefix:\"host.\"\n        | summarize count=count(), by:{host.id, host=host.entity.name, compliant=host.compliant}\n        | fieldsRemove count\n        ",
+        "title": "Unmonitored Kubernetes cluster"
       },
       "settings": {
         "muted": false

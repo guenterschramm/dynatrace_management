@@ -160,12 +160,6 @@ resource "dynatrace_document" "Cisco_Catalyst_Center_Monitoring_Overview" {
           "x": 0,
           "y": 52
         },
-        "36": {
-          "h": 4,
-          "w": 6,
-          "x": 38,
-          "y": 5
-        },
         "4": {
           "h": 4,
           "w": 6,
@@ -2800,10 +2794,6 @@ resource "dynatrace_document" "Cisco_Catalyst_Center_Monitoring_Overview" {
           "content": "***",
           "type": "markdown"
         },
-        "36": {
-          "content": "**🔗 Navigate to entities:**\n* [Catalyst Centers](/ui/apps/dynatrace.classic.technologies/ui/entity/list/cisco_cc:center)\n* [Sites](/ui/apps/dynatrace.classic.technologies/ui/entity/list/cisco_cc:site)\n* [Devices](/ui/apps/dynatrace.classic.technologies/ui/entity/list/cisco_cc:device)\n* [Interfaces](/ui/apps/dynatrace.classic.technologies/ui/entity/list/cisco_cc:interface)",
-          "type": "markdown"
-        },
         "4": {
           "davis": {
             "davisVisualization": {
@@ -3595,6 +3585,6 @@ resource "dynatrace_document" "Cisco_Catalyst_Center_Monitoring_Overview" {
       ],
       "version": 19
     })
-  custom_id = "com-dynatrace-extension-cisco-cc-catalyst-center-overview--464828074"
+  custom_id = "com-dynatrace-extension-cisco-cc-catalyst-center-overview"
   # private = false
 }

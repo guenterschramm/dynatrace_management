@@ -3,39 +3,40 @@ resource "dynatrace_hub_extension_v2_config" "com_dynatrace_extension_sql-server
   scope = "ag_group-default"
   value = jsonencode({
       "activationContext": "REMOTE",
-      "description": "Bee4IT Production",
+      "description": "xECM Steel - Content Server PROD (CSSDP)",
       "dtAttributes": {
-        "dt.cost.costcenter": "P223100000_bee4it",
-        "dt.cost.product": "bee4it_production"
+        "dt.cost.costcenter": "xecm",
+        "dt.cost.product": "xecm_production",
+        "dt.security_context": "xECM_Steel"
       },
       "enabled": true,
       "featureSets": [
-        "Memory",
         "Agent",
-        "Latches",
-        "Database files",
-        "Transaction logs",
         "Always On",
-        "Transaction Logs",
-        "Locks",
-        "Jobs",
-        "Sessions",
-        "Queries",
         "Backups",
-        "Replication"
+        "Database files",
+        "Jobs",
+        "Latches",
+        "Locks",
+        "Memory",
+        "Queries",
+        "Replication",
+        "Sessions",
+        "Transaction logs"
       ],
       "sqlServerRemote": {
         "endpoints": [
           {
             "authentication": {
-              "password": "***66057591ce02d880***",
-              "scheme": "basic",
+              "password": "***48ddf5e0a2009966***",
+              "scheme": "ntlm",
               "useCredentialVault": false,
-              "username": "dynatrace"
+              "username": "2217_S_2236_DYNA_P"
             },
-            "databaseName": "Bee4ITP",
-            "host": "2217dbsqlbee4it",
-            "instanceName": "bee4itp",
+            "databaseName": "",
+            "host": "2236DBXALIASP1",
+            "instanceName": "SXECMP",
+            "port": 14301,
             "ssl": false,
             "useConnectionString": false
           }
@@ -46,6 +47,6 @@ resource "dynatrace_hub_extension_v2_config" "com_dynatrace_extension_sql-server
         "longest-queries-timeout": "120",
         "query-interval": "1"
       },
-      "version": "2.11.5"
+      "version": "2.11.8"
     })
 }

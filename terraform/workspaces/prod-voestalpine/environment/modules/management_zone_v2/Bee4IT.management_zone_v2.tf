@@ -4,6 +4,46 @@ resource "dynatrace_management_zone_v2" "Bee4IT" {
     rule {
       type            = "SELECTOR"
       enabled         = true
+      entity_selector =<<-EOT
+        type("sql:sql_server_availability_replica"), dt.security_context("Bee4IT")
+      EOT
+    }
+    rule {
+      type            = "SELECTOR"
+      enabled         = true
+      entity_selector =<<-EOT
+        type("sql:sql_server_availability_database"), dt.security_context("Bee4IT")
+      EOT
+    }
+    rule {
+      type            = "SELECTOR"
+      enabled         = true
+      entity_selector =<<-EOT
+        type("sql:sql_server_availability_group"), dt.security_context("Bee4IT")
+      EOT
+    }
+    rule {
+      type            = "SELECTOR"
+      enabled         = true
+      entity_selector =<<-EOT
+        type("sql:sql_server_database"), dt.security_context("Bee4IT")
+      EOT
+    }
+    rule {
+      type            = "SELECTOR"
+      enabled         = true
+      entity_selector = "type(sql:sql_server_instance), dt.security_context(\"Bee4IT\")"
+    }
+    rule {
+      type            = "SELECTOR"
+      enabled         = true
+      entity_selector =<<-EOT
+        type("sql:sql_server_host"), dt.security_context("Bee4IT")
+      EOT
+    }
+    rule {
+      type            = "SELECTOR"
+      enabled         = true
       entity_selector = "type(vcenter),fromRelationships.manages(type(HYPERVISOR),toRelationship.runsOn(type(HOST),hostGroupName(\"bee4it\")))"
     }
     rule {

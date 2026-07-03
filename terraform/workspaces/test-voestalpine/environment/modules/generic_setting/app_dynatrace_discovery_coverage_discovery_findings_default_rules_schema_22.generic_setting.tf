@@ -18,22 +18,22 @@ resource "dynatrace_generic_setting" "app_dynatrace_discovery_coverage_discovery
             "parameters": [
               {
                 "name": "extensionName",
-                "value": "com.dynatrace.rabbitmq"
+                "value": "com.dynatrace.extension.sql-server"
               },
               {
                 "name": "defaultPort",
-                "value": "5672"
+                "value": "1433"
               }
             ]
           }
         ],
-        "category": "Messaging",
-        "description": "RabbitMQ is an important messaging part of your infrastructure.\n        Infrastructure Mode and an extension are highly recommended. Without\n        adequate monitoring, Davis has a limited view into your MQ health.",
+        "category": "Databases",
+        "description": "MSSQL databases are an important part of your infrastructure.\n        Infrastructure Mode and a database extension are highly recommended. Without\n        adequate monitoring, Davis can only tell that the database is the rootcause,\n        not why the database is causing slow performance.",
         "environmentScope": false,
-        "id": "undermonitored-rabbit-mq-0",
+        "id": "undermonitored-msssql-db-0",
         "priority": "WARNING",
-        "query": "fetch dt.entity.process_group_instance, from:-15m\n        | filter matchesValue(softwareTechnologies, \"type:RABBIT_MQ\")\n        | fieldsAdd hostid=belongs_to[dt.entity.host]\n        | lookup [ fetch dt.entity.host | fieldsAdd monitoringMode], sourceField:hostid, lookupField:id, prefix:\"host.\"\n        | fields id, entity.name, host=host.entity.name, host.id, listenPorts, ipAddress=host.ipAddress, monitoringMode=host.monitoringMode\n        | lookup [ fetch `dt.entity.rabbitmq:node` | fieldsAdd hostid=same_as[dt.entity.host][0]], sourceField:host.id, lookupField:hostid, prefix:\"mq.\"\n        | fieldsAdd compliant=(isNotNull(mq.hostid) and in(monitoringMode, array(\"INFRASTRUCTURE\", \"FULL_STACK\")))\n        | fields process.id=id, process=entity.name, host, host.id, listenPorts, ipAddress, monitoringMode, mq.id, mq=mq.entity.name, compliant\n        ",
-        "title": "Undermonitored RabbitMQ"
+        "query": "fetch dt.entity.process_group_instance, from:-15m\n        | filter matchesValue(softwareTechnologies, \"*type:MICROSOFT_SQL_SERVER*\")\n        | fieldsAdd hostid=belongs_to[dt.entity.host]\n        | lookup [ fetch dt.entity.host | fieldsAdd monitoringMode], sourceField:hostid, lookupField:id, prefix:\"host.\"\n        | fields id, entity.name, host=host.entity.name, host.id, listenPorts, ipAddress=host.ipAddress, monitoringMode=host.monitoringMode\n        | lookup [ fetch `dt.entity.sql:sql_server_host` | fieldsAdd same_as | fieldsFlatten same_as | expand hostid = same_as.dt.entity.host ], sourceField:host.id, lookupField:hostid, prefix:\"db.\"\n        | fields process.id=id, process=entity.name, host, host.id, listenPorts, ipAddress, monitoringMode, compliant=(isNotNull(db.hostid) AND in(monitoringMode, array(\"INFRASTRUCTURE\", \"FULL_STACK\")))\n        ",
+        "title": "Undermonitored MSSQL databases"
       },
       "settings": {
         "muted": false

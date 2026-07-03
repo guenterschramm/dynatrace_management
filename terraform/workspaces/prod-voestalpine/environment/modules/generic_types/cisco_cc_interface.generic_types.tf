@@ -1,7 +1,7 @@
 resource "dynatrace_generic_types" "cisco_cc_interface" {
   name         = "cisco_cc:interface"
   enabled      = true
-  created_by   = "com.dynatrace.extension.cisco-cc 2.2.1"
+  created_by   = "com.dynatrace.extension.cisco-cc 3.0.3"
   display_name = "Catalyst Interface"
   insert_after = "vu9U3hXa3q0AAAABACZidWlsdGluOm1vbml0b3JlZGVudGl0aWVzLmdlbmVyaWMudHlwZQAGdGVuYW50AAZ0ZW5hbnQAJDkxOTlmZTUxLTZmNmQtNTVlMS05YzgyLWJlYjcyMTU0ZWM5Nb7vVN4V2t6t"
   rules {
@@ -64,6 +64,16 @@ resource "dynatrace_generic_types" "cisco_cc_interface" {
           display_name = "Interface Index"
           key          = "if_index"
           pattern      = "{if_index}"
+        }
+        attribute {
+          display_name = "Chassis MAC"
+          key          = "chassis_mac"
+          pattern      = "{chassis.mac}"
+        }
+        attribute {
+          display_name = "Site Id"
+          key          = "site_id"
+          pattern      = "{site_id}"
         }
         attribute {
           display_name = "Security Context"
@@ -221,6 +231,16 @@ resource "dynatrace_generic_types" "cisco_cc_interface" {
           display_name = "Vlan ID"
           key          = "if_vlan_id"
           pattern      = "{if_vlan_id}"
+        }
+        attribute {
+          display_name = "Chassis MAC"
+          key          = "chassis_mac"
+          pattern      = "{chassis.mac}"
+        }
+        attribute {
+          display_name = "Site Id"
+          key          = "site_id"
+          pattern      = "{site_id}"
         }
         attribute {
           display_name = "Security Context"

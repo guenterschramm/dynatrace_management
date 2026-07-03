@@ -1,7 +1,7 @@
 resource "dynatrace_generic_types" "sql_sql_server_instance" {
   name         = "sql:sql_server_instance"
   enabled      = true
-  created_by   = "com.dynatrace.extension.sql-server 2.11.5"
+  created_by   = "com.dynatrace.extension.sql-server 3.1.2"
   display_name = "SQL Server Instance"
   insert_after = ""
   rules {
@@ -11,21 +11,6 @@ resource "dynatrace_generic_types" "sql_sql_server_instance" {
       instance_name_pattern = "{instance} on {server} (via: {device})"
       role                  = "default"
       attributes {
-        attribute {
-          display_name = "Device URL"
-          key          = "device"
-          pattern      = "{device}"
-        }
-        attribute {
-          display_name = "Instance Name"
-          key          = "instance"
-          pattern      = "{instance}"
-        }
-        attribute {
-          display_name = "Server Name"
-          key          = "server"
-          pattern      = "{server}"
-        }
         attribute {
           display_name = "DB Instance Version"
           key          = "server_version"
@@ -37,19 +22,19 @@ resource "dynatrace_generic_types" "sql_sql_server_instance" {
           pattern      = "{major_version}"
         }
         attribute {
-          display_name = "Start Time"
-          key          = "start_time"
-          pattern      = "{start_time}"
-        }
-        attribute {
           display_name = "Edition"
           key          = "edition"
           pattern      = "{edition}"
         }
         attribute {
-          display_name = "Affinity Type"
-          key          = "affinity_type"
-          pattern      = "{affinity_type}"
+          display_name = "Device URL"
+          key          = "device"
+          pattern      = "{device}"
+        }
+        attribute {
+          display_name = "Security Context"
+          key          = "dt.security_context"
+          pattern      = "{dt.security_context}"
         }
         attribute {
           display_name = "Endpoint Metadata"
@@ -65,6 +50,26 @@ resource "dynatrace_generic_types" "sql_sql_server_instance" {
           display_name = "IP Address"
           key          = "dt.ip_addresses"
           pattern      = "{device.address}"
+        }
+        attribute {
+          display_name = "Instance Name"
+          key          = "instance"
+          pattern      = "{instance}"
+        }
+        attribute {
+          display_name = "Server Name"
+          key          = "server"
+          pattern      = "{server}"
+        }
+        attribute {
+          display_name = "Start Time"
+          key          = "start_time"
+          pattern      = "{start_time}"
+        }
+        attribute {
+          display_name = "Affinity Type"
+          key          = "affinity_type"
+          pattern      = "{affinity_type}"
         }
         attribute {
           display_name = "CPU Count"
@@ -85,16 +90,6 @@ resource "dynatrace_generic_types" "sql_sql_server_instance" {
           display_name = "Virtual Machine Type"
           key          = "virtual_machine_type"
           pattern      = "{virtual_machine_type}"
-        }
-        attribute {
-          display_name = "Security Context"
-          key          = "dt.security_context"
-          pattern      = "{dt.security_context}"
-        }
-        attribute {
-          display_name = "Fully Qualified Server Name"
-          key          = "qual_server_name"
-          pattern      = "{qual_server_name}"
         }
       }
       required_dimensions {

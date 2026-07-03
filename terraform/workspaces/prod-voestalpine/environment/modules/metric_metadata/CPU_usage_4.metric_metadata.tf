@@ -1,23 +1,16 @@
 resource "dynatrace_metric_metadata" "CPU_usage_4" {
-  description        = "The system's CPU usage expressed as a percentage"
-  display_name       = "CPU usage"
-  metric_id          = "metric-com.dynatrace.extension.network_device.cpu_usage"
-  source_entity_type = "network:device"
-  tags               = [ "NetworkDevice" ]
-  unit               = "Percent"
+  description  = "Extensions engine CPU usage"
+  display_name = "CPU usage"
+  metric_id    = "metric-func:sfm_extension_cpu_usage"
+  unit         = "Percent"
   dimensions {
     dimension {
-      display_name = "Device name"
-      key          = "sys.name"
+      display_name = "Configuration ID"
+      key          = "dt.extension.config.id"
     }
     dimension {
-      display_name = "Device address"
-      key          = "device.address"
+      display_name = "Extension name"
+      key          = "dt.extension.name"
     }
-  }
-  metric_properties {
-    max_value  = 100
-    min_value  = 0
-    value_type = "error"
   }
 }

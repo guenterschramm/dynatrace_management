@@ -1,8 +1,8 @@
 resource "dynatrace_metric_metadata" "Synchronization_health" {
-  description        = "Reflects a rollup of the synchronization health of all replicas the group"
+  description        = "Intersection of the synchronization state of a database that is joined to the group on the replica and the availability mode of the replica"
   display_name       = "Synchronization health"
-  metric_id          = "metric-sql-server.always-on.ag.synchronizationHealth"
-  source_entity_type = "sql:sql_server_availability_group"
+  metric_id          = "metric-sql-server.always-on.db.synchronizationHealth"
+  source_entity_type = "sql:sql_server_availability_database"
   unit               = "State"
   dimensions {
     dimension {
@@ -14,20 +14,32 @@ resource "dynatrace_metric_metadata" "Synchronization_health" {
       key          = "availability.group.name"
     }
     dimension {
-      display_name = "Availability group automated backup preference"
-      key          = "availability.group.automated_backup_preference"
+      display_name = "Availability replica ID"
+      key          = "availability.replica.id"
     }
     dimension {
-      display_name = "Availability group primary recovery health"
-      key          = "availability.group.primary_recovery_health"
+      display_name = "Availability replica name"
+      key          = "availability.replica.name"
     }
     dimension {
-      display_name = "Availability group secondary recovery health"
-      key          = "availability.group.secondary_recovery_health"
+      display_name = "Availability database ID"
+      key          = "availability.database.id"
     }
     dimension {
-      display_name = "Availability group synchronization health"
-      key          = "availability.group.synchronization_health"
+      display_name = "Availability database name"
+      key          = "availability.database.name"
+    }
+    dimension {
+      display_name = "Availability database synchronization state"
+      key          = "availability.database.synchronization_state"
+    }
+    dimension {
+      display_name = "Availability database synchronization health"
+      key          = "availability.database.synchronization_health"
+    }
+    dimension {
+      display_name = "Availability database state"
+      key          = "availability.database.state"
     }
   }
   metric_properties {

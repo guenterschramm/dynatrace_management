@@ -1,9 +1,9 @@
 resource "dynatrace_generic_types" "otel_host" {
   name         = "otel:host"
   enabled      = true
-  created_by   = "com.dynatrace.extension.opentelemetry 2.1.3"
+  created_by   = "com.dynatrace.extension.opentelemetry 3.0.3"
   display_name = "Host"
-  insert_after = "vu9U3hXa3q0AAAABACZidWlsdGluOm1vbml0b3JlZGVudGl0aWVzLmdlbmVyaWMudHlwZQAGdGVuYW50AAZ0ZW5hbnQAJGI0MmQzOTdkLWJjZGYtNTNkZS1hNDFlLTA2NTQ4NjBkMDU3Zb7vVN4V2t6t"
+  insert_after = "vu9U3hXa3q0AAAABACZidWlsdGluOm1vbml0b3JlZGVudGl0aWVzLmdlbmVyaWMudHlwZQAGdGVuYW50AAZ0ZW5hbnQAJDAzMGFkNGQyLTFlZDgtMzM0Yy1iM2QzLTkyYTA4MWVmNDJiZb7vVN4V2t6t"
   rules {
     rule {
       icon_pattern          = "host"

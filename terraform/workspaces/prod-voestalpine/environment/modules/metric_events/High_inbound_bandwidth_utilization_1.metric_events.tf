@@ -1,6 +1,6 @@
 resource "dynatrace_metric_events" "High_inbound_bandwidth_utilization_1" {
   enabled                    = false
-  event_entity_dimension_key = "dt.entity.snmp:com_dynatrace_extension_snmp_generic_cisco_network_interface"
+  event_entity_dimension_key = "dt.entity.snmp:com_dynatrace_extension_snmp_generic_device_interface"
   summary                    = "High inbound bandwidth utilization"
   event_template {
     description   = "The {metricname} value of {severity} was {alert_condition} your custom threshold of {threshold}."
@@ -19,6 +19,6 @@ resource "dynatrace_metric_events" "High_inbound_bandwidth_utilization_1" {
   }
   query_definition {
     type            = "METRIC_SELECTOR"
-    metric_selector = "func:com.dynatrace.extension.snmp-generic-cisco-device.if.in.bandwidth"
+    metric_selector = "func:com.dynatrace.extension.snmp-generic-device.if.in.bandwidth"
   }
 }

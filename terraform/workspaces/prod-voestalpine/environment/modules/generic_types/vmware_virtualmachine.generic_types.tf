@@ -1,7 +1,7 @@
 resource "dynatrace_generic_types" "vmware_virtualmachine" {
   name         = "vmware:virtualmachine"
   enabled      = true
-  created_by   = "com.dynatrace.vmware-integration 3.14.13"
+  created_by   = "com.dynatrace.vmware-integration 3.16.2"
   display_name = "VMware VM"
   insert_after = "vu9U3hXa3q0AAAABACZidWlsdGluOm1vbml0b3JlZGVudGl0aWVzLmdlbmVyaWMudHlwZQAGdGVuYW50AAZ0ZW5hbnQAJDg0NzhhOWUyLTQ4MjUtNTBhNS05MjkyLTIwZmY5Nzk3NGNlM77vVN4V2t6t"
   rules {
@@ -9,6 +9,20 @@ resource "dynatrace_generic_types" "vmware_virtualmachine" {
       icon_pattern          = "vm-vmware"
       id_pattern            = "vmware_vm_{vcenter.address}_{vm.id}_{vm.name}"
       instance_name_pattern = "{vm.name}"
+      required_dimensions {
+        required_dimension {
+          key           = "vm.id"
+          value_pattern = "$exists()"
+        }
+        required_dimension {
+          key           = "vcenter.address"
+          value_pattern = "$exists()"
+        }
+        required_dimension {
+          key           = "vm.name"
+          value_pattern = "$exists()"
+        }
+      }
       sources {
         source {
           source_type = "Logs"
@@ -61,6 +75,20 @@ resource "dynatrace_generic_types" "vmware_virtualmachine" {
           pattern      = "{dt.security_context}"
         }
       }
+      required_dimensions {
+        required_dimension {
+          key           = "vm.id"
+          value_pattern = "$exists()"
+        }
+        required_dimension {
+          key           = "device.address"
+          value_pattern = "$exists()"
+        }
+        required_dimension {
+          key           = "vm.name"
+          value_pattern = "$exists()"
+        }
+      }
       sources {
         source {
           condition   = "$prefix(vmware.vm.availability)"
@@ -92,6 +120,20 @@ resource "dynatrace_generic_types" "vmware_virtualmachine" {
           display_name = "Security Context"
           key          = "dt.security_context"
           pattern      = "{dt.security_context}"
+        }
+      }
+      required_dimensions {
+        required_dimension {
+          key           = "vm.id"
+          value_pattern = "$exists()"
+        }
+        required_dimension {
+          key           = "device.address"
+          value_pattern = "$exists()"
+        }
+        required_dimension {
+          key           = "vm.name"
+          value_pattern = "$exists()"
         }
       }
       sources {

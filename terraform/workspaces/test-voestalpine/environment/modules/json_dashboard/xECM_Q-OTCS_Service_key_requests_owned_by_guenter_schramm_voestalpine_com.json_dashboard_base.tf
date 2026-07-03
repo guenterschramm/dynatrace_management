@@ -467,7 +467,7 @@ resource "dynatrace_json_dashboard" "xECM_Q-OTCS_Service_key_requests_owned_by_g
           "configured": true,
           "customName": "Data explorer results",
           "metricExpressions": [
-            "resolution=null\u0026(builtin:service.keyRequest.response.time:filter(and(or(in(\"dt.entity.service_method\",entitySelector(\"type(service_method),entityName.equals(~\"/OTCS/llisapi.dll - ll - browse~\")\")),in(\"dt.entity.service_method\",entitySelector(\"type(service_method),entityName.equals(~\"/OTCS/llisapi.dll/api/v2/nodes/\u003cid\u003e~\")\")),in(\"dt.entity.service_method\",entitySelector(\"type(service_method),entityName.equals(~\"/OTCS/llisapi.dll/open/\u003cid\u003e~\")\"))))):splitBy(\"dt.entity.service_method\"):median:sort(value(median,descending)):limit(20)):limit(100):names"
+            "resolution=null\u0026(builtin:service.keyRequest.response.time:filter(and(or(in(\"dt.entity.service_method\",entitySelector(\"type(service_method),entityName.equals(~\"/OTCS/llisapi.dll - ll - browse~\")\")),in(\"dt.entity.service_method\",entitySelector(\"type(service_method),entityName.equals(~\"/OTCS/llisapi.dll/open/\u003cid\u003e~\")\")),in(\"dt.entity.service_method\",entitySelector(\"type(service_method),entityName.equals(~\"/OTCS/llisapi.dll/api/v2/nodes/\u003cid\u003e~\")\"))))):splitBy(\"dt.entity.service_method\"):median:sort(value(median,descending)):limit(20)):limit(100):names"
           ],
           "name": "Key requests (Folder change) - Median response time",
           "queries": [
@@ -486,12 +486,12 @@ resource "dynatrace_json_dashboard" "xECM_Q-OTCS_Service_key_requests_owned_by_g
                       {
                         "evaluator": "IN",
                         "matchExactly": true,
-                        "value": "/OTCS/llisapi.dll/api/v2/nodes/\u003cid\u003e"
+                        "value": "/OTCS/llisapi.dll/open/\u003cid\u003e"
                       },
                       {
                         "evaluator": "IN",
                         "matchExactly": true,
-                        "value": "/OTCS/llisapi.dll/open/\u003cid\u003e"
+                        "value": "/OTCS/llisapi.dll/api/v2/nodes/\u003cid\u003e"
                       }
                     ],
                     "entityAttribute": "entityName",

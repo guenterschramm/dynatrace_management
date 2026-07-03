@@ -5,22 +5,22 @@ resource "dynatrace_generic_setting" "app_dynatrace_discovery_coverage_discovery
       "rule": {
         "actions": [
           {
-            "name": "setMonitoringMode",
+            "name": "enableLogIngestRule",
             "parameters": [
               {
-                "name": "mode",
-                "value": "FULL_STACK"
+                "name": "ruleName",
+                "value": "[Built-in] Linux system logs"
               }
             ]
           }
         ],
-        "category": "Deep monitoring",
-        "description": "All hosts which have processes that support deep monitoring. Deep monitoring of microservices\n        enables end to end tracing.",
-        "environmentScope": false,
-        "id": "hosts-with-injectable-processes-0",
-        "priority": "INFO",
-        "query": "fetch dt.entity.process_group_instance, from:-15m\n        | filter in(processType,{\"JAVA\", \"PHP\", \"DOTNET\", \"GO\", \"NODE_JS\", \"APACHE_HTTPD\", \"NGINX\"})\n        | fieldsAdd hostid=belongs_to[dt.entity.host]\n        | lookup [ fetch dt.entity.host | fieldsAdd monitoringMode], sourceField:hostid, lookupField:id, prefix:\"host.\"\n        | fields entity.name=host.entity.name, id=host.id, monitoringMode=host.monitoringMode\n        | summarize by:{id,entity.name,monitoringMode}, count=count()\n        | fieldsRemove count\n        | fieldsAdd host.id=id, compliant=(monitoringMode == \"FULL_STACK\")\n        ",
-        "title": "Hosts with injectable processes"
+        "category": "Logs",
+        "description": "Logs are a critical signal for Observability and Security use cases. There are multiple ways to ingest logs, but the easiest is via OneAgent. This rule looks for Linux system logs which have been detected by OneAgent but are not being ingested. The recommended remediation action is to enable a built-in rule to ingest these logs environment wide, to ensure there are no blind spots. Alternatively, you can create your own rules at the environment, host group, or host level.",
+        "environmentScope": true,
+        "id": "unmonitored-linux-system-logs-0",
+        "priority": "CRITICAL",
+        "query": "fetch dt.entity.process_group_instance, from:-7d\n        | filter processType == \"LINUX_SYSTEM\"\n        | fields hostId=belongs_to[dt.entity.host],id,logMonitored=isNotNull(logPathLastUpdate) or (isNotNull(logSourceState) and contains(toString(logSourceState),\"LOG_STORAGE_CONFIGURATION_STATUS_SEND_TO_STORAGE\"))\n        | filter id in [ fetch dt.entity.process_group_instance, from:-2h | filter processType == \"LINUX_SYSTEM\" |fields id]\n        | lookup [fetch dt.entity.host], lookupField: id, sourceField: hostId, prefix:\"host.\"\n        | fields host.id,host=host.entity.name,compliant=logMonitored\n        ",
+        "title": "Unmonitored Linux system logs"
       },
       "settings": {
         "muted": false

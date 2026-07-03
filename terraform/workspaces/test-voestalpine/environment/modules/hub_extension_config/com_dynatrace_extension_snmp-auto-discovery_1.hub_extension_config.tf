@@ -7,44 +7,35 @@ resource "dynatrace_hub_extension_config" "com_dynatrace_extension_snmp-auto-dis
   scope             = "ag_group-nedcon_us_2161"
   value             = jsonencode({
       "activationContext": "REMOTE",
-      "description": "Nedcon US 2161 Autodiscovery v3",
+      "description": "Network Discovery Nedcon US - eWons",
       "dtAttributes": {
-        "dt.cost.costcenter": "nedcon_2151",
-        "dt.cost.product": "nedcon_us_2161",
-        "dt.security_context": "Nedcon_POC"
+        "dt.cost.costcenter": "nedcon_2151"
       },
       "enabled": true,
-      "featureSets": [
-        "self-monitoring"
-      ],
+      "featureSets": [],
       "pythonRemote": {
         "debugLogging": false,
         "groups": [
           {
             "addresses": [
-              "10.138.152.0/24"
+              "10.138.154.1-10.138.154.254"
             ],
             "authentication": {
-              "auth_password": "***5a9bff62cab7538e***",
-              "auth_protocol": "SHA",
-              "priv_password": "***af8f63cf749d65bd***",
-              "priv_protocol": "DES",
-              "security_level": "AUTH_PRIV",
-              "useCredentialVault": false,
-              "username": "NETZWERK",
+              "credentialVaultIdSnmpV3": "CREDENTIALS_VAULT-AA52FC484EBDECD9",
+              "useCredentialVault": true,
               "version": "SNMPv3"
             },
-            "label": "Nedcon US 2161 Autodiscovery v3",
+            "label": "Nedcom US 2161 - eWons",
             "port": 161
           }
         ],
         "scanner": {
-          "frequency": 10,
+          "frequency": 30,
           "neighbors": true,
-          "profile": "HIGH",
-          "token": "***0214a34e7a3862aa***"
+          "profile": "DEFAULT",
+          "token": "***e8dda1def94a39e9***"
         }
       },
-      "version": "4.1.5"
+      "version": "4.1.7"
     })
 }

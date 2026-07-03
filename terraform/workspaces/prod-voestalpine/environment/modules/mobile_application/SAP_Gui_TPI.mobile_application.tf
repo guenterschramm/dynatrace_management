@@ -4,7 +4,7 @@ resource "dynatrace_mobile_application" "SAP_Gui_TPI" {
   application_type          = "CUSTOM_APPLICATION"
   beacon_endpoint_type      = "CLUSTER_ACTIVE_GATE"
   icon_type                 = "DESKTOP"
-  key_user_actions          = [ "Sales and Distribution - VA01 (Create Sales Order) (0100)", "Sales and Distribution - VA01 (Create Sales Order) (4001)", "SESSION_MANAGER (Session Manager Menu Tree Display) (0100)", "Sales and Distribution - VA02 (Change Sales Order) (4001)", "/SCT/QP_QV (0100)" ]
+  key_user_actions          = [ "SESSION_MANAGER (Session Manager Menu Tree Display) (0100)", "Sales and Distribution - VA02 (Change Sales Order) (4001)", "/SCT/QP_QV (0100)", "Sales and Distribution - VA01 (Create Sales Order) (4001)", "Sales and Distribution - VA01 (Create Sales Order) (0100)" ]
   # session_replay          = false
   # session_replay_on_crash = false
   user_session_percentage   = 100

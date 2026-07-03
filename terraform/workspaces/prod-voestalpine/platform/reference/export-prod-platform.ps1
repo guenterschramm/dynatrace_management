@@ -159,16 +159,21 @@ try {
         }
     }
 
+    if ([string]::IsNullOrWhiteSpace($vars["platform_prod_token"])) {
+        throw "Variable 'platform_prod_token' ist leer in $TfvarsPath"
+    }
+
     New-Item -ItemType Directory -Force -Path $TargetFolder | Out-Null
 
     $env:DYNATRACE_ENV_URL = $vars["platform_prod_env_url"]
+    $env:DYNATRACE_API_TOKEN = $vars["platform_prod_token"]
     $env:DYNATRACE_PLATFORM_TOKEN = $vars["platform_prod_token"]
     $env:DYNATRACE_TARGET_FOLDER = $TargetFolder
 
     Write-Host "=== Platform PROD Export ==="
     Write-Host "DYNATRACE_ENV_URL        = $env:DYNATRACE_ENV_URL"
     Write-Host "DYNATRACE_TARGET_FOLDER  = $env:DYNATRACE_TARGET_FOLDER"
-    Write-Host "DYNATRACE_PLATFORM_TOKEN = gesetzt"
+    Write-Host "DYNATRACE_API_TOKEN      = gesetzt (Laenge: $($env:DYNATRACE_API_TOKEN.Length))"
 
     $providerExe = Find-DynatraceProviderExe
     Write-Host "Provider EXE             = $providerExe"

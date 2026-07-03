@@ -1,6 +1,6 @@
 resource "dynatrace_generic_relationships" "vmware_virtualmachine_SAME_AS_host" {
   enabled          = true
-  created_by       = "com.dynatrace.vmware-integration 3.14.13"
+  created_by       = "com.dynatrace.vmware-integration 3.16.2"
   from_type        = "vmware:virtualmachine"
   to_type          = "host"
   type_of_relation = "SAME_AS"

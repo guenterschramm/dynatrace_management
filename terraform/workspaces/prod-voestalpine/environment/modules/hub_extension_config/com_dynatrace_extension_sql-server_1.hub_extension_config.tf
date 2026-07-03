@@ -10,32 +10,30 @@ resource "dynatrace_hub_extension_config" "com_dynatrace_extension_sql-server_1"
       "description": "Bee4IT Production",
       "dtAttributes": {
         "dt.cost.costcenter": "P223100000_bee4it",
-        "dt.cost.product": "bee4it_production"
+        "dt.cost.product": "bee4it_production",
+        "dt.security_context": "Bee4IT"
       },
       "enabled": true,
       "featureSets": [
-        "Memory",
-        "Agent",
-        "Latches",
-        "Database files",
-        "Transaction logs",
-        "Always On",
-        "Transaction Logs",
         "Locks",
-        "Jobs",
+        "Memory",
         "Sessions",
-        "Queries",
+        "Transaction Logs",
+        "Agent",
+        "Always On",
         "Backups",
+        "Database files",
+        "Latches",
+        "Queries",
         "Replication"
       ],
       "sqlServerRemote": {
         "endpoints": [
           {
             "authentication": {
-              "password": "***66057591ce02d880***",
+              "credentialVaultId": "CREDENTIALS_VAULT-613313DA871BC6CD",
               "scheme": "basic",
-              "useCredentialVault": false,
-              "username": "dynatrace"
+              "useCredentialVault": true
             },
             "databaseName": "Bee4ITP",
             "host": "2217dbsqlbee4it",
@@ -50,6 +48,6 @@ resource "dynatrace_hub_extension_config" "com_dynatrace_extension_sql-server_1"
         "longest-queries-timeout": "120",
         "query-interval": "1"
       },
-      "version": "2.11.5"
+      "version": "3.1.2"
     })
 }

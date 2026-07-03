@@ -10,11 +10,11 @@ resource "dynatrace_openpipeline_v2_logs_ingestsources" "SNMP_Autodiscovery" {
     }
     metadata {
       entry_key   = "extension_version"
-      entry_value = "4.1.5"
+      entry_value = "4.1.7"
     }
   }
   static_routing {
-    pipeline_id   = "vu9U3hXa3q0AAAABACNidWlsdGluOm9wZW5waXBlbGluZS5sb2dzLnBpcGVsaW5lcwAGdGVuYW50AAZ0ZW5hbnQAJDViMDI1YmUzLWZiZDUtMzBmZS1hZWIxLTBmMzBkZjRmYzEyOb7vVN4V2t6t"
+    pipeline_id   = "vu9U3hXa3q0AAAABACNidWlsdGluOm9wZW5waXBlbGluZS5sb2dzLnBpcGVsaW5lcwAGdGVuYW50AAZ0ZW5hbnQAJGM3NDkzNThhLTIzOWMtM2U1Zi04MDVmLWU1ZDM3ZWU2MmIyN77vVN4V2t6t"
     pipeline_type = "custom"
   }
 }

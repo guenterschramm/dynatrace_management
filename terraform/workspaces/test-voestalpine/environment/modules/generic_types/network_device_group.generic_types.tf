@@ -1,7 +1,7 @@
 resource "dynatrace_generic_types" "network_device_group" {
   name         = "network:device_group"
   enabled      = true
-  created_by   = "com.dynatrace.extension.snmp-auto-discovery 4.1.5"
+  created_by   = "com.dynatrace.extension.snmp-auto-discovery 4.1.7"
   display_name = "Network device group"
   insert_after = "vu9U3hXa3q0AAAABACZidWlsdGluOm1vbml0b3JlZGVudGl0aWVzLmdlbmVyaWMudHlwZQAGdGVuYW50AAZ0ZW5hbnQAJDNkYTQxMjE0LWNiZGItNThjOS05Mjg3LTNiODAwMzRjYmNjN77vVN4V2t6t"
   rules {

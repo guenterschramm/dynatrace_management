@@ -315,9 +315,18 @@
 						if (payload.resource) {
 							progressStatus.textContent = 'Exportiere: ' + payload.resource;
 						} else if (payload.status === 'done') {
-							progressStatus.textContent = 'Export abgeschlossen.';
+							setProgress(total, total);
+							progressStatus.textContent = 'Export abgeschlossen. Terraform Init wird ausgefuehrt, bitte warten...';
+							if (pollId) {
+								window.clearInterval(pollId);
+								pollId = null;
+							}
 						} else if (payload.status === 'failed') {
 							progressStatus.textContent = 'Export mit Fehlern beendet.';
+							if (pollId) {
+								window.clearInterval(pollId);
+								pollId = null;
+							}
 						} else {
 							progressStatus.textContent = 'Exportiere Objekte...';
 						}

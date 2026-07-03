@@ -4,12 +4,12 @@ resource "dynatrace_custom_tags" "vadslb02_voestalpine_root_local" {
     filter {
       context = "CONTEXTLESS"
       key     = "Application"
-      value   = "OTEL"
+      value   = "TPI_Messaging"
     }
     filter {
       context = "CONTEXTLESS"
       key     = "Application"
-      value   = "TPI_Messaging"
+      value   = "OTEL"
     }
   }
 }

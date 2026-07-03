@@ -2,11 +2,12 @@ resource "dynatrace_document" "Untitled_dashboard" {
   name    = "Untitled dashboard"
   type    = "dashboard"
   content = jsonencode({
+      "annotations": [],
       "importedWithCode": false,
       "layouts": {
         "0": {
-          "h": 6,
-          "w": 22,
+          "h": 12,
+          "w": 24,
           "x": 0,
           "y": 0
         }
@@ -20,7 +21,7 @@ resource "dynatrace_document" "Untitled_dashboard" {
             },
             "enabled": false
           },
-          "query": "timeseries avg(xecm_steel.loglevels.counter) ",
+          "query": "smartscapeNodes \"EXT_NETWORK_DEVICE\"\n| fields name\n",
           "querySettings": {
             "defaultSamplingRatio": 10,
             "defaultScanLimitGbytes": 500,
@@ -30,14 +31,14 @@ resource "dynatrace_document" "Untitled_dashboard" {
           },
           "title": "",
           "type": "data",
-          "visualization": "barChart",
+          "visualization": "table",
           "visualizationSettings": {
-            "autoSelectVisualization": false
+            "autoSelectVisualization": true
           }
         }
       },
       "variables": [],
-      "version": 20
+      "version": 21
     })
   private = true
 }

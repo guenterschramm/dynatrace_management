@@ -28,7 +28,7 @@ resource "dynatrace_json_dashboard" "Remedy_Production-Real_User_Insights_owned_
           "configured": true,
           "customName": "Web applications",
           "metricExpressions": [
-            "resolution=Inf\u0026(builtin:apps.web.actionCount.category:filter(and(or(eq(\"Apdex category\",FRUSTRATED),eq(\"Apdex category\",TOLERATING),eq(\"Apdex category\",SATISFIED)))):splitBy(\"Apdex category\"):value:sort(value(sum,descending)):limit(20)):limit(100):names"
+            "resolution=Inf\u0026(builtin:apps.web.actionCount.category:filter(and(or(eq(\"Apdex category\",SATISFIED),eq(\"Apdex category\",TOLERATING),eq(\"Apdex category\",FRUSTRATED)))):splitBy(\"Apdex category\"):value:sort(value(sum,descending)):limit(20)):limit(100):names"
           ],
           "name": "Remedy Production",
           "queries": [
@@ -41,11 +41,11 @@ resource "dynatrace_json_dashboard" "Remedy_Production-Real_User_Insights_owned_
                     "criteria": [
                       {
                         "evaluator": "EQ",
-                        "value": "FRUSTRATED"
+                        "value": "SATISFIED"
                       },
                       {
                         "evaluator": "EQ",
-                        "value": "SATISFIED"
+                        "value": "FRUSTRATED"
                       },
                       {
                         "evaluator": "EQ",

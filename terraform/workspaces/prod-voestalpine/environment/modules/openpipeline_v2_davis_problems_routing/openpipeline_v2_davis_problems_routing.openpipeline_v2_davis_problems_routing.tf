@@ -63,5 +63,12 @@ resource "dynatrace_openpipeline_v2_davis_problems_routing" "openpipeline_v2_dav
       pipeline_id   = "vu9U3hXa3q0AAAABAC1idWlsdGluOm9wZW5waXBlbGluZS5kYXZpcy5wcm9ibGVtcy5waXBlbGluZXMABnRlbmFudAAGdGVuYW50ACRhY2IyNmZlNS0xYTVlLTM4YTctODZjNC0wOTk0OWViNDUxYmS-71TeFdrerQ"
       pipeline_type = "custom"
     }
+    routing_entry {
+      description   = "Network Problems - POC"
+      enabled       = true
+      matcher       = "matchesValue(dt.security_context,\"network\")"
+      pipeline_id   = "vu9U3hXa3q0AAAABAC1idWlsdGluOm9wZW5waXBlbGluZS5kYXZpcy5wcm9ibGVtcy5waXBlbGluZXMABnRlbmFudAAGdGVuYW50ACRhYWRlOGFlMy0xZjBhLTNmNWItOWNlOS0wZTcwYmQ2ZTQwYjK-71TeFdrerQ"
+      pipeline_type = "custom"
+    }
   }
 }

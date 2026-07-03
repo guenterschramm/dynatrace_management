@@ -1,6 +1,6 @@
 resource "dynatrace_generic_relationships" "network_interface_RUNS_ON_network_device_2" {
   enabled          = true
-  created_by       = "com.dynatrace.extension.snmp-auto-discovery 4.1.5"
+  created_by       = "com.dynatrace.extension.snmp-auto-discovery 4.1.7"
   from_role        = "neighbor"
   from_type        = "network:interface"
   to_role          = "neighbor"

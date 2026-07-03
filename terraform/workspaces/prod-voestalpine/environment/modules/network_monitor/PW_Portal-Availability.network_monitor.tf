@@ -22,8 +22,8 @@ resource "dynatrace_network_monitor" "PW_Portal-Availability" {
         constraint {
           type = "HTTP_STATUSES"
           properties = {
-            "value"    = "400"
             "operator" = "<"
+            "value"    = "400"
           }
         }
       }

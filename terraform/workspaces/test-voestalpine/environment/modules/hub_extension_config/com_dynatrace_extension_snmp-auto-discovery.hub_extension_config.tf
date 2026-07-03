@@ -7,13 +7,13 @@ resource "dynatrace_hub_extension_config" "com_dynatrace_extension_snmp-auto-dis
   scope             = "ag_group-nedcon_us_2161"
   value             = jsonencode({
       "activationContext": "REMOTE",
-      "description": "Nedcon US 2161 Autodiscovery",
+      "description": "Network Discovery Nedcon US",
       "dtAttributes": {
-        "dt.cost.costcenter": "nedcon_2157",
+        "dt.cost.costcenter": "nedcon_2151",
         "dt.cost.product": "nedcon_us_2161",
-        "dt.security_context": "\"Nedcon_POC,network\""
+        "dt.security_context": "Nedcon_POC"
       },
-      "enabled": false,
+      "enabled": true,
       "featureSets": [
         "self-monitoring"
       ],
@@ -22,24 +22,24 @@ resource "dynatrace_hub_extension_config" "com_dynatrace_extension_snmp-auto-dis
         "groups": [
           {
             "addresses": [
-              "10.138.152.1/24"
+              "10.138.152.1-10.138.152.254"
             ],
             "authentication": {
-              "community": "***765ad9142177f1ff***",
-              "useCredentialVault": false,
-              "version": "SNMPv2c"
+              "credentialVaultIdSnmpV3": "CREDENTIALS_VAULT-AA52FC484EBDECD9",
+              "useCredentialVault": true,
+              "version": "SNMPv3"
             },
             "label": "Nedcon US 2161",
             "port": 161
           }
         ],
         "scanner": {
-          "frequency": 5,
+          "frequency": 30,
           "neighbors": true,
           "profile": "HIGH",
-          "token": "***f25eb0d01feaf49b***"
+          "token": "***45e0ef044560f9e2***"
         }
       },
-      "version": "4.1.5"
+      "version": "4.1.7"
     })
 }

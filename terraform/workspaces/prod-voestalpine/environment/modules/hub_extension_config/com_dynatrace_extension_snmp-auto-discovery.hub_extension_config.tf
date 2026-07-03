@@ -7,36 +7,39 @@ resource "dynatrace_hub_extension_config" "com_dynatrace_extension_snmp-auto-dis
   scope             = "ag_group-default"
   value             = jsonencode({
       "activationContext": "REMOTE",
-      "description": "ActiveGates",
+      "description": "BG88 Autodiscovery",
+      "dtAttributes": {
+        "dt.cost.costcenter": "network",
+        "dt.cost.product": "cisco",
+        "dt.security_context": "network"
+      },
       "enabled": false,
       "featureSets": [
         "self-monitoring"
       ],
       "pythonRemote": {
+        "debugLogging": true,
         "groups": [
           {
             "addresses": [
-              "10.164.16.0/24",
-              "10.164.15.0/24",
-              "10.164.17.0/24",
-              "10.164.18.0/24"
+              "10.163.32.0-10.163.32.255"
             ],
             "authentication": {
-              "community": "***c565d25c0c7b776d***",
+              "community": "***e4f634fa10312951***",
               "useCredentialVault": false,
               "version": "SNMPv2c"
             },
-            "label": "ActiveGates",
+            "label": "BG88 Scan",
             "port": 161
           }
         ],
         "scanner": {
-          "frequency": 60,
+          "frequency": 5,
           "neighbors": true,
-          "profile": "HIGH",
-          "token": "***defad37d714bd88d***"
+          "profile": "DEFAULT",
+          "token": "***5ec9c93db9ce195f***"
         }
       },
-      "version": "4.1.5"
+      "version": "4.1.7"
     })
 }

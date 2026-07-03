@@ -2,6 +2,20 @@ resource "dynatrace_management_zone_v2" "Nedcon_POC" {
   name = "Nedcon_POC"
   rules {
     rule {
+      type    = "ME"
+      enabled = true
+      attribute_rule {
+        entity_type = "NETWORK_AVAILABILITY_MONITOR"
+        attribute_conditions {
+          condition {
+            key      = "NETWORK_AVAILABILITY_MONITOR_TAGS"
+            operator = "EQUALS"
+            tag      = "UCID:nedcon_us_2161"
+          }
+        }
+      }
+    }
+    rule {
       type            = "SELECTOR"
       enabled         = true
       entity_selector =<<-EOT
@@ -24,14 +38,14 @@ resource "dynatrace_management_zone_v2" "Nedcon_POC" {
     }
     rule {
       type            = "SELECTOR"
-      enabled         = false
+      enabled         = true
       entity_selector =<<-EOT
         type("snmp:com_dynatrace_extension_snmp_generic_cisco_network_interface"),tag("UCID:nedcon_us_2161")
       EOT
     }
     rule {
       type            = "SELECTOR"
-      enabled         = false
+      enabled         = true
       entity_selector =<<-EOT
         type("snmp:com_dynatrace_extension_snmp_generic_cisco_device"),tag("UCID:nedcon_us_2161")
       EOT
@@ -54,7 +68,7 @@ resource "dynatrace_management_zone_v2" "Nedcon_POC" {
       type            = "SELECTOR"
       enabled         = true
       entity_selector =<<-EOT
-        type("network:device"), tag("UCID:nedcon_us_2161")
+        type("network:device"),  tag("UCID:nedcon_us_2161")
       EOT
     }
     rule {

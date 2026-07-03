@@ -1,9 +1,9 @@
 resource "dynatrace_generic_types" "rabbitmq_cluster" {
   name         = "rabbitmq:cluster"
   enabled      = true
-  created_by   = "com.dynatrace.rabbitmq 2.1.7"
+  created_by   = "com.dynatrace.rabbitmq 3.0.0"
   display_name = "Cluster"
-  insert_after = "vu9U3hXa3q0AAAABACZidWlsdGluOm1vbml0b3JlZGVudGl0aWVzLmdlbmVyaWMudHlwZQAGdGVuYW50AAZ0ZW5hbnQAJDAzMGFkNGQyLTFlZDgtMzM0Yy1iM2QzLTkyYTA4MWVmNDJiZb7vVN4V2t6t"
+  insert_after = "vu9U3hXa3q0AAAABACZidWlsdGluOm1vbml0b3JlZGVudGl0aWVzLmdlbmVyaWMudHlwZQAGdGVuYW50AAZ0ZW5hbnQAJDIzZGRhZTMzLWM4NzgtNTc2Ni04ZTdmLTFkMmM1ZTQxZTFkMr7vVN4V2t6t"
   rules {
     rule {
       icon_pattern          = "cluster"
@@ -34,6 +34,12 @@ resource "dynatrace_generic_types" "rabbitmq_cluster" {
           display_name = "Security Context"
           key          = "dt.security_context"
           pattern      = "{dt.security_context}"
+        }
+      }
+      required_dimensions {
+        required_dimension {
+          key           = "cluster"
+          value_pattern = "$exists()"
         }
       }
       sources {

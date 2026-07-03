@@ -43,6 +43,6 @@ resource "dynatrace_hub_extension_v2_config" "com_dynatrace_custom_python-certif
           "customize_port_range": false
         }
       },
-      "version": "1.10.26"
+      "version": "2.0.0"
     })
 }

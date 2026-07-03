@@ -10,7 +10,7 @@ resource "dynatrace_openpipeline_v2_metrics_ingestsources" "SNMP_Generic_Cisco" 
     }
     metadata {
       entry_key   = "extension_version"
-      entry_value = "4.0.8"
+      entry_value = "4.0.9"
     }
   }
   static_routing {

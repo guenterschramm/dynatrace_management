@@ -63,5 +63,12 @@ resource "dynatrace_openpipeline_v2_davis_events_routing" "openpipeline_v2_davis
       pipeline_id   = "vu9U3hXa3q0AAAABACtidWlsdGluOm9wZW5waXBlbGluZS5kYXZpcy5ldmVudHMucGlwZWxpbmVzAAZ0ZW5hbnQABnRlbmFudAAkMTc4ODEyZWEtNGZiYS0zYzI0LThmNjQtM2QzNTdkMTQ3YTZlvu9U3hXa3q0"
       pipeline_type = "custom"
     }
+    routing_entry {
+      description   = "Network Events - POC"
+      enabled       = true
+      matcher       = "matchesValue(dt.security_context,\"network\")"
+      pipeline_id   = "vu9U3hXa3q0AAAABACtidWlsdGluOm9wZW5waXBlbGluZS5kYXZpcy5ldmVudHMucGlwZWxpbmVzAAZ0ZW5hbnQABnRlbmFudAAkZmRmY2QyN2UtMWMxYy0zM2I0LTgwNjItNmI2MTBmMTIwODNlvu9U3hXa3q0"
+      pipeline_type = "custom"
+    }
   }
 }

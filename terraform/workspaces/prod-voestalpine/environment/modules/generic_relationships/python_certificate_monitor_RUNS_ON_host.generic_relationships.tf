@@ -1,6 +1,6 @@
 resource "dynatrace_generic_relationships" "python_certificate_monitor_RUNS_ON_host" {
   enabled          = true
-  created_by       = "com.dynatrace.custom.python-certificate-monitor 1.10.26"
+  created_by       = "com.dynatrace.custom.python-certificate-monitor 2.0.0"
   from_type        = "python:certificate_monitor"
   to_type          = "host"
   type_of_relation = "RUNS_ON"

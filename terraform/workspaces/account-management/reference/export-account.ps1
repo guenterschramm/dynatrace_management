@@ -91,6 +91,12 @@ try {
         }
     }
 
+    foreach ($required in @("account_id", "account_client_id", "account_client_secret")) {
+        if ([string]::IsNullOrWhiteSpace($vars[$required])) {
+            throw "Variable '$required' ist leer in $TfvarsPath"
+        }
+    }
+
     New-Item -ItemType Directory -Force -Path $TargetFolder | Out-Null
     $resolvedTargetFolder = (Resolve-Path $TargetFolder).Path
 
@@ -158,9 +164,8 @@ try {
         }
 
         if ([string]::IsNullOrWhiteSpace($envUrl) -or [string]::IsNullOrWhiteSpace($apiToken)) {
-            Write-Warning "Environment-Ressourcen uebersprungen: tenant_test_env_url / tenant_test_api_token fehlen in terraform.tfvars."
-        }
-        else {
+            throw "Environment-Ressourcen angefordert, aber tenant_test_env_url / tenant_test_api_token fehlen oder sind leer in terraform.tfvars."
+        } else {
             # Keep account credentials and add environment credentials for tenant resources.
             $env:DYNATRACE_ENV_URL = $envUrl
             $env:DYNATRACE_API_TOKEN = $apiToken

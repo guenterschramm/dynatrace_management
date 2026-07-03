@@ -1,7 +1,7 @@
 resource "dynatrace_generic_types" "vmware_host" {
   name         = "vmware:host"
   enabled      = true
-  created_by   = "com.dynatrace.vmware-integration 3.14.13"
+  created_by   = "com.dynatrace.vmware-integration 3.16.2"
   display_name = "VMware Host"
   insert_after = "vu9U3hXa3q0AAAABACZidWlsdGluOm1vbml0b3JlZGVudGl0aWVzLmdlbmVyaWMudHlwZQAGdGVuYW50AAZ0ZW5hbnQAJGM1Zjk2NmVkLWM1N2UtNTc5NC04ZDBlLTk1OTdkOTJhNGM0ZL7vVN4V2t6t"
   rules {
@@ -56,9 +56,32 @@ resource "dynatrace_generic_types" "vmware_host" {
           pattern      = "{host.powered.state}"
         }
         attribute {
+          display_name = "Boot Time"
+          key          = "host_boot_time"
+          pattern      = "{host.boot.time}"
+        }
+        attribute {
           display_name = "Security Context"
           key          = "dt.security_context"
           pattern      = "{dt.security_context}"
+        }
+      }
+      required_dimensions {
+        required_dimension {
+          key           = "host.id"
+          value_pattern = "$exists()"
+        }
+        required_dimension {
+          key           = "cluster.id"
+          value_pattern = "$exists()"
+        }
+        required_dimension {
+          key           = "device.address"
+          value_pattern = "$exists()"
+        }
+        required_dimension {
+          key           = "host.name"
+          value_pattern = "$exists()"
         }
       }
       sources {
@@ -89,6 +112,24 @@ resource "dynatrace_generic_types" "vmware_host" {
           pattern      = "{dt.security_context}"
         }
       }
+      required_dimensions {
+        required_dimension {
+          key           = "host.id"
+          value_pattern = "$exists()"
+        }
+        required_dimension {
+          key           = "cluster.id"
+          value_pattern = "$exists()"
+        }
+        required_dimension {
+          key           = "device.address"
+          value_pattern = "$exists()"
+        }
+        required_dimension {
+          key           = "host.name"
+          value_pattern = "$exists()"
+        }
+      }
       sources {
         source {
           condition   = "$prefix(vmware.)"
@@ -100,6 +141,24 @@ resource "dynatrace_generic_types" "vmware_host" {
       icon_pattern          = "host"
       id_pattern            = "vmware_host_{vcenter.address}_{cluster.id}_{host.id}_{host.name}"
       instance_name_pattern = "{host.name}"
+      required_dimensions {
+        required_dimension {
+          key           = "host.id"
+          value_pattern = "$exists()"
+        }
+        required_dimension {
+          key           = "cluster.id"
+          value_pattern = "$exists()"
+        }
+        required_dimension {
+          key           = "vcenter.address"
+          value_pattern = "$exists()"
+        }
+        required_dimension {
+          key           = "host.name"
+          value_pattern = "$exists()"
+        }
+      }
       sources {
         source {
           source_type = "Logs"

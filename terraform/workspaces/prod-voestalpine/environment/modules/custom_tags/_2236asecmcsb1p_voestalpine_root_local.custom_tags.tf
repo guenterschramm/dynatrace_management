@@ -3,13 +3,18 @@ resource "dynatrace_custom_tags" "_2236asecmcsb1p_voestalpine_root_local" {
   tags {
     filter {
       context = "CONTEXTLESS"
+      key     = "xECM Steel Component"
+      value   = "Backend"
+    }
+    filter {
+      context = "CONTEXTLESS"
       key     = "Webserver"
       value   = "IIS"
     }
     filter {
       context = "CONTEXTLESS"
-      key     = "xECM Steel Component"
-      value   = "Backend"
+      key     = "Technology"
+      value   = "Memcached"
     }
   }
 }

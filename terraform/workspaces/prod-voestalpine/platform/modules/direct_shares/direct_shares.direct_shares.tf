@@ -1,6 +1,6 @@
 resource "dynatrace_direct_shares" "direct_shares" {
-  access      = "read-write"
-  document_id = "04b20103-2b17-4ad8-893a-cc207f448f19"
+  access      = "read"
+  document_id = "e3ab1eaf-5274-4845-b472-ef467dc1f7cf"
   recipients {
     recipient {
       type = "user"

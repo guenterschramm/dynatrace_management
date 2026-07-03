@@ -1,6 +1,6 @@
 resource "dynatrace_generic_relationships" "cisco_cc_site_CHILD_OF_cisco_cc_center" {
   enabled          = true
-  created_by       = "com.dynatrace.extension.cisco-cc 2.2.1"
+  created_by       = "com.dynatrace.extension.cisco-cc 3.0.3"
   from_type        = "cisco_cc:site"
   to_type          = "cisco_cc:center"
   type_of_relation = "CHILD_OF"

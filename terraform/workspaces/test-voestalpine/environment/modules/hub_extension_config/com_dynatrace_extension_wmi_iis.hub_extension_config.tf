@@ -9,7 +9,7 @@ resource "dynatrace_hub_extension_config" "com_dynatrace_extension_wmi_iis" {
       "activationContext": "LOCAL",
       "activationTags": [],
       "description": "Nedcon US 2161",
-      "enabled": false,
+      "enabled": true,
       "featureSets": [
         "IIS Extended Request Metrics",
         "Http request processing"
@@ -18,6 +18,6 @@ resource "dynatrace_hub_extension_config" "com_dynatrace_extension_wmi_iis" {
         "iis_app_pool": "Name != '_Total'",
         "iis_site": "Name != '_Total'"
       },
-      "version": "1.2.6"
+      "version": "2.0.1"
     })
 }

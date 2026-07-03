@@ -5,23 +5,35 @@ resource "dynatrace_generic_setting" "app_dynatrace_discovery_coverage_discovery
       "rule": {
         "actions": [
           {
-            "name": "configureLogForwardingForCloud",
+            "name": "setMonitoringMode",
             "parameters": [
               {
-                "name": "cloudProvider",
-                "value": "aws"
+                "name": "mode",
+                "value": "AT_LEAST_INFRA"
+              }
+            ]
+          },
+          {
+            "name": "activateExtension",
+            "parameters": [
+              {
+                "name": "extensionName",
+                "value": "com.dynatrace.rabbitmq"
+              },
+              {
+                "name": "defaultPort",
+                "value": "5672"
               }
             ]
           }
         ],
-        "category": "Logs",
-        "description": "Logs are a critical signal for Observability and Security use cases. This rule looks for AWS integration for your account and detects if any logs are ingested. The recommended remediation action is set up AWS log ingest to ensure there are no blind spots. There are multiple ways to ingest resource and activity logs from AWS.",
-        "environmentScope": true,
-        "id": "unmonitored-aws-logs-0",
-        "priority": "CRITICAL",
-        "query": "fetch dt.entity.aws_credentials, from:-15m\n       | summarize count=count(), by:{awsAccountId}\n       | fields `Account ID`=awsAccountId, id=awsAccountId\n       | lookup [ fetch logs | filter cloud.provider == \"aws\" | summarize count=count(), by:{aws.account.id} | fields aws.account.id, hasLogs = count \u003e 0 ],\n                  sourceField:`Account ID`, lookupField: aws.account.id\n       | fields `Account ID`, id, compliant=lookup.hasLogs\n       ",
-        "title": "Unmonitored AWS logs",
-        "zeroRated": true
+        "category": "Messaging",
+        "description": "RabbitMQ is an important messaging part of your infrastructure.\n        Infrastructure Mode and an extension are highly recommended. Without\n        adequate monitoring, Davis has a limited view into your MQ health.",
+        "environmentScope": false,
+        "id": "undermonitored-rabbit-mq-0",
+        "priority": "WARNING",
+        "query": "fetch dt.entity.process_group_instance, from:-15m\n        | filter matchesValue(softwareTechnologies, \"type:RABBIT_MQ\")\n        | fieldsAdd hostid=belongs_to[dt.entity.host]\n        | lookup [ fetch dt.entity.host | fieldsAdd monitoringMode], sourceField:hostid, lookupField:id, prefix:\"host.\"\n        | fields id, entity.name, host=host.entity.name, host.id, listenPorts, ipAddress=host.ipAddress, monitoringMode=host.monitoringMode\n        | lookup [ fetch `dt.entity.rabbitmq:node` | fieldsAdd hostid=same_as[dt.entity.host][0]], sourceField:host.id, lookupField:hostid, prefix:\"mq.\"\n        | fieldsAdd compliant=(isNotNull(mq.hostid) and in(monitoringMode, array(\"INFRASTRUCTURE\", \"FULL_STACK\")))\n        | fields process.id=id, process=entity.name, host, host.id, listenPorts, ipAddress, monitoringMode, mq.id, mq=mq.entity.name, compliant\n        ",
+        "title": "Undermonitored RabbitMQ"
       },
       "settings": {
         "muted": false

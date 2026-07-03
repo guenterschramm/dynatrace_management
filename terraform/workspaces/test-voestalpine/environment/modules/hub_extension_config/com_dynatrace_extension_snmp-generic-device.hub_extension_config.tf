@@ -11,7 +11,7 @@ resource "dynatrace_hub_extension_config" "com_dynatrace_extension_snmp-generic-
       "dtAttributes": {
         "dt.cost.costcenter": "nedcon_2157",
         "dt.cost.product": "nedcon_us_2161",
-        "dt.security_context": "\"Nedcon_POC,network\""
+        "dt.security_context": "Nedcon_POC"
       },
       "enabled": false,
       "featureSets": [
@@ -27,18 +27,18 @@ resource "dynatrace_hub_extension_config" "com_dynatrace_extension_snmp-generic-
         "devices": [
           {
             "authentication": {
-              "community": "***c244ae0bed137172***",
-              "type": "SNMPv2c",
-              "useCredentialVault": false
+              "credentialVaultIdSnmpV3": "CREDENTIALS_VAULT-AA52FC484EBDECD9",
+              "type": "SNMPv3",
+              "useCredentialVault": true
             },
             "ip": "10.138.152.253",
             "port": 161
           },
           {
             "authentication": {
-              "community": "***88c8d94d51a42d72***",
-              "type": "SNMPv2c",
-              "useCredentialVault": false
+              "credentialVaultIdSnmpV3": "CREDENTIALS_VAULT-AA52FC484EBDECD9",
+              "type": "SNMPv3",
+              "useCredentialVault": true
             },
             "ip": "10.138.152.254",
             "port": 161
@@ -46,6 +46,6 @@ resource "dynatrace_hub_extension_config" "com_dynatrace_extension_snmp-generic-
         ]
       },
       "vars": {},
-      "version": "3.0.4"
+      "version": "3.0.5"
     })
 }

@@ -5,17 +5,22 @@ resource "dynatrace_generic_setting" "app_dynatrace_discovery_coverage_discovery
       "rule": {
         "actions": [
           {
-            "name": "configureSynthetic",
-            "parameters": []
+            "name": "setMonitoringMode",
+            "parameters": [
+              {
+                "name": "mode",
+                "value": "FULL_STACK"
+              }
+            ]
           }
         ],
-        "category": "Frontend",
-        "description": "Real User Monitoring (RUM) provides a great view into frontend\n        performance and behavior, as it experienced by users. It is recommended to also include synthetic tests\n        to ensure consistent performance and availability monitoring around the clock.\n        ",
-        "environmentScope": true,
-        "id": "undermonitored-rum-applications-0",
-        "priority": "WARNING",
-        "query": "fetch dt.entity.application, from:-15m\n        | fieldsAdd isSyntheticMonitored=isNotNull(monitored_by[dt.entity.synthetic_test]), isHttpMonitored=isNotNull(monitored_by[dt.entity.http_check])\n        | fieldsAdd compliant=(isSyntheticMonitored or isHttpMonitored)\n        | fields application.id=id, application=entity.name, isSyntheticMonitored, isHttpMonitored, compliant\n        ",
-        "title": "Undermonitored frontend applications"
+        "category": "Deep monitoring",
+        "description": "Through end-to-end tracing services on these hosts were found to be externally facing",
+        "environmentScope": false,
+        "id": "hosts-with-external-services-0",
+        "priority": "CRITICAL",
+        "query": "fetch dt.entity.host, from:-15m\n        | filter hasPublicTraffic == true OR ebpfHasPublicTraffic == true\n        | fields host=entity.name, monitoringMode, host.id=id, compliant=(monitoringMode == \"FULL_STACK\")\n        ",
+        "title": "Hosts with external services"
       },
       "settings": {
         "muted": false

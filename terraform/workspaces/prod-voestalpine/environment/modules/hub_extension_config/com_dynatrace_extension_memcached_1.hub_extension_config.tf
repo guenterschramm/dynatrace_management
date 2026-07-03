@@ -22,6 +22,6 @@ resource "dynatrace_hub_extension_config" "com_dynatrace_extension_memcached_1" 
       "pythonLocal": {
         "debug": false
       },
-      "version": "2.1.1"
+      "version": "3.0.0"
     })
 }

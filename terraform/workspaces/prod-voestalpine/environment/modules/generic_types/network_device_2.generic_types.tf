@@ -1,7 +1,7 @@
 resource "dynatrace_generic_types" "network_device_2" {
   name         = "network:device"
   enabled      = true
-  created_by   = "com.dynatrace.extension.snmp-auto-discovery 4.1.5"
+  created_by   = "com.dynatrace.extension.snmp-auto-discovery 4.1.7"
   display_name = "Network device"
   insert_after = "vu9U3hXa3q0AAAABACZidWlsdGluOm1vbml0b3JlZGVudGl0aWVzLmdlbmVyaWMudHlwZQAGdGVuYW50AAZ0ZW5hbnQAJDY3Y2NkODhkLWUyNmYtNTRiYS1hYzcyLTcxZjExMjI5YjlmMr7vVN4V2t6t"
   rules {
@@ -22,6 +22,10 @@ resource "dynatrace_generic_types" "network_device_2" {
         attribute {
           key     = "dt.dns_names"
           pattern = "{sys.name}"
+        }
+        attribute {
+          key     = "dt.security_context"
+          pattern = "{dt.security_context}"
         }
         attribute {
           display_name = "Network segment"
@@ -109,6 +113,10 @@ resource "dynatrace_generic_types" "network_device_2" {
         attribute {
           key     = "dt.ip_addresses"
           pattern = "{snmp.ip}"
+        }
+        attribute {
+          key     = "dt.security_context"
+          pattern = "{dt.security_context}"
         }
         attribute {
           display_name = "Network segment"
@@ -267,6 +275,10 @@ resource "dynatrace_generic_types" "network_device_2" {
         attribute {
           key     = "dt.ip_addresses"
           pattern = "{neighbor.address}"
+        }
+        attribute {
+          key     = "dt.security_context"
+          pattern = "{dt.security_context}"
         }
       }
       required_dimensions {

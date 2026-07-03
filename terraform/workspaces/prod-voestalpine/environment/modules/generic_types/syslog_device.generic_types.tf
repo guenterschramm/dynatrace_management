@@ -1,9 +1,9 @@
 resource "dynatrace_generic_types" "syslog_device" {
   name         = "syslog:device"
   enabled      = true
-  created_by   = "com.dynatrace.extension.snmp-auto-discovery 4.1.5"
+  created_by   = "com.dynatrace.extension.snmp-auto-discovery 4.1.7"
   display_name = "Syslog device"
-  insert_after = "vu9U3hXa3q0AAAABACZidWlsdGluOm1vbml0b3JlZGVudGl0aWVzLmdlbmVyaWMudHlwZQAGdGVuYW50AAZ0ZW5hbnQAJDY2NWU2NjlkLTA4MTAtNWRiYy04NDMxLWU0ZTYwMWM5NDhmMb7vVN4V2t6t"
+  insert_after = "vu9U3hXa3q0AAAABACZidWlsdGluOm1vbml0b3JlZGVudGl0aWVzLmdlbmVyaWMudHlwZQAGdGVuYW50AAZ0ZW5hbnQAJDQxMjE0MDdmLTdlYTEtNTI1YS04YWQ3LTk2OGNjMmQ0ZTdmOL7vVN4V2t6t"
   rules {
     rule {
       id_pattern            = "syslog_device_{dt.ingest.source.ip}"

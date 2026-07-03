@@ -5,22 +5,22 @@ resource "dynatrace_generic_setting" "app_dynatrace_discovery_coverage_discovery
       "rule": {
         "actions": [
           {
-            "name": "configureLogForwardingForTechnology",
+            "name": "enableLogIngestRule",
             "parameters": [
               {
-                "name": "technology",
-                "value": "fluentd"
+                "name": "ruleName",
+                "value": "[Built-in] Linux system logs"
               }
             ]
           }
         ],
         "category": "Logs",
-        "description": "Monitoring Kubernetes logs, together with other observability signals like metrics and traces, is important to assure full context for observability and troubleshooting use cases.\n    This rule detects existing fluentd instances that are not integrated with Dynatrace, and provides instructions for configuring your log forwarder to send data to logs ingest API.",
+        "description": "Logs are a critical signal for Observability and Security use cases. There are multiple ways to ingest logs, but the easiest is via OneAgent. This rule looks for Linux system logs which have been detected by OneAgent but are not being ingested. The recommended remediation action is to enable a built-in rule to ingest these logs environment wide, to ensure there are no blind spots. Alternatively, you can create your own rules at the environment, host group, or host level.",
         "environmentScope": true,
-        "id": "unmonitored-fluentd-logs-0",
-        "priority": "WARNING",
-        "query": "fetch dt.entity.container_group_instance\n        | fieldsAdd containerImageName, cluster_id=belongs_to[dt.entity.kubernetes_cluster]\n        | filter matchesPhrase(containerImageName,\"fluentd\")\n        | summarize tmp=count(), by: cluster_id\n        | fieldsRemove tmp\n        | fieldsAdd compliant = cluster_id in [\n          timeseries count = sum(dt.log.status_per_entity_count), by: {dt.entity.kubernetes_cluster}, from: now()-1h\n          | filterOut isNull(dt.entity.kubernetes_cluster)\n          | fields dt.entity.kubernetes_cluster\n        ]\n        | lookup [fetch dt.entity.kubernetes_cluster], sourceField:cluster_id, lookupField:id, prefix:\"kubernetes_cluster.\"\n        | fields kubernetes_cluster=kubernetes_cluster.entity.name, kubernetes_cluster.id=cluster_id, compliant\n        ",
-        "title": "Unmonitored fluentd logs"
+        "id": "unmonitored-linux-system-logs-0",
+        "priority": "CRITICAL",
+        "query": "fetch dt.entity.process_group_instance, from:-7d\n        | filter processType == \"LINUX_SYSTEM\"\n        | fields hostId=belongs_to[dt.entity.host],id,logMonitored=isNotNull(logPathLastUpdate) or (isNotNull(logSourceState) and contains(toString(logSourceState),\"LOG_STORAGE_CONFIGURATION_STATUS_SEND_TO_STORAGE\"))\n        | filter id in [ fetch dt.entity.process_group_instance, from:-2h | filter processType == \"LINUX_SYSTEM\" |fields id]\n        | lookup [fetch dt.entity.host], lookupField: id, sourceField: hostId, prefix:\"host.\"\n        | fields host.id,host=host.entity.name,compliant=logMonitored\n        ",
+        "title": "Unmonitored Linux system logs"
       },
       "settings": {
         "muted": false

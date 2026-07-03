@@ -5,22 +5,22 @@ resource "dynatrace_generic_setting" "app_dynatrace_discovery_coverage_discovery
       "rule": {
         "actions": [
           {
-            "name": "enableLogIngestRule",
+            "name": "configureLogForwardingForTechnology",
             "parameters": [
               {
-                "name": "ruleName",
-                "value": "[Built-in] Kubernetes default namespaces logs"
+                "name": "technology",
+                "value": "fluent-bit"
               }
             ]
           }
         ],
         "category": "Logs",
-        "description": "Logs are a critical signal for Observability and Security use cases. There are multiple ways to ingest logs, but the easiest is via OneAgent. This rule looks for Kubernetes containers and determines whether logs have been detected and ingested by OneAgent. The recommended remediation action is to enable a built-in rule to ingest these logs environment wide, to ensure there are no blind spots. Alternatively, you can create your own rules at the environment, namespace, deployment, or container level.",
+        "description": "Monitoring Kubernetes logs, together with other observability signals like metrics and traces, is important to assure full context for observability and troubleshooting use cases.\n    This rule detects existing fluentbit instances that are not integrated with Dynatrace, and provides instructions for configuring your log forwarder to send data to logs ingest API.",
         "environmentScope": true,
-        "id": "unmonitored-kubernetes-logs-0",
-        "priority": "CRITICAL",
-        "query": "fetch dt.entity.container_group_instance\n        | fieldsAdd process=contains[dt.entity.process_group_instance][0]\n        | filterOut isNull(process) or isNull(belongs_to[dt.entity.kubernetes_cluster])\n        | lookup [fetch dt.entity.process_group_instance, from:-7d\n          | fieldsAdd hostId=belongs_to[dt.entity.host],id,logMonitored=isNotNull(logPathLastUpdate) or\n            (isNotNull(logSourceState) and contains(toString(logSourceState),\"LOG_STORAGE_CONFIGURATION_STATUS_SEND_TO_STORAGE\"))\n        ], sourceField:process, lookupField:id, prefix:\"process.\"\n        | lookup [fetch dt.entity.cloud_application], sourceField:belongs_to[dt.entity.cloud_application], lookupField:id, prefix:\"deployment.\"\n        | lookup [fetch dt.entity.cloud_application_namespace], sourceField:belongs_to[dt.entity.cloud_application_namespace], lookupField:id, prefix:\"namespace.\"\n        | fields namespace=namespace.entity.name, namespace.id, deployment=deployment.entity.name, deployment.id, container=entity.name, container.id=id,\n          compliant=process.logMonitored\n        ",
-        "title": "Unmonitored Kubernetes logs"
+        "id": "unmonitored-fluentbit-logs-0",
+        "priority": "WARNING",
+        "query": "fetch dt.entity.container_group_instance\n        | fieldsAdd containerImageName, cluster_id=belongs_to[dt.entity.kubernetes_cluster]\n        | filter matchesPhrase(containerImageName,\"fluent-bit\")\n        | summarize tmp=count(), by: cluster_id\n        | fieldsRemove tmp\n        | fieldsAdd compliant = cluster_id in [\n          timeseries count = sum(dt.log.status_per_entity_count), by: {dt.entity.kubernetes_cluster}, from: now()-1h\n          | filterOut isNull(dt.entity.kubernetes_cluster)\n          | fields dt.entity.kubernetes_cluster\n        ]\n        | lookup [fetch dt.entity.kubernetes_cluster], sourceField:cluster_id, lookupField:id, prefix:\"kubernetes_cluster.\"\n        | fields kubernetes_cluster=kubernetes_cluster.entity.name, kubernetes_cluster.id=cluster_id, compliant\n        ",
+        "title": "Unmonitored fluentbit logs"
       },
       "settings": {
         "muted": false

@@ -1,7 +1,7 @@
 resource "dynatrace_generic_types" "snmp_com_dynatrace_extension_snmp_generic_cisco_device" {
   name         = "snmp:com_dynatrace_extension_snmp_generic_cisco_device"
   enabled      = true
-  created_by   = "com.dynatrace.extension.snmp-generic-cisco-device 3.4.10"
+  created_by   = "com.dynatrace.extension.snmp-generic-cisco-device 4.0.9"
   display_name = "Generic SNMP Cisco Device"
   insert_after = "vu9U3hXa3q0AAAABACZidWlsdGluOm1vbml0b3JlZGVudGl0aWVzLmdlbmVyaWMudHlwZQAGdGVuYW50AAZ0ZW5hbnQAJGY1YjNjNDM5LWNmNjUtNTI0NS1iZGU0LWE5OTIwN2YyMjkxNb7vVN4V2t6t"
   rules {

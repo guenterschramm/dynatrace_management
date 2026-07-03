@@ -4,6 +4,41 @@ resource "dynatrace_custom_tags" "_2217WWTC08_voestalpine_root_local" {
     filter {
       context = "CONTEXTLESS"
       key     = "Webapplication"
+      value   = "Webhosting - IT Structure"
+    }
+    filter {
+      context = "CONTEXTLESS"
+      key     = "Webapplication"
+      value   = "Webhosting - Satre Kapfenberg"
+    }
+    filter {
+      context = "CONTEXTLESS"
+      key     = "Webapplication"
+      value   = "Webhosting - Schrottplatz Waagenanbindung"
+    }
+    filter {
+      context = "CONTEXTLESS"
+      key     = "Webapplication"
+      value   = "Webhosting - Satre Stahl"
+    }
+    filter {
+      context = "CONTEXTLESS"
+      key     = "Webapplication"
+      value   = "Webhosting - Safety Standards"
+    }
+    filter {
+      context = "CONTEXTLESS"
+      key     = "Webapplication"
+      value   = "Webhosting - LogServ Personal Intranet"
+    }
+    filter {
+      context = "CONTEXTLESS"
+      key     = "Webapplication"
+      value   = "Webhosting - Corporate Commodity Group Management"
+    }
+    filter {
+      context = "CONTEXTLESS"
+      key     = "Webapplication"
       value   = "Webhosting - SQM Dokumente"
     }
     filter {
@@ -14,22 +49,12 @@ resource "dynatrace_custom_tags" "_2217WWTC08_voestalpine_root_local" {
     filter {
       context = "CONTEXTLESS"
       key     = "Webapplication"
-      value   = "Webhosting - Safety Standards"
+      value   = "Webhosting - Procontract"
     }
     filter {
       context = "CONTEXTLESS"
       key     = "Webapplication"
-      value   = "Webhosting - SQM Report Portal"
-    }
-    filter {
-      context = "CONTEXTLESS"
-      key     = "Webapplication"
-      value   = "Webhosting - Corporate Commodity Group Management"
-    }
-    filter {
-      context = "CONTEXTLESS"
-      key     = "Webapplication"
-      value   = "Webhosting - Car Discounts"
+      value   = "Webhosting - VDV"
     }
     filter {
       context = "CONTEXTLESS"
@@ -39,42 +64,17 @@ resource "dynatrace_custom_tags" "_2217WWTC08_voestalpine_root_local" {
     filter {
       context = "CONTEXTLESS"
       key     = "Webapplication"
+      value   = "Webhosting - Car Discounts"
+    }
+    filter {
+      context = "CONTEXTLESS"
+      key     = "Webapplication"
       value   = "Webhosting - KMV"
     }
     filter {
       context = "CONTEXTLESS"
       key     = "Webapplication"
-      value   = "Webhosting - Procontract"
-    }
-    filter {
-      context = "CONTEXTLESS"
-      key     = "Webapplication"
-      value   = "Webhosting - Satre Kapfenberg"
-    }
-    filter {
-      context = "CONTEXTLESS"
-      key     = "Webapplication"
-      value   = "Webhosting - IT Structure"
-    }
-    filter {
-      context = "CONTEXTLESS"
-      key     = "Webapplication"
-      value   = "Webhosting - LogServ Personal Intranet"
-    }
-    filter {
-      context = "CONTEXTLESS"
-      key     = "Webapplication"
-      value   = "Webhosting - Satre Stahl"
-    }
-    filter {
-      context = "CONTEXTLESS"
-      key     = "Webapplication"
-      value   = "Webhosting - Schrottplatz Waagenanbindung"
-    }
-    filter {
-      context = "CONTEXTLESS"
-      key     = "Webapplication"
-      value   = "Webhosting - VDV"
+      value   = "Webhosting - SQM Report Portal"
     }
   }
 }

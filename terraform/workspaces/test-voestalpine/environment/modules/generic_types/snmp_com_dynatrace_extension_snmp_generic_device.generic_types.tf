@@ -1,7 +1,7 @@
 resource "dynatrace_generic_types" "snmp_com_dynatrace_extension_snmp_generic_device" {
   name         = "snmp:com_dynatrace_extension_snmp_generic_device"
   enabled      = true
-  created_by   = "com.dynatrace.extension.snmp-generic-device 3.0.4"
+  created_by   = "com.dynatrace.extension.snmp-generic-device 3.0.5"
   display_name = "Generic SNMP Device"
   insert_after = "vu9U3hXa3q0AAAABACZidWlsdGluOm1vbml0b3JlZGVudGl0aWVzLmdlbmVyaWMudHlwZQAGdGVuYW50AAZ0ZW5hbnQAJGYyNTY2ZWRlLWRjYWEtNTA1Mi05MGEyLWI5MmRhZmVjYTNkZb7vVN4V2t6t"
   rules {

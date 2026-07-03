@@ -4,4 +4,14 @@ resource "dynatrace_metric_metadata" "Total_App_Pool_Uptime" {
   metric_id    = "metric-iis.total.applicationPool.uptime"
   tags         = [ "IIS", "Webserver" ]
   unit         = "Second"
+  dimensions {
+    dimension {
+      display_name = "App Pool"
+      key          = "iis_app_pool"
+    }
+    dimension {
+      display_name = "App Pool State"
+      key          = "app_pool_state"
+    }
+  }
 }

@@ -1,6 +1,6 @@
 resource "dynatrace_generic_relationships" "syslog_device_SAME_AS_network_device" {
   enabled          = true
-  created_by       = "com.dynatrace.extension.snmp-auto-discovery 4.1.5"
+  created_by       = "com.dynatrace.extension.snmp-auto-discovery 4.1.7"
   from_type        = "syslog:device"
   to_type          = "network:device"
   type_of_relation = "SAME_AS"

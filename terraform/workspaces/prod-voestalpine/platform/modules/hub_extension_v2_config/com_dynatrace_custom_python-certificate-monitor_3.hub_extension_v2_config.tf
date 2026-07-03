@@ -1,10 +1,10 @@
 resource "dynatrace_hub_extension_v2_config" "com_dynatrace_custom_python-certificate-monitor_3" {
   name  = "com.dynatrace.custom.python-certificate-monitor"
-  scope = "HOST_GROUP-43F6C4407DC19AD5"
+  scope = "HOST_GROUP-C345CA5D0D760424"
   value = jsonencode({
       "activationContext": "LOCAL",
       "activationTags": [],
-      "description": "PCD_PW_Portal SSL Certificate",
+      "description": "xECM Steel SSL Certificate",
       "enabled": true,
       "featureSets": [
         "enhanced_metric"
@@ -43,6 +43,6 @@ resource "dynatrace_hub_extension_v2_config" "com_dynatrace_custom_python-certif
           "customize_port_range": false
         }
       },
-      "version": "1.10.26"
+      "version": "2.0.0"
     })
 }

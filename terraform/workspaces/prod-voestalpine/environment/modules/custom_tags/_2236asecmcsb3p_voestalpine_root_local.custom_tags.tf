@@ -3,6 +3,11 @@ resource "dynatrace_custom_tags" "_2236asecmcsb3p_voestalpine_root_local" {
   tags {
     filter {
       context = "CONTEXTLESS"
+      key     = "Technology"
+      value   = "Memcached"
+    }
+    filter {
+      context = "CONTEXTLESS"
       key     = "Webserver"
       value   = "IIS"
     }

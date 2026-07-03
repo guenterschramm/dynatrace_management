@@ -14,7 +14,7 @@ resource "dynatrace_openpipeline_v2_metrics_ingestsources" "Generic_Juniper_Devi
     }
   }
   static_routing {
-    pipeline_id   = "vu9U3hXa3q0AAAABACZidWlsdGluOm9wZW5waXBlbGluZS5tZXRyaWNzLnBpcGVsaW5lcwAGdGVuYW50AAZ0ZW5hbnQAJGNlOWE3MWRhLTc5MmUtMzIyZC04YmRiLTQzODU2ZGUyYjBmY77vVN4V2t6t"
+    pipeline_id   = "vu9U3hXa3q0AAAABACZidWlsdGluOm9wZW5waXBlbGluZS5tZXRyaWNzLnBpcGVsaW5lcwAGdGVuYW50AAZ0ZW5hbnQAJDA4Nzk2MTUxLWYzMTMtM2JlNS1iYzhiLTYzMWUzNzI3YmQzNL7vVN4V2t6t"
     pipeline_type = "custom"
   }
 }

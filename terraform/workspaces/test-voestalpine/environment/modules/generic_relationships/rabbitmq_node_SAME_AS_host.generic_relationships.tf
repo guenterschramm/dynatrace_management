@@ -1,6 +1,6 @@
 resource "dynatrace_generic_relationships" "rabbitmq_node_SAME_AS_host" {
   enabled          = true
-  created_by       = "com.dynatrace.rabbitmq 2.1.7"
+  created_by       = "com.dynatrace.rabbitmq 3.0.0"
   from_type        = "rabbitmq:node"
   to_type          = "host"
   type_of_relation = "SAME_AS"

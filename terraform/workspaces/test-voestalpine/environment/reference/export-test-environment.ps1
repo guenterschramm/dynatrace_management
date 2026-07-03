@@ -512,6 +512,12 @@ try {
     if (-not $vars.ContainsKey("tenant_test_api_token")) {
         throw "Variable 'tenant_test_api_token' fehlt in $TfvarsPath"
     }
+    if ([string]::IsNullOrWhiteSpace($vars["tenant_test_env_url"])) {
+        throw "Variable 'tenant_test_env_url' ist leer in $TfvarsPath"
+    }
+    if ([string]::IsNullOrWhiteSpace($vars["tenant_test_api_token"])) {
+        throw "Variable 'tenant_test_api_token' ist leer in $TfvarsPath"
+    }
 
     New-Item -ItemType Directory -Force -Path $TargetFolder | Out-Null
 

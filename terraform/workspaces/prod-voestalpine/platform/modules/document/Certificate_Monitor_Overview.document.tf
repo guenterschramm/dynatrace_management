@@ -640,7 +640,7 @@ resource "dynatrace_document" "Certificate_Monitor_Overview" {
           }
         },
         "6": {
-          "content": "#### 🔗 Navigate to entities:\n* [Certificate monitor]($TenantUrl/ui/apps/dynatrace.classic.technologies/ui/entity/list/python:certificate_monitor)\n* [Certificate]($TenantUrl/ui/apps/dynatrace.classic.technologies/ui/entity/list/python:certificate_monitor_certificate)",
+          "content": "#### 🔗 Navigate to entities:\n* [Certificate monitor]($TenantUrl/ui/apps/dynatrace.infraops/technology/security/com.dynatrace.custom.python-certificate-monitor/python:certificate_monitor)\n* [Certificate]($TenantUrl/ui/apps/dynatrace.infraops/technology/security/com.dynatrace.custom.python-certificate-monitor/python:certificate_monitor_certificate)",
           "type": "markdown"
         },
         "7": {
@@ -665,6 +665,6 @@ resource "dynatrace_document" "Certificate_Monitor_Overview" {
       ],
       "version": 19
     })
-  custom_id = "com-dynatrace-custom-python-certificate-monitor-certificate-monitor-overview--1377841924"
+  custom_id = "com-dynatrace-custom-python-certificate-monitor-certificate-monitor-overview"
   # private = false
 }

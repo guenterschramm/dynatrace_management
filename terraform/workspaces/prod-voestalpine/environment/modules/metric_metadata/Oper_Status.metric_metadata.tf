@@ -49,5 +49,13 @@ resource "dynatrace_metric_metadata" "Oper_Status" {
       display_name = "Interface Index"
       key          = "if_index"
     }
+    dimension {
+      display_name = "Chassis MAC"
+      key          = "chassis.mac"
+    }
+    dimension {
+      display_name = "Site Id"
+      key          = "site_id"
+    }
   }
 }

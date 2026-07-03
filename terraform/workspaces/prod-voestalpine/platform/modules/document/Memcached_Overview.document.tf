@@ -426,6 +426,6 @@ resource "dynatrace_document" "Memcached_Overview" {
       ],
       "version": 19
     })
-  custom_id = "com-dynatrace-extension-memcached-memcached-overview-1658346239"
+  custom_id = "com-dynatrace-extension-memcached-memcached-overview"
   # private = false
 }

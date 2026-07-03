@@ -1,6 +1,7 @@
 resource "dynatrace_metric_events" "SQL_Server_low_buffer_cache_hit_rate" {
-  enabled = false
-  summary = "SQL Server low buffer cache hit rate"
+  enabled                    = false
+  event_entity_dimension_key = "dt.entity.sql:sql_server_instance"
+  summary                    = "SQL Server low buffer cache hit rate"
   event_template {
     description   = "The {metricname} value of {severity} was {alert_condition} threshold of {threshold}."
     # davis_merge = false
@@ -18,6 +19,6 @@ resource "dynatrace_metric_events" "SQL_Server_low_buffer_cache_hit_rate" {
   }
   query_definition {
     type            = "METRIC_SELECTOR"
-    metric_selector = "sql-server.buffers.cacheHitRatio:splitBy(device):avg:auto:sort(value(avg,descending)):limit(100)"
+    metric_selector = "sql-server.buffers.cacheHitRatio:splitBy(device,dt.entity.sql:sql_server_instance):avg:auto:sort(value(avg,descending)):limit(100)"
   }
 }

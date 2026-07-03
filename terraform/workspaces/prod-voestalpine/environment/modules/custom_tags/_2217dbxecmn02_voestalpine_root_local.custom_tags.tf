@@ -3,6 +3,11 @@ resource "dynatrace_custom_tags" "_2217dbxecmn02_voestalpine_root_local" {
   tags {
     filter {
       context = "CONTEXTLESS"
+      key     = "[Environment]dt.cost.product"
+      value   = "xecm_production"
+    }
+    filter {
+      context = "CONTEXTLESS"
       key     = "[Environment]dt.cost.costcenter"
       value   = "xecm"
     }
@@ -10,11 +15,6 @@ resource "dynatrace_custom_tags" "_2217dbxecmn02_voestalpine_root_local" {
       context = "CONTEXTLESS"
       key     = "Application"
       value   = "SQL Server"
-    }
-    filter {
-      context = "CONTEXTLESS"
-      key     = "[Environment]dt.cost.product"
-      value   = "xecm_production"
     }
   }
 }

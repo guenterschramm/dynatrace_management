@@ -7,39 +7,37 @@ resource "dynatrace_hub_extension_config" "com_dynatrace_extension_snmp-auto-dis
   scope             = "ag_group-default"
   value             = jsonencode({
       "activationContext": "REMOTE",
-      "description": "BG88",
+      "description": "Network - Discovery",
       "dtAttributes": {
-        "dt.cost.costcenter": "network",
-        "dt.cost.product": "cisco",
-        "dt.security_context": "network/bg88"
+        "dt.cost.costcenter": "discovery",
+        "dt.cost.product": "network",
+        "dt.security_context": "network"
       },
       "enabled": true,
-      "featureSets": [
-        "self-monitoring"
-      ],
+      "featureSets": [],
       "pythonRemote": {
         "debugLogging": false,
         "groups": [
           {
             "addresses": [
-              "10.163.32.0/24"
+              "10.233.0.1-10.233.0.255"
             ],
             "authentication": {
-              "community": "***aa1a1a64ae4ee519***",
-              "useCredentialVault": false,
-              "version": "SNMPv2c"
+              "credentialVaultIdSnmpV3": "CREDENTIALS_VAULT-BEB60FA211474B83",
+              "useCredentialVault": true,
+              "version": "SNMPv3"
             },
-            "label": "BG88",
+            "label": "Network - WLAN Core router discovery",
             "port": 161
           }
         ],
         "scanner": {
-          "frequency": 60,
+          "frequency": 30,
           "neighbors": true,
-          "profile": "DEFAULT",
-          "token": "***3a358438bd3b2291***"
+          "profile": "HIGH",
+          "token": "***55d680d1a9a68de2***"
         }
       },
-      "version": "4.1.5"
+      "version": "4.1.7"
     })
 }

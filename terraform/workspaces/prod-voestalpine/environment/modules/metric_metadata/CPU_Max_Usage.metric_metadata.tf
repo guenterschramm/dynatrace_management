@@ -3,5 +3,5 @@ resource "dynatrace_metric_metadata" "CPU_Max_Usage" {
   display_name       = "CPU Max Usage"
   metric_id          = "metric-vmware.vm.cpu.max_usage"
   source_entity_type = "vmware:virtualmachine"
-  unit               = "Unspecified"
+  unit               = "MegaHertz"
 }

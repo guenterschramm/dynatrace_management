@@ -5,22 +5,23 @@ resource "dynatrace_generic_setting" "app_dynatrace_discovery_coverage_discovery
       "rule": {
         "actions": [
           {
-            "name": "enableLogIngestRule",
+            "name": "configureLogForwardingForCloud",
             "parameters": [
               {
-                "name": "ruleName",
-                "value": "[Built-in] Windows system, application, and security logs"
+                "name": "cloudProvider",
+                "value": "gcp"
               }
             ]
           }
         ],
         "category": "Logs",
-        "description": "Logs are a critical signal for Observability and Security use cases. There are multiple ways to ingest logs, but the easiest is via OneAgent. This rule looks for Windows system, application, and security logs which have been detected by OneAgent but are not being ingested. The recommended remediation action is to enable a built-in rule to ingest these logs environment wide, to ensure there are no blind spots. Alternatively, you can create your own rules at the environment, host group, or host level.",
+        "description": "Logs are a critical signal for Observability and Security use cases. This rule looks for Google Cloud Platform integration for your account and detects if any logs are ingested. The recommended remediation action is set up GCP resource and audit log ingest to ensure there are no blind spots.",
         "environmentScope": true,
-        "id": "unmonitored-windows-system-logs-0",
+        "id": "unmonitored-gcp-logs-0",
         "priority": "CRITICAL",
-        "query": "fetch dt.entity.process_group_instance, from:-7d\n        | filter processType == \"WINDOWS_SYSTEM\"\n        | fields hostId=belongs_to[dt.entity.host],id,logMonitored=isNotNull(logPathLastUpdate) or (isNotNull(logSourceState) and contains(toString(logSourceState),\"LOG_STORAGE_CONFIGURATION_STATUS_SEND_TO_STORAGE\"))\n        | filter id in [ fetch dt.entity.process_group_instance, from:-2h | filter processType == \"WINDOWS_SYSTEM\" |fields id]\n        | lookup [fetch dt.entity.host], lookupField: id, sourceField: hostId, prefix:\"host.\"\n        | fields host.id,host=host.entity.name,compliant=logMonitored\n        ",
-        "title": "Unmonitored Windows system logs"
+        "query": "fetch `dt.entity.cloud:gcp:project`, from:-15m\n       | summarize count=count(), by:{entity.name}\n       | fields `Google Cloud project`=entity.name,id=entity.name\n       | lookup [ fetch logs | fields gcp.project.id, cloud.provider | filter cloud.provider == \"gcp\" | summarize count=count(), by:{gcp.project.id} | fields gcp.project.id, hasLogs = count \u003e 0 ],\n                  sourceField:`Google Cloud project`, lookupField: gcp.project.id\n       | fields `Google Cloud project`, id, compliant=lookup.hasLogs\n       ",
+        "title": "Unmonitored Google Cloud logs",
+        "zeroRated": true
       },
       "settings": {
         "muted": false

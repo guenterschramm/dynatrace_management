@@ -1,11 +1,11 @@
 resource "dynatrace_hub_extension_v2_config" "com_dynatrace_custom_python-certificate-monitor" {
   name  = "com.dynatrace.custom.python-certificate-monitor"
-  scope = "HOST_GROUP-0A0A9B6358002D55"
+  scope = "HOST_GROUP-554BA752BD01F8E3"
   value = jsonencode({
       "activationContext": "LOCAL",
       "activationTags": [],
-      "description": "Webhosting SSL Certificate",
-      "enabled": true,
+      "description": "xECM Corporate SSL Certificate",
+      "enabled": false,
       "featureSets": [
         "enhanced_metric"
       ],
@@ -43,6 +43,6 @@ resource "dynatrace_hub_extension_v2_config" "com_dynatrace_custom_python-certif
           "customize_port_range": false
         }
       },
-      "version": "1.10.26"
+      "version": "2.0.0"
     })
 }

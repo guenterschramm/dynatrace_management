@@ -5,23 +5,35 @@ resource "dynatrace_generic_setting" "app_dynatrace_discovery_coverage_discovery
       "rule": {
         "actions": [
           {
-            "instantAction": true,
-            "name": "configureLogForwardingForTechnology",
+            "name": "setMonitoringMode",
             "parameters": [
               {
-                "name": "technology",
-                "value": "fluent-bit"
+                "name": "mode",
+                "value": "AT_LEAST_INFRA"
+              }
+            ]
+          },
+          {
+            "name": "activateExtension",
+            "parameters": [
+              {
+                "name": "extensionName",
+                "value": "com.dynatrace.extension.sql-oracle"
+              },
+              {
+                "name": "defaultPort",
+                "value": "1521"
               }
             ]
           }
         ],
-        "category": "Logs",
-        "description": "Monitoring Kubernetes logs, together with other observability signals like metrics and traces, is important to assure full context for observability and troubleshooting use cases.\n    This rule detects existing fluentbit instances that are not integrated with Dynatrace, and provides instructions for configuring your log forwarder to send data to logs ingest API.",
-        "environmentScope": true,
-        "id": "unmonitored-fluentbit-logs-0",
+        "category": "Databases",
+        "description": "Oracle databases are an important part of your infrastructure.\n        Infrastructure Mode and a database extension are highly recommended. Without\n        adequate monitoring, Davis can only tell that the database is the rootcause,\n        not why the database is causing slow performance.",
+        "environmentScope": false,
+        "id": "undermonitored-oracle-db-0",
         "priority": "WARNING",
-        "query": "fetch dt.entity.container_group_instance\n        | fieldsAdd containerImageName, cluster_id=belongs_to[dt.entity.kubernetes_cluster]\n        | filter matchesPhrase(containerImageName,\"fluent-bit\")\n        | summarize tmp=count(), by: cluster_id\n        | fieldsRemove tmp\n        | fieldsAdd compliant = cluster_id in [\n          timeseries count = sum(dt.log.status_per_entity_count), by: {dt.entity.kubernetes_cluster}, from: now()-1h\n          | filterOut isNull(dt.entity.kubernetes_cluster)\n          | fields dt.entity.kubernetes_cluster\n        ]\n        | lookup [fetch dt.entity.kubernetes_cluster], sourceField:cluster_id, lookupField:id, prefix:\"kubernetes_cluster.\"\n        | fields kubernetes_cluster=kubernetes_cluster.entity.name, kubernetes_cluster.id=cluster_id, compliant\n        ",
-        "title": "Unmonitored fluentbit logs"
+        "query": "fetch dt.entity.process_group_instance, from:-15m\n        | filter matchesValue(softwareTechnologies, \"*type:ORACLE_DATABASE*\") AND matchesValue(entity.detected_name, \"Oracle Listener*\")\n        | fieldsAdd hostid=belongs_to[dt.entity.host]\n        | lookup [ fetch dt.entity.host | fieldsAdd monitoringMode], sourceField:hostid, lookupField:id, prefix:\"host.\"\n        | fields id, entity.name, host=host.entity.name, host.id, listenPorts, ipAddress=host.ipAddress, monitoringMode=host.monitoringMode\n        | lookup [ fetch `dt.entity.sql:com_dynatrace_extension_sql-oracle_host` | fieldsAdd same_as | fieldsFlatten same_as | expand hostid = same_as.dt.entity.host], sourceField:host.id, lookupField:hostid, prefix:\"db.\"\n        | fields process.id=id, process=entity.name, host, host.id, listenPorts, ipAddress, monitoringMode, compliant=(isNotNull(db.hostid) AND in(monitoringMode, array(\"INFRASTRUCTURE\", \"FULL_STACK\")))\n        ",
+        "title": "Undermonitored Oracle databases"
       },
       "settings": {
         "muted": false

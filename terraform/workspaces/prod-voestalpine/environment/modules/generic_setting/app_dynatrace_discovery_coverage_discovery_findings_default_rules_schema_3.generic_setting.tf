@@ -5,22 +5,17 @@ resource "dynatrace_generic_setting" "app_dynatrace_discovery_coverage_discovery
       "rule": {
         "actions": [
           {
-            "name": "setMonitoringMode",
-            "parameters": [
-              {
-                "name": "mode",
-                "value": "AT_LEAST_INFRA"
-              }
-            ]
+            "name": "installDynatraceOperator",
+            "parameters": []
           }
         ],
-        "category": "Databases",
-        "description": "MongoDB databases are an important part of your infrastructure.\n        Infrastructure Mode and a database extension are highly recommended. Without\n        adequate monitoring, Davis can only tell that the database is the rootcause,\n        not why the database is causing slow performance.",
-        "environmentScope": false,
-        "id": "undermonitored-mongo-db-0",
-        "priority": "WARNING",
-        "query": "fetch dt.entity.process_group_instance, from:-15m\n        | filter matchesValue(softwareTechnologies, \"*type:MONGODB*\")\n        | fieldsAdd hostid=belongs_to[dt.entity.host]\n        | lookup [ fetch dt.entity.host | fieldsAdd monitoringMode], sourceField:hostid, lookupField:id, prefix:\"host.\"\n        | fields process.id=id, process=entity.name, host=host.entity.name, host.id, listenPorts, ipAddress=host.ipAddress, monitoringMode=host.monitoringMode, compliant=(in(host.monitoringMode, array(\"INFRASTRUCTURE\", \"FULL_STACK\")))\n        ",
-        "title": "Undermonitored MongoDB databases"
+        "category": "Kubernetes",
+        "description": "Kubernetes is the 'operating system' of the modern cloud. As such, it's important from a platform engineering perspective to monitor Kubernetes, not just your workloads. Dynatrace monitors Kubernetes using an Operator. This rule detects Kubernetes clusters which are not monitored using the Operator and opens a new tab to the Kubernetes app, so that you can install the Operator.",
+        "environmentScope": true,
+        "id": "unmonitored-kubernetes-cluster-0",
+        "priority": "CRITICAL",
+        "query": "fetch dt.entity.process_group_instance, from:-15m\n        | filter contains(toString(softwareTechnologies),\"type:KUBERNETES\")\n        | fieldsAdd hostId=belongs_to[dt.entity.host]\n        | lookup [fetch dt.entity.host | fieldsAdd compliant=isNotNull(contains[dt.entity.kubernetes_node])], lookupField:id, sourceField:hostId, prefix:\"host.\"\n        | summarize count=count(), by:{host.id, host=host.entity.name, compliant=host.compliant}\n        | fieldsRemove count\n        ",
+        "title": "Unmonitored Kubernetes cluster"
       },
       "settings": {
         "muted": false

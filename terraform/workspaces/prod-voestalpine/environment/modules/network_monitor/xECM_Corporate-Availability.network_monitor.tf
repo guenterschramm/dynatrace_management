@@ -20,8 +20,8 @@ resource "dynatrace_network_monitor" "xECM_Corporate-Availability" {
         constraint {
           type = "HTTP_STATUSES"
           properties = {
-            "operator" = "<"
             "value"    = "400"
+            "operator" = "<"
           }
         }
       }

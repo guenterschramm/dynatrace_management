@@ -8,7 +8,7 @@ resource "dynatrace_openpipeline_v2_logs_pipelines" "SNMP_Autodiscovery" {
     }
     metadata {
       entry_key   = "extension_version"
-      entry_value = "4.1.5"
+      entry_value = "4.1.7"
     }
   }
   processing {
@@ -194,6 +194,10 @@ resource "dynatrace_openpipeline_v2_logs_pipelines" "SNMP_Autodiscovery" {
               field_name            = "troubleshooting.upsert_source"
               referenced_field_name = "upsert_source"
             }
+            smartscape_field_extraction_entry {
+              field_name            = "dt.security_context"
+              referenced_field_name = "dt.security_context"
+            }
           }
           id_components {
             id_component {
@@ -225,6 +229,10 @@ resource "dynatrace_openpipeline_v2_logs_pipelines" "SNMP_Autodiscovery" {
             smartscape_field_extraction_entry {
               field_name            = "autodiscovery.config_label"
               referenced_field_name = "autodiscovery.config_label"
+            }
+            smartscape_field_extraction_entry {
+              field_name            = "dt.security_context"
+              referenced_field_name = "dt.security_context"
             }
             smartscape_field_extraction_entry {
               field_name            = "autodiscovery.group_label"
@@ -303,6 +311,10 @@ resource "dynatrace_openpipeline_v2_logs_pipelines" "SNMP_Autodiscovery" {
               referenced_field_name = "neighbor.device.id"
             }
             smartscape_field_extraction_entry {
+              field_name            = "dt.security_context"
+              referenced_field_name = "dt.security_context"
+            }
+            smartscape_field_extraction_entry {
               field_name            = "troubleshooting.upsert_source"
               referenced_field_name = "upsert_source"
             }
@@ -362,6 +374,10 @@ resource "dynatrace_openpipeline_v2_logs_pipelines" "SNMP_Autodiscovery" {
               field_name            = "troubleshooting.upsert_source"
               referenced_field_name = "upsert_source"
             }
+            smartscape_field_extraction_entry {
+              field_name            = "dt.security_context"
+              referenced_field_name = "dt.security_context"
+            }
           }
           id_components {
             id_component {
@@ -416,6 +432,10 @@ resource "dynatrace_openpipeline_v2_logs_pipelines" "SNMP_Autodiscovery" {
             smartscape_field_extraction_entry {
               field_name            = "troubleshooting.upsert_source"
               referenced_field_name = "upsert_source"
+            }
+            smartscape_field_extraction_entry {
+              field_name            = "dt.security_context"
+              referenced_field_name = "dt.security_context"
             }
           }
           id_components {

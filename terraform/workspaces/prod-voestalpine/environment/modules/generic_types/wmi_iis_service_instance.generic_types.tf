@@ -3,7 +3,7 @@ resource "dynatrace_generic_types" "wmi_iis_service_instance" {
   enabled      = true
   created_by   = "com.dynatrace.extension.wmi.iis 1.2.6"
   display_name = "IIS Service"
-  insert_after = "vu9U3hXa3q0AAAABACZidWlsdGluOm1vbml0b3JlZGVudGl0aWVzLmdlbmVyaWMudHlwZQAGdGVuYW50AAZ0ZW5hbnQAJGVjYjRmYTk5LWM2NGYtNTU2Yi1iMjAyLThiYzFhZjNkOWM3Nr7vVN4V2t6t"
+  insert_after = "vu9U3hXa3q0AAAABACZidWlsdGluOm1vbml0b3JlZGVudGl0aWVzLmdlbmVyaWMudHlwZQAGdGVuYW50AAZ0ZW5hbnQAJDQ1ZjE2YWMyLWNhNjgtNTAyNy05OGJmLTBhNjNjNDY2NjBkZr7vVN4V2t6t"
   rules {
     rule {
       icon_pattern          = "webserver"

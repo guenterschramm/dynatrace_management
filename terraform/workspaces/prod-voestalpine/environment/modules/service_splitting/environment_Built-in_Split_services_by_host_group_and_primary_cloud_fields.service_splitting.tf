@@ -1,6 +1,6 @@
 resource "dynatrace_service_splitting" "environment_Built-in_Split_services_by_host_group_and_primary_cloud_fields" {
   enabled      = false
-  insert_after = "vu9U3hXa3q0AAAABAB9idWlsdGluOnNlcnZpY2Utc3BsaXR0aW5nLXJ1bGVzAAZ0ZW5hbnQABnRlbmFudAAkZDI0NmIyNDEtZTc4Zi00MWRjLTgxM2YtNmExZjdhODkzYjNlvu9U3hXa3q0"
+  insert_after = "vu9U3hXa3q0AAAABAB9idWlsdGluOnNlcnZpY2Utc3BsaXR0aW5nLXJ1bGVzAAZ0ZW5hbnQABnRlbmFudAAkZGJkNWM5NjAtMzQ0Yi00ODFlLTk0NTYtYjFmYjRkMDg1YTFmvu9U3hXa3q0"
   scope        = "environment"
   rule {
     rule_name = "[Built-in] Split services by host group and primary cloud fields"

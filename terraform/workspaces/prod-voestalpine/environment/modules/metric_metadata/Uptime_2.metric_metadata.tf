@@ -1,41 +1,41 @@
 resource "dynatrace_metric_metadata" "Uptime_2" {
-  description        = "Time in seconds since instance was last started"
+  description        = "Device Uptime in Seconds"
   display_name       = "Uptime"
-  metric_id          = "metric-sql-server.uptime"
-  source_entity_type = "sql:sql_server_instance"
-  unit               = "Seconds"
+  metric_id          = "metric-cisco.cc.device.uptime.gauge"
+  source_entity_type = "cisco_cc:device"
+  unit               = "Second"
   dimensions {
     dimension {
-      display_name = "DB Instance Version"
-      key          = "server_version"
+      display_name = "Center"
+      key          = "center"
     }
     dimension {
-      display_name = "Major version"
-      key          = "major_version"
+      display_name = "Device"
+      key          = "device"
     }
     dimension {
-      display_name = "Start time"
-      key          = "start_time"
+      display_name = "Device Type"
+      key          = "type"
     }
     dimension {
-      display_name = "Edition"
-      key          = "edition"
+      display_name = "Device Platform"
+      key          = "platform_id"
     }
     dimension {
-      display_name = "Affinity type"
-      key          = "affinity_type"
+      display_name = "Device Family"
+      key          = "family"
     }
     dimension {
-      display_name = "Instance name"
-      key          = "instance"
+      display_name = "Device Role"
+      key          = "role"
     }
     dimension {
-      display_name = "Server name"
-      key          = "server"
+      display_name = "Device IP Address"
+      key          = "device_ip_address"
     }
-  }
-  metric_properties {
-    min_value  = 0
-    value_type = "score"
+    dimension {
+      display_name = "Chassis MAC"
+      key          = "chassis.mac"
+    }
   }
 }

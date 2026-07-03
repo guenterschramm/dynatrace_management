@@ -1,6 +1,6 @@
 resource "dynatrace_generic_relationships" "cisco_cc_device_CALLS_cisco_cc_site" {
   enabled          = true
-  created_by       = "com.dynatrace.extension.cisco-cc 2.2.1"
+  created_by       = "com.dynatrace.extension.cisco-cc 3.0.3"
   from_type        = "cisco_cc:device"
   to_type          = "cisco_cc:site"
   type_of_relation = "CALLS"

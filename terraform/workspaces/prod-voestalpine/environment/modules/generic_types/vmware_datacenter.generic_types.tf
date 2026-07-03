@@ -1,7 +1,7 @@
 resource "dynatrace_generic_types" "vmware_datacenter" {
   name         = "vmware:datacenter"
   enabled      = true
-  created_by   = "com.dynatrace.vmware-integration 3.14.13"
+  created_by   = "com.dynatrace.vmware-integration 3.16.2"
   display_name = "VMware Datacenter"
   insert_after = "vu9U3hXa3q0AAAABACZidWlsdGluOm1vbml0b3JlZGVudGl0aWVzLmdlbmVyaWMudHlwZQAGdGVuYW50AAZ0ZW5hbnQAJGRjMDFiMTk3LTExNWUtNWUxZS05NGFhLTc4NjM1OGRjOTdlNL7vVN4V2t6t"
   rules {
@@ -29,6 +29,20 @@ resource "dynatrace_generic_types" "vmware_datacenter" {
           display_name = "Security Context"
           key          = "dt.security_context"
           pattern      = "{dt.security_context}"
+        }
+      }
+      required_dimensions {
+        required_dimension {
+          key           = "datacenter.id"
+          value_pattern = "$exists()"
+        }
+        required_dimension {
+          key           = "device.address"
+          value_pattern = "$exists()"
+        }
+        required_dimension {
+          key           = "datacenter.name"
+          value_pattern = "$exists()"
         }
       }
       sources {

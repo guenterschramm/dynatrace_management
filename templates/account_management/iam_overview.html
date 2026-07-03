@@ -44,10 +44,29 @@
             <div class="list-group">
                 {% for module in iam_summary.modules %}
                     {% if module.loaded_count > 0 %}
-                        <button type="button" class="list-group-item list-group-item-action d-flex justify-content-between align-items-center" data-open-module="true" data-workspace-id="{{ account_workspace.pk }}" data-module-name="{{ module.name }}">
-                            <span class="fw-semibold">{{ module.name }}</span>
-                            <span class="badge text-bg-success">{{ module.loaded_count }} objekte</span>
-                        </button>
+                        <div class="list-group-item d-flex flex-column flex-lg-row justify-content-between align-items-lg-center gap-2">
+                            <button type="button" class="btn btn-link p-0 text-start text-decoration-none" data-open-module="true" data-workspace-id="{{ account_workspace.pk }}" data-module-name="{{ module.name }}">
+                                <span class="fw-semibold">{{ module.name }}</span>
+                                <span class="badge text-bg-success ms-2">{{ module.loaded_count }} objekte</span>
+                            </button>
+                            <div class="d-inline-flex gap-2">
+                                <form action="{% url 'terraform_engine:init' account_workspace.pk %}?next=account_iam" method="post">
+                                    {% csrf_token %}
+                                    <input type="hidden" name="module_name" value="{{ module.name }}">
+                                    <button class="btn btn-sm btn-outline-secondary" type="submit">Init</button>
+                                </form>
+                                <form action="{% url 'terraform_engine:plan' account_workspace.pk %}?next=account_iam" method="post">
+                                    {% csrf_token %}
+                                    <input type="hidden" name="module_name" value="{{ module.name }}">
+                                    <button class="btn btn-sm btn-dark" type="submit">Plan</button>
+                                </form>
+                                <form action="{% url 'terraform_engine:sync' account_workspace.pk %}?next=account_iam" method="post">
+                                    {% csrf_token %}
+                                    <input type="hidden" name="module_name" value="{{ module.name }}">
+                                    <button class="btn btn-sm btn-outline-dark" type="submit">Apply</button>
+                                </form>
+                            </div>
+                        </div>
                     {% endif %}
                 {% empty %}
                     <div class="list-group-item text-secondary">Keine exportierten Module vorhanden.</div>

@@ -1,10 +1,4 @@
 resource "dynatrace_settings_permissions" "permissions_35" {
-  all_users          = "none"
-  settings_object_id = "vu9U3hXa3q0AAAABACNidWlsdGluOm9wZW5waXBlbGluZS5sb2dzLnBpcGVsaW5lcwAGdGVuYW50AAZ0ZW5hbnQAJDM0MTdiZDZmLWU2ZWQtMzM4ZS04ZDhjLWQyNWIyMTAwOWJkOb7vVN4V2t6t"
-  groups {
-    group {
-      access = "read"
-      id     = "1497f4c9-7f23-4dd0-9f0e-f5deff104b90"
-    }
-  }
+  all_users          = "read"
+  settings_object_id = "vu9U3hXa3q0AAAABAChidWlsdGluOm9wZW5waXBlbGluZS5sb2dzLmluZ2VzdC1zb3VyY2VzAAZ0ZW5hbnQABnRlbmFudAAkNTVmMTU4Y2QtOTE0Yy0zNWNhLTk1NDMtZjkxNWRlMzUxYWUwvu9U3hXa3q0"
 }

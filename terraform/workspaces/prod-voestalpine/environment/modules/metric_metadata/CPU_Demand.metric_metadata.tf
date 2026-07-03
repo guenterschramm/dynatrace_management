@@ -3,5 +3,5 @@ resource "dynatrace_metric_metadata" "CPU_Demand" {
   display_name       = "CPU Demand"
   metric_id          = "metric-vmware.vm.cpu.demand.average"
   source_entity_type = "vmware:virtualmachine"
-  unit               = "Unspecified"
+  unit               = "MegaHertz"
 }

@@ -1,7 +1,7 @@
 resource "dynatrace_generic_types" "python_certificate_monitor_certificate" {
   name         = "python:certificate_monitor_certificate"
   enabled      = true
-  created_by   = "com.dynatrace.custom.python-certificate-monitor 1.10.26"
+  created_by   = "com.dynatrace.custom.python-certificate-monitor 2.0.0"
   display_name = "Certificate"
   insert_after = "vu9U3hXa3q0AAAABACZidWlsdGluOm1vbml0b3JlZGVudGl0aWVzLmdlbmVyaWMudHlwZQAGdGVuYW50AAZ0ZW5hbnQAJGUzOWFmOWZmLTJmZjktNTRiYi05NTk0LTQ3MGFkNjgzMjg5N77vVN4V2t6t"
   rules {
@@ -156,6 +156,22 @@ resource "dynatrace_generic_types" "python_certificate_monitor_certificate" {
         required_dimension {
           key           = "source"
           value_pattern = "$eq(OneAgent)"
+        }
+        required_dimension {
+          key           = "validity_not_after"
+          value_pattern = "$exists()"
+        }
+        required_dimension {
+          key           = "dt.entity.host"
+          value_pattern = "$exists()"
+        }
+        required_dimension {
+          key           = "port"
+          value_pattern = "$exists()"
+        }
+        required_dimension {
+          key           = "subject_common_name"
+          value_pattern = "$exists()"
         }
       }
       sources {
@@ -314,6 +330,22 @@ resource "dynatrace_generic_types" "python_certificate_monitor_certificate" {
         required_dimension {
           key           = "source"
           value_pattern = "$eq(WCS)"
+        }
+        required_dimension {
+          key           = "dt.entity.host"
+          value_pattern = "$exists()"
+        }
+        required_dimension {
+          key           = "cert_store"
+          value_pattern = "$exists()"
+        }
+        required_dimension {
+          key           = "subject_common_name"
+          value_pattern = "$exists()"
+        }
+        required_dimension {
+          key           = "sn"
+          value_pattern = "$exists()"
         }
       }
       sources {
@@ -477,6 +509,22 @@ resource "dynatrace_generic_types" "python_certificate_monitor_certificate" {
         required_dimension {
           key           = "source"
           value_pattern = "$eq(Domain)"
+        }
+        required_dimension {
+          key           = "validity_not_after"
+          value_pattern = "$exists()"
+        }
+        required_dimension {
+          key           = "monitoring_config"
+          value_pattern = "$exists()"
+        }
+        required_dimension {
+          key           = "subject_common_name"
+          value_pattern = "$exists()"
+        }
+        required_dimension {
+          key           = "host_port"
+          value_pattern = "$exists()"
         }
       }
       sources {
@@ -655,6 +703,22 @@ resource "dynatrace_generic_types" "python_certificate_monitor_certificate" {
         required_dimension {
           key           = "source"
           value_pattern = "$eq(External)"
+        }
+        required_dimension {
+          key           = "validity_not_after"
+          value_pattern = "$exists()"
+        }
+        required_dimension {
+          key           = "monitoring_config"
+          value_pattern = "$exists()"
+        }
+        required_dimension {
+          key           = "file_name"
+          value_pattern = "$exists()"
+        }
+        required_dimension {
+          key           = "subject_common_name"
+          value_pattern = "$exists()"
         }
       }
       sources {

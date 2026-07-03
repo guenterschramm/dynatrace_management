@@ -1,6 +1,6 @@
 resource "dynatrace_generic_relationships" "wmi_iis_service_instance_RUNS_ON_host" {
   enabled          = true
-  created_by       = "com.dynatrace.extension.wmi.iis 1.2.6"
+  created_by       = "com.dynatrace.extension.wmi.iis 2.0.1"
   from_type        = "wmi:iis_service_instance"
   to_type          = "host"
   type_of_relation = "RUNS_ON"

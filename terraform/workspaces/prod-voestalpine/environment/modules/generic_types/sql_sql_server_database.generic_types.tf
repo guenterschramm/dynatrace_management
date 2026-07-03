@@ -1,7 +1,7 @@
 resource "dynatrace_generic_types" "sql_sql_server_database" {
   name         = "sql:sql_server_database"
   enabled      = true
-  created_by   = "com.dynatrace.extension.sql-server 2.11.5"
+  created_by   = "com.dynatrace.extension.sql-server 3.1.2"
   display_name = "SQL Server Database"
   insert_after = "vu9U3hXa3q0AAAABACZidWlsdGluOm1vbml0b3JlZGVudGl0aWVzLmdlbmVyaWMudHlwZQAGdGVuYW50AAZ0ZW5hbnQAJDQxZjZhZGUyLTllZWYtNWVhMC05YzRjLTdmYzE2ZDUwMDU1Zb7vVN4V2t6t"
   rules {

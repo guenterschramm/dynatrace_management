@@ -2,13 +2,13 @@ resource "dynatrace_hub_extension_config" "com_dynatrace_custom_python-certifica
   name                = "com.dynatrace.custom.python-certificate-monitor"
   # active_gate_group = ""
   # host              = ""
-  host_group          = "HOST_GROUP-76B585663184C4C0"
+  host_group          = "HOST_GROUP-43F6C4407DC19AD5"
   # management_zone   = ""
-  scope               = "HOST_GROUP-76B585663184C4C0"
+  scope               = "HOST_GROUP-43F6C4407DC19AD5"
   value               = jsonencode({
       "activationContext": "LOCAL",
       "activationTags": [],
-      "description": "PAM SSL Certificate",
+      "description": "PCD_PW_Portal SSL Certificate",
       "enabled": true,
       "featureSets": [
         "enhanced_metric"
@@ -47,6 +47,6 @@ resource "dynatrace_hub_extension_config" "com_dynatrace_custom_python-certifica
           "customize_port_range": false
         }
       },
-      "version": "1.10.26"
+      "version": "2.0.0"
     })
 }

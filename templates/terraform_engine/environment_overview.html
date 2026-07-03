@@ -79,10 +79,29 @@
 							<div class="list-group">
 								{% for module in work.init_summary.modules %}
 									{% if module.loaded_count > 0 %}
-										<button type="button" class="list-group-item list-group-item-action d-flex justify-content-between align-items-center" data-open-module="true" data-workspace-id="{{ work.pk }}" data-module-name="{{ module.name }}">
-											<span class="fw-semibold">{{ module.name }}</span>
-											<span class="badge text-bg-success">{{ module.loaded_count }} objekte</span>
-										</button>
+										<div class="list-group-item d-flex flex-column flex-lg-row justify-content-between align-items-lg-center gap-2">
+											<button type="button" class="btn btn-link p-0 text-start text-decoration-none" data-open-module="true" data-workspace-id="{{ work.pk }}" data-module-name="{{ module.name }}">
+												<span class="fw-semibold">{{ module.name }}</span>
+												<span class="badge text-bg-success ms-2">{{ module.loaded_count }} objekte</span>
+											</button>
+											<div class="d-inline-flex gap-2">
+												<form action="{% url 'terraform_engine:init' work.pk %}?next=environment" method="post" data-init-progress="true" data-scope="{{ work.scope }}" data-workspace="{{ work.workspace_name }}" data-export-total="{{ work.expected_export_total }}" data-progress-url="{% url 'terraform_engine:progress' work.pk %}">
+													{% csrf_token %}
+													<input type="hidden" name="module_name" value="{{ module.name }}">
+													<button class="btn btn-sm btn-outline-secondary" type="submit">Init</button>
+												</form>
+												<form action="{% url 'terraform_engine:plan' work.pk %}?next=environment" method="post">
+													{% csrf_token %}
+													<input type="hidden" name="module_name" value="{{ module.name }}">
+													<button class="btn btn-sm btn-dark" type="submit">Plan</button>
+												</form>
+												<form action="{% url 'terraform_engine:sync' work.pk %}?next=environment" method="post">
+													{% csrf_token %}
+													<input type="hidden" name="module_name" value="{{ module.name }}">
+													<button class="btn btn-sm btn-outline-dark" type="submit">Apply</button>
+												</form>
+											</div>
+										</div>
 									{% endif %}
 								{% empty %}
 									<div class="list-group-item text-secondary">Keine exportierten Module vorhanden.</div>
@@ -234,9 +253,18 @@
 						if (payload.resource) {
 							progressStatus.textContent = 'Exportiere: ' + payload.resource;
 						} else if (payload.status === 'done') {
-							progressStatus.textContent = 'Export abgeschlossen.';
+							setProgress(total, total);
+							progressStatus.textContent = 'Export abgeschlossen. Terraform Init wird ausgefuehrt, bitte warten...';
+							if (pollId) {
+								window.clearInterval(pollId);
+								pollId = null;
+							}
 						} else if (payload.status === 'failed') {
 							progressStatus.textContent = 'Export mit Fehlern beendet.';
+							if (pollId) {
+								window.clearInterval(pollId);
+								pollId = null;
+							}
 						} else {
 							progressStatus.textContent = 'Exportiere Objekte...';
 						}
@@ -291,6 +319,35 @@
 
 			objectList.innerHTML = '';
 			var objects = module && module.objects ? module.objects : [];
+			var detailsUrl = module ? (module.details_url || '') : '';
+
+			if ((!objects || !objects.length) && detailsUrl) {
+				objectList.innerHTML = '<div class="list-group-item text-secondary">Lade Moduldetails...</div>';
+				renderObjectDetails(null);
+				modal.show();
+				fetch(detailsUrl, {
+					headers: {
+						'X-Requested-With': 'XMLHttpRequest'
+					}
+				})
+					.then(function (response) {
+						return response.json();
+					})
+					.then(function (payload) {
+						if (!module) {
+							return;
+						}
+						module.objects = payload.objects || [];
+						module.loaded_count = payload.loaded_count || module.loaded_count || 0;
+						openModule(workspaceId, selectedModuleName);
+					})
+					.catch(function () {
+						objectList.innerHTML = '<div class="list-group-item text-danger">Moduldetails konnten nicht geladen werden.</div>';
+						renderObjectDetails(null);
+					});
+				return;
+			}
+
 			var longestFileNameLength = objects.reduce(function (maxLength, item) {
 				var fileName = item.file_name || item.name || '';
 				return Math.max(maxLength, fileName.length);

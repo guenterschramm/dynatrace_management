@@ -14,7 +14,7 @@ resource "dynatrace_webhook_notification" "Bee4IT-Teams_Notification" {
       "url": "{ProblemURL}"
     })
   profile                = "vu9U3hXa3q0AAAABABhidWlsdGluOmFsZXJ0aW5nLnByb2ZpbGUABnRlbmFudAAGdGVuYW50ACQ0MGZmMTg0ZS1hNmVmLTMwMjktYjYyNC05YWVmNGIyYTRiZjO-71TeFdrerQ"
-  secret_url             = "***12a85483c033d063***"
+  secret_url             = "***354521e65ed7f3c0***"
   # url                  = ""
   url_contains_secret    = true
 }

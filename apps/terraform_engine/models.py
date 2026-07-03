@@ -85,6 +85,7 @@ class TerraformExecution(TimeStampedModel):
 	class CommandType(models.TextChoices):
 		INIT = 'init', 'Init'
 		PLAN = 'plan', 'Plan'
+		APPLY = 'apply', 'Apply'
 
 	workspace = models.ForeignKey(
 		TerraformWorkspace,

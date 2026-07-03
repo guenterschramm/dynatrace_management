@@ -1,7 +1,7 @@
 resource "dynatrace_generic_types" "network_device" {
   name         = "network:device"
   enabled      = true
-  created_by   = "com.dynatrace.extension.snmp-generic-device 2.5.12"
+  created_by   = "com.dynatrace.extension.snmp-generic-device 3.0.4"
   display_name = "Network device"
   insert_after = "vu9U3hXa3q0AAAABACZidWlsdGluOm1vbml0b3JlZGVudGl0aWVzLmdlbmVyaWMudHlwZQAGdGVuYW50AAZ0ZW5hbnQAJDRmMzJmMTZjLTNkMTMtNTVkNS04YjFhLWFkNTU3NDMwOTcxMr7vVN4V2t6t"
   rules {

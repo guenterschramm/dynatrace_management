@@ -5,22 +5,23 @@ resource "dynatrace_generic_setting" "app_dynatrace_discovery_coverage_discovery
       "rule": {
         "actions": [
           {
-            "name": "configureLogForwardingForTechnology",
+            "name": "configureLogForwardingForCloud",
             "parameters": [
               {
-                "name": "technology",
-                "value": "fluent-bit"
+                "name": "cloudProvider",
+                "value": "aws"
               }
             ]
           }
         ],
         "category": "Logs",
-        "description": "Monitoring Kubernetes logs, together with other observability signals like metrics and traces, is important to assure full context for observability and troubleshooting use cases.\n    This rule detects existing fluentbit instances that are not integrated with Dynatrace, and provides instructions for configuring your log forwarder to send data to logs ingest API.",
+        "description": "Logs are a critical signal for Observability and Security use cases. This rule looks for AWS integration for your account and detects if any logs are ingested. The recommended remediation action is set up AWS log ingest to ensure there are no blind spots. There are multiple ways to ingest resource and activity logs from AWS.",
         "environmentScope": true,
-        "id": "unmonitored-fluentbit-logs-0",
-        "priority": "WARNING",
-        "query": "fetch dt.entity.container_group_instance\n        | fieldsAdd containerImageName, cluster_id=belongs_to[dt.entity.kubernetes_cluster]\n        | filter matchesPhrase(containerImageName,\"fluent-bit\")\n        | summarize tmp=count(), by: cluster_id\n        | fieldsRemove tmp\n        | fieldsAdd compliant = cluster_id in [\n          timeseries count = sum(dt.log.status_per_entity_count), by: {dt.entity.kubernetes_cluster}, from: now()-1h\n          | filterOut isNull(dt.entity.kubernetes_cluster)\n          | fields dt.entity.kubernetes_cluster\n        ]\n        | lookup [fetch dt.entity.kubernetes_cluster], sourceField:cluster_id, lookupField:id, prefix:\"kubernetes_cluster.\"\n        | fields kubernetes_cluster=kubernetes_cluster.entity.name, kubernetes_cluster.id=cluster_id, compliant\n        ",
-        "title": "Unmonitored fluentbit logs"
+        "id": "unmonitored-aws-logs-0",
+        "priority": "CRITICAL",
+        "query": "fetch dt.entity.aws_credentials, from:-15m\n       | summarize count=count(), by:{awsAccountId}\n       | fields `Account ID`=awsAccountId, id=awsAccountId\n       | lookup [ fetch logs | filter cloud.provider == \"aws\" | summarize count=count(), by:{aws.account.id} | fields aws.account.id, hasLogs = count \u003e 0 ],\n                  sourceField:`Account ID`, lookupField: aws.account.id\n       | fields `Account ID`, id, compliant=lookup.hasLogs\n       ",
+        "title": "Unmonitored AWS logs",
+        "zeroRated": true
       },
       "settings": {
         "muted": false

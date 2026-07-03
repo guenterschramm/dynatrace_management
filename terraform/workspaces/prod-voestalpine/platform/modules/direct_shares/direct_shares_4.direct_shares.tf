@@ -1,10 +1,10 @@
 resource "dynatrace_direct_shares" "direct_shares_4" {
-  access      = "read"
-  document_id = "dd4ba15d-fb3b-420f-bad3-c4f48e748bc9"
+  access      = "read-write"
+  document_id = "013eecf6-f6de-468c-9ed9-3b2b471a0b5e"
   recipients {
     recipient {
-      type = "group"
-      id   = "a6140a90-81d6-4d36-a686-ed5e84d8c157"
+      type = "user"
+      id   = "6d0797b3-4352-4881-800c-e174d1cac922"
     }
   }
 }

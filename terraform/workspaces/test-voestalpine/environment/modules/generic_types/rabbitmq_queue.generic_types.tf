@@ -1,7 +1,7 @@
 resource "dynatrace_generic_types" "rabbitmq_queue" {
   name         = "rabbitmq:queue"
   enabled      = true
-  created_by   = "com.dynatrace.rabbitmq 2.1.7"
+  created_by   = "com.dynatrace.rabbitmq 3.0.0"
   display_name = "Queue"
   insert_after = "vu9U3hXa3q0AAAABACZidWlsdGluOm1vbml0b3JlZGVudGl0aWVzLmdlbmVyaWMudHlwZQAGdGVuYW50AAZ0ZW5hbnQAJDcxZTQzZDBlLTM3ODgtNTEwNC05ZTg5LTYwMGJhMTVkOGFmYr7vVN4V2t6t"
   rules {
@@ -59,6 +59,20 @@ resource "dynatrace_generic_types" "rabbitmq_queue" {
           display_name = "Security Context"
           key          = "dt.security_context"
           pattern      = "{dt.security_context}"
+        }
+      }
+      required_dimensions {
+        required_dimension {
+          key           = "node"
+          value_pattern = "$exists()"
+        }
+        required_dimension {
+          key           = "queue"
+          value_pattern = "$exists()"
+        }
+        required_dimension {
+          key           = "cluster"
+          value_pattern = "$exists()"
         }
       }
       sources {

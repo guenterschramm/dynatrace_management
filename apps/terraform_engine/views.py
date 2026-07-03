@@ -152,18 +152,47 @@ def _workspace_content_stamp(workspace):
 	return f'{file_count}:{latest_mtime}'
 
 
-def _build_init_summary(workspace):
+def _read_module_objects(workspace, module_name):
+	modules_root = workspace.workspace_dir / 'modules'
+	module_dir = modules_root / module_name
+	if not module_dir.exists() or not module_dir.is_dir():
+		return []
+
+	scaffold_names = {'main.tf', 'variables.tf', 'outputs.tf', '___providers___.tf', '___variables___.tf'}
+	tf_files = sorted(path for path in module_dir.glob('*.tf'))
+	exported_files = [path.name for path in tf_files if path.name not in scaffold_names]
+	objects = []
+	for exported_file in exported_files:
+		candidate = module_dir / exported_file
+		content = ''
+		try:
+			content = candidate.read_text(encoding='utf-8', errors='replace')
+		except Exception:
+			content = ''
+		objects.append(
+			{
+				'name': candidate.stem,
+				'file_name': exported_file,
+				'content': content,
+			}
+		)
+	return objects
+
+
+def _build_init_summary(workspace, include_object_content=False):
 	modules_root = workspace.workspace_dir / 'modules'
 	scaffold_names = {'main.tf', 'variables.tf', 'outputs.tf', '___providers___.tf', '___variables___.tf'}
 	last_init_execution = workspace.executions.filter(command=TerraformExecution.CommandType.INIT).first()
 	last_init_result = None
 	workspace_stamp = _workspace_content_stamp(workspace)
+	content_mode = 'full' if include_object_content else 'lite'
 	last_exec_stamp = 'none'
 	if last_init_execution is not None:
 		last_exec_stamp = f'{last_init_execution.pk}:{int(last_init_execution.created_at.timestamp())}'
 
 	cache_key = (
 		'terraform_init_summary:'
+		f'{content_mode}:'
 		f'{workspace.pk}:'
 		f'{workspace_stamp}:'
 		f'{last_exec_stamp}'
@@ -211,20 +240,8 @@ def _build_init_summary(workspace):
 			tf_files = sorted(path for path in module_dir.glob('*.tf'))
 			exported_files = [path.name for path in tf_files if path.name not in scaffold_names]
 			objects = []
-			for exported_file in exported_files:
-				candidate = module_dir / exported_file
-				content = ''
-				try:
-					content = candidate.read_text(encoding='utf-8', errors='replace')
-				except Exception:
-					content = ''
-				objects.append(
-					{
-						'name': candidate.stem,
-						'file_name': exported_file,
-						'content': content,
-					}
-				)
+			if include_object_content and exported_files:
+				objects = _read_module_objects(workspace, module_dir.name)
 			loaded_count = len(exported_files)
 			summary['total_loaded_objects'] += loaded_count
 			if loaded_count > 0:
@@ -235,29 +252,18 @@ def _build_init_summary(workspace):
 					'loaded_count': loaded_count,
 				}
 			)
-			preview_text = ''
-			preview_source = None
-			for exported_file in exported_files:
-				candidate = module_dir / exported_file
-				if candidate.exists():
-					preview_source = candidate
-					break
-			if preview_source is not None:
-				try:
-					preview_text = '\n'.join(preview_source.read_text(encoding='utf-8', errors='replace').splitlines()[:24])
-				except Exception:
-					preview_text = ''
 			summary['modules'].append(
 				{
 					'name': module_dir.name,
 					'loaded_count': loaded_count,
 					'files': exported_files,
-					'preview': preview_text,
+					'preview': '',
 					'objects': objects,
 				}
 			)
-		cache.set(cache_key, summary, timeout=INIT_SUMMARY_CACHE_TIMEOUT_SECONDS)
-		return summary
+		if summary['total_loaded_objects'] > 0 or workspace.scope == TerraformWorkspace.WorkspaceScope.ACCOUNT_MANAGEMENT:
+			cache.set(cache_key, summary, timeout=INIT_SUMMARY_CACHE_TIMEOUT_SECONDS)
+			return summary
 
 	if workspace.scope in (
 		TerraformWorkspace.WorkspaceScope.ENVIRONMENT,
@@ -278,6 +284,16 @@ def _build_init_summary(workspace):
 					loaded_count = 0
 				summary['total_loaded_objects'] += loaded_count
 				summary['types'].append({'name': key, 'loaded_count': loaded_count})
+				if loaded_count > 0:
+					summary['modules'].append(
+						{
+							'name': key,
+							'loaded_count': loaded_count,
+							'files': [],
+							'preview': '',
+							'objects': [],
+						}
+					)
 
 			if summary['types']:
 				cache.set(cache_key, summary, timeout=INIT_SUMMARY_CACHE_TIMEOUT_SECONDS)
@@ -297,6 +313,16 @@ def _build_init_summary(workspace):
 					loaded_count = 0
 				summary['total_loaded_objects'] += loaded_count
 				summary['types'].append({'name': json_file.stem, 'loaded_count': loaded_count})
+				if loaded_count > 0:
+					summary['modules'].append(
+						{
+							'name': json_file.stem,
+							'loaded_count': loaded_count,
+							'files': [],
+							'preview': '',
+							'objects': [],
+						}
+					)
 		if summary['types']:
 			cache.set(cache_key, summary, timeout=INIT_SUMMARY_CACHE_TIMEOUT_SECONDS)
 			return summary
@@ -306,6 +332,18 @@ def _build_init_summary(workspace):
 		return summary
 
 	cache.set(cache_key, summary, timeout=INIT_SUMMARY_CACHE_TIMEOUT_SECONDS)
+	return summary
+
+
+def _append_module_detail_urls(summary):
+	workspace_id = summary.get('workspace_id')
+	if not workspace_id:
+		return summary
+	for module in summary.get('modules', []):
+		module_name = module.get('name', '')
+		if not module_name:
+			continue
+		module['details_url'] = reverse('terraform_engine:module_details', args=[workspace_id, module_name])
 	return summary
 
 
@@ -434,8 +472,8 @@ class TerraformOverviewView(TemplateView):
 			_annotate_export_state(workspace)
 			_annotate_data_freshness(workspace)
 			workspace.expected_export_total = _expected_export_total(workspace)
-			workspace.init_summary = _build_init_summary(workspace)
-			workspace_view_data[str(workspace.pk)] = _serialize_init_summary(workspace.init_summary)
+			workspace.init_summary = _build_init_summary(workspace, include_object_content=False)
+			workspace_view_data[str(workspace.pk)] = _append_module_detail_urls(_serialize_init_summary(workspace.init_summary))
 			if workspace.scope == TerraformWorkspace.WorkspaceScope.ACCOUNT_MANAGEMENT:
 				account_workspace = workspace
 				continue
@@ -482,8 +520,8 @@ class EnvironmentOverviewView(TemplateView):
 				continue
 			_annotate_data_freshness(workspace)
 			workspace.expected_export_total = _expected_export_total(workspace)
-			workspace.init_summary = _build_init_summary(workspace)
-			workspace_view_data[str(workspace.pk)] = _serialize_init_summary(workspace.init_summary)
+			workspace.init_summary = _build_init_summary(workspace, include_object_content=False)
+			workspace_view_data[str(workspace.pk)] = _append_module_detail_urls(_serialize_init_summary(workspace.init_summary))
 			group_key = workspace.workspace_group
 			group = groups.setdefault(
 				group_key,
@@ -522,8 +560,8 @@ class PlatformOverviewView(TemplateView):
 				continue
 			_annotate_data_freshness(workspace)
 			workspace.expected_export_total = _expected_export_total(workspace)
-			workspace.init_summary = _build_init_summary(workspace)
-			workspace_view_data[str(workspace.pk)] = _serialize_init_summary(workspace.init_summary)
+			workspace.init_summary = _build_init_summary(workspace, include_object_content=False)
+			workspace_view_data[str(workspace.pk)] = _append_module_detail_urls(_serialize_init_summary(workspace.init_summary))
 			group_key = workspace.workspace_group
 			group = groups.setdefault(
 				group_key,
@@ -553,6 +591,21 @@ class TerraformSyncView(View):
 	def post(self, request, pk, *args, **kwargs):
 		workspace = get_object_or_404(TerraformWorkspace, pk=pk)
 		redirect_target = _resolve_next_view_name(request)
+		module_name = (request.POST.get('module_name') or '').strip()
+
+		if module_name:
+			result = TerraformExecutionService().execute(
+				workspace,
+				TerraformExecution.CommandType.APPLY,
+				target_module=module_name,
+				run_provider_export=False,
+			)
+			if result.returncode == 0:
+				messages.success(request, f'Terraform apply fuer Modul {module_name} in {workspace.workspace_name} erfolgreich.')
+			else:
+				messages.error(request, f'Terraform apply fuer Modul {module_name} in {workspace.workspace_name} fehlgeschlagen.')
+			return redirect(redirect_target)
+
 		results = sync_terraform_workspaces(
 			selected_workspace_ids=[workspace.id],
 			run_reference_export=True,
@@ -576,13 +629,21 @@ class TerraformCommandView(View):
 		workspace = get_object_or_404(TerraformWorkspace, pk=pk)
 		is_ajax = request.headers.get('x-requested-with') == 'XMLHttpRequest'
 		redirect_target = _resolve_next_view_name(request)
-		result = TerraformExecutionService().execute(workspace, self.command)
-		if self.command == TerraformExecution.CommandType.INIT:
-			request.session['terraform_init_summary_overlay'] = _build_init_summary(workspace)
+		module_name = (request.POST.get('module_name') or '').strip()
+		request.session.pop('terraform_init_summary_overlay', None)
+		result = TerraformExecutionService().execute(
+			workspace,
+			self.command,
+			target_module=module_name or None,
+			run_provider_export=not bool(module_name),
+		)
+		if self.command == TerraformExecution.CommandType.INIT and redirect_target.startswith('terraform_engine:'):
+			request.session['terraform_init_summary_overlay'] = _serialize_init_summary(_build_init_summary(workspace))
+		target_suffix = f' (Modul {module_name})' if module_name else ''
 		if result.returncode == 0:
-			messages.success(request, f'Terraform {self.command} fuer {workspace.workspace_name} erfolgreich.')
+			messages.success(request, f'Terraform {self.command}{target_suffix} fuer {workspace.workspace_name} erfolgreich.')
 		else:
-			messages.error(request, f'Terraform {self.command} fuer {workspace.workspace_name} fehlgeschlagen.')
+			messages.error(request, f'Terraform {self.command}{target_suffix} fuer {workspace.workspace_name} fehlgeschlagen.')
 		if is_ajax:
 			return JsonResponse(
 				{
@@ -597,6 +658,21 @@ class TerraformProgressView(View):
 	def get(self, request, pk, *args, **kwargs):
 		workspace = get_object_or_404(TerraformWorkspace, pk=pk)
 		return JsonResponse(_read_export_progress(workspace))
+
+
+class TerraformModuleDetailsView(View):
+	def get(self, request, pk, module_name, *args, **kwargs):
+		workspace = get_object_or_404(TerraformWorkspace, pk=pk)
+		objects = _read_module_objects(workspace, module_name)
+		return JsonResponse(
+			{
+				'workspace_id': workspace.pk,
+				'workspace_name': workspace.workspace_name,
+				'module_name': module_name,
+				'loaded_count': len(objects),
+				'objects': objects,
+			}
+		)
 
 
 class TerraformPlanView(TerraformCommandView):

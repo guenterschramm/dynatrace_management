@@ -1,4 +1,4 @@
 resource "dynatrace_hub_extension_active_version" "com_dynatrace_extension_wmi_iis" {
   name    = "com.dynatrace.extension.wmi.iis"
-  version = "1.2.6"
+  version = "2.0.1"
 }

@@ -3,36 +3,37 @@ resource "dynatrace_hub_extension_v2_config" "com_dynatrace_extension_snmp-auto-
   scope = "ag_group-default"
   value = jsonencode({
       "activationContext": "REMOTE",
-      "description": "ActiveGates",
-      "enabled": false,
-      "featureSets": [
-        "self-monitoring"
-      ],
+      "description": "Network - Discovery",
+      "dtAttributes": {
+        "dt.cost.costcenter": "discovery",
+        "dt.cost.product": "network",
+        "dt.security_context": "network"
+      },
+      "enabled": true,
+      "featureSets": [],
       "pythonRemote": {
+        "debugLogging": false,
         "groups": [
           {
             "addresses": [
-              "10.164.16.0/24",
-              "10.164.15.0/24",
-              "10.164.17.0/24",
-              "10.164.18.0/24"
+              "10.233.0.1-10.233.0.255"
             ],
             "authentication": {
-              "community": "***c565d25c0c7b776d***",
-              "useCredentialVault": false,
-              "version": "SNMPv2c"
+              "credentialVaultIdSnmpV3": "CREDENTIALS_VAULT-BEB60FA211474B83",
+              "useCredentialVault": true,
+              "version": "SNMPv3"
             },
-            "label": "ActiveGates",
+            "label": "Network - WLAN Core router discovery",
             "port": 161
           }
         ],
         "scanner": {
-          "frequency": 60,
+          "frequency": 30,
           "neighbors": true,
           "profile": "HIGH",
-          "token": "***defad37d714bd88d***"
+          "token": "***55d680d1a9a68de2***"
         }
       },
-      "version": "4.1.5"
+      "version": "4.1.7"
     })
 }

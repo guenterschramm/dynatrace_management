@@ -1,7 +1,7 @@
 resource "dynatrace_generic_types" "wmi_iis_service_site" {
   name         = "wmi:iis_service_site"
   enabled      = true
-  created_by   = "com.dynatrace.extension.wmi.iis 1.2.6"
+  created_by   = "com.dynatrace.extension.wmi.iis 2.0.1"
   display_name = "IIS Site"
   insert_after = "vu9U3hXa3q0AAAABACZidWlsdGluOm1vbml0b3JlZGVudGl0aWVzLmdlbmVyaWMudHlwZQAGdGVuYW50AAZ0ZW5hbnQAJGE4ZjFjMDk0LTU2NmItNWZkZi04ZDQwLTY0MGZmNWE2MzViZL7vVN4V2t6t"
   rules {

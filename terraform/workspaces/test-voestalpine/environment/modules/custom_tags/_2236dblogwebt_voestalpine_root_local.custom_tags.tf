@@ -4,12 +4,12 @@ resource "dynatrace_custom_tags" "_2236dblogwebt_voestalpine_root_local" {
     filter {
       context = "CONTEXTLESS"
       key     = "Application"
-      value   = "RabbitMQ"
+      value   = "TPI_Messaging"
     }
     filter {
       context = "CONTEXTLESS"
       key     = "Application"
-      value   = "TPI_Messaging"
+      value   = "RabbitMQ"
     }
   }
 }

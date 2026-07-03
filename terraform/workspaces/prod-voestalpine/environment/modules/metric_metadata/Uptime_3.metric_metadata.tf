@@ -1,37 +1,18 @@
 resource "dynatrace_metric_metadata" "Uptime_3" {
-  description        = "Device Uptime in Seconds"
+  description        = "The time, in system ticks (1/100 second), since the last system reboot."
   display_name       = "Uptime"
-  metric_id          = "metric-cisco.cc.device.uptime.gauge"
-  source_entity_type = "cisco_cc:device"
-  unit               = "Second"
+  metric_id          = "metric-com.dynatrace.extension.network_device.sysuptime"
+  source_entity_type = "network:device"
+  tags               = [ "NetworkDevice" ]
+  unit               = "Count"
   dimensions {
     dimension {
-      display_name = "Center"
-      key          = "center"
+      display_name = "Device name"
+      key          = "sys.name"
     }
     dimension {
-      display_name = "Device"
-      key          = "device"
-    }
-    dimension {
-      display_name = "Device Type"
-      key          = "type"
-    }
-    dimension {
-      display_name = "Device Platform"
-      key          = "platform_id"
-    }
-    dimension {
-      display_name = "Device Family"
-      key          = "family"
-    }
-    dimension {
-      display_name = "Device Role"
-      key          = "role"
-    }
-    dimension {
-      display_name = "Device IP Address"
-      key          = "ip_address"
+      display_name = "Device address"
+      key          = "device.address"
     }
   }
 }

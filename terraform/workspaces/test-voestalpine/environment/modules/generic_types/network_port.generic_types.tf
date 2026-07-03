@@ -1,7 +1,7 @@
 resource "dynatrace_generic_types" "network_port" {
   name         = "network:port"
   enabled      = true
-  created_by   = "com.dynatrace.extension.snmp-auto-discovery 4.1.5"
+  created_by   = "com.dynatrace.extension.snmp-auto-discovery 4.1.7"
   display_name = "Network port"
   insert_after = "vu9U3hXa3q0AAAABACZidWlsdGluOm1vbml0b3JlZGVudGl0aWVzLmdlbmVyaWMudHlwZQAGdGVuYW50AAZ0ZW5hbnQAJDhlOTM0OTgwLWMwYTgtNWQwMy05NzQyLWUxNzMzOGM1ZjE4OL7vVN4V2t6t"
   rules {
@@ -45,6 +45,10 @@ resource "dynatrace_generic_types" "network_port" {
           key          = "macAddress"
           pattern      = "{monitored.mac}"
         }
+        attribute {
+          key     = "dt.security_context"
+          pattern = "{dt.security_context}"
+        }
       }
       required_dimensions {
         required_dimension {
@@ -84,6 +88,10 @@ resource "dynatrace_generic_types" "network_port" {
           key     = "hostSysName"
           pattern = "{neighbor.sys.name}"
         }
+        attribute {
+          key     = "dt.security_context"
+          pattern = "{dt.security_context}"
+        }
       }
       required_dimensions {
         required_dimension {
@@ -117,6 +125,10 @@ resource "dynatrace_generic_types" "network_port" {
           display_name = "MAC Address"
           key          = "macAddress"
           pattern      = "{neighbor.mac}"
+        }
+        attribute {
+          key     = "dt.security_context"
+          pattern = "{dt.security_context}"
         }
       }
       required_dimensions {

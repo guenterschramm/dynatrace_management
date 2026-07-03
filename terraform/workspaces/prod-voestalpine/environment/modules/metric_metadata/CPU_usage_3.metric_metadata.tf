@@ -1,16 +1,7 @@
-resource "dynatrace_metric_metadata" "CPU_usage_3" {
-  description  = "Extensions engine CPU usage"
-  display_name = "CPU usage"
-  metric_id    = "metric-func:sfm_extension_cpu_usage"
-  unit         = "Percent"
-  dimensions {
-    dimension {
-      display_name = "Configuration ID"
-      key          = "dt.extension.config.id"
-    }
-    dimension {
-      display_name = "Extension name"
-      key          = "dt.extension.name"
-    }
-  }
+resource "dynatrace_metric_metadata" "CPU_Usage_3" {
+  description        = "CPU usage as a percentage during the interval"
+  display_name       = "CPU Usage"
+  metric_id          = "metric-vmware.vm.cpu.usage.average"
+  source_entity_type = "vmware:virtualmachine"
+  unit               = "Percent"
 }

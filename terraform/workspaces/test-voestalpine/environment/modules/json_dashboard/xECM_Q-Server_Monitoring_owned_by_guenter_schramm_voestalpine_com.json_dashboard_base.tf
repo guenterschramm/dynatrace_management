@@ -978,7 +978,7 @@ resource "dynatrace_json_dashboard" "xECM_Q-Server_Monitoring_owned_by_guenter_s
           "configured": true,
           "customName": "Top list",
           "metricExpressions": [
-            "resolution=null\u0026(builtin:host.availability:filter(and(or(in(\"dt.entity.host\",entitySelector(\"type(host),fromRelationship.isInstanceOf(type(HOST_GROUP),entityName.equals(~\"xECM_Q~\"))\"))))):splitBy(\"dt.entity.host\"):sort(value(auto,descending)):limit(20)):limit(100):names:fold(auto)"
+            "resolution=Inf\u0026(builtin:host.availability:filter(and(or(in(\"dt.entity.host\",entitySelector(\"type(host),fromRelationship.isInstanceOf(type(HOST_GROUP),entityName.equals(~\"xECM_Q~\"))\"))))):splitBy(\"dt.entity.host\"):sort(value(auto,descending)):limit(20)):limit(100):names"
           ],
           "name": "Availability",
           "queries": [

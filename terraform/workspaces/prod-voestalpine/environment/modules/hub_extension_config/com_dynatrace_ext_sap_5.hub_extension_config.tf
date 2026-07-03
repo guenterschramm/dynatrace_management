@@ -7,16 +7,15 @@ resource "dynatrace_hub_extension_config" "com_dynatrace_ext_sap_5" {
   scope             = "ag_group-default"
   value             = jsonencode({
       "activationContext": "REMOTE",
-      "description": "SAP_ERP_VPG",
+      "description": "SAP_ERP_Q",
       "enabled": false,
       "featureSets": [
-        "Job Metrics",
-        "Task Metrics",
         "Dialog Metrics",
-        "default",
-        "Application Server Instance Metrics",
+        "Task Metrics",
+        "Job Metrics",
+        "RFC Metrics",
         "Threshold Metrics",
-        "RFC Metrics"
+        "Application Server Instance Metrics"
       ],
       "pythonRemote": {
         "applicationID": "4d64d21b-a285-41f0-bdea-515de8b9a4dc",
@@ -25,13 +24,13 @@ resource "dynatrace_hub_extension_config" "com_dynatrace_ext_sap_5" {
         "clientno": "100",
         "connect_via": "app_server",
         "debug": false,
-        "instance": "66",
-        "password": "***3b985bdcc32e1c95***",
+        "instance": "11",
+        "password": "***5faa222365df9313***",
         "pollAll": false,
         "pollLess": false,
         "rfc": "Per function call",
         "rum": true,
-        "server": "vadsvpg.voestalpine.root.local",
+        "server": "vadsvqe11.voestalpine.root.local",
         "tasks": [],
         "timeoutMin": 25,
         "useHostName": true,

@@ -1,7 +1,7 @@
 resource "dynatrace_generic_types" "cisco_cc_device" {
   name         = "cisco_cc:device"
   enabled      = true
-  created_by   = "com.dynatrace.extension.cisco-cc 2.2.1"
+  created_by   = "com.dynatrace.extension.cisco-cc 3.0.3"
   display_name = "Catalyst Device"
   insert_after = "vu9U3hXa3q0AAAABACZidWlsdGluOm1vbml0b3JlZGVudGl0aWVzLmdlbmVyaWMudHlwZQAGdGVuYW50AAZ0ZW5hbnQAJGMxOWI3MjJhLWY4MDUtNTdkOC05ZmM5LWI5YjQ1OGM3Y2ZhZL7vVN4V2t6t"
   rules {
@@ -32,8 +32,8 @@ resource "dynatrace_generic_types" "cisco_cc_device" {
         }
         attribute {
           display_name = "IP Address"
-          key          = "ip_address"
-          pattern      = "{ip_address}"
+          key          = "device_ip_address"
+          pattern      = "{device_ip_address}"
         }
         attribute {
           display_name = "Family"
@@ -89,6 +89,21 @@ resource "dynatrace_generic_types" "cisco_cc_device" {
           display_name = "Reachability Status"
           key          = "reachability_status"
           pattern      = "{reachability_status}"
+        }
+        attribute {
+          display_name = "Vendor"
+          key          = "vendor"
+          pattern      = "{vendor}"
+        }
+        attribute {
+          display_name = "Device Product Vendor"
+          key          = "product_vendor"
+          pattern      = "{product_vendor}"
+        }
+        attribute {
+          display_name = "Chassis MAC"
+          key          = "chassis_mac"
+          pattern      = "{chassis.mac}"
         }
         attribute {
           display_name = "Center Device Link"
@@ -290,7 +305,8 @@ resource "dynatrace_generic_types" "cisco_cc_device" {
           key = "center"
         }
         required_dimension {
-          key = "device_id"
+          key           = "device_id"
+          value_pattern = "$exists()"
         }
       }
       sources {
@@ -384,6 +400,33 @@ resource "dynatrace_generic_types" "cisco_cc_device" {
         }
         source {
           condition   = "$prefix(cisco.cc.interface.)"
+          source_type = "Metrics"
+        }
+      }
+    }
+    rule {
+      icon_pattern          = "switch"
+      id_pattern            = "cisco_cc_device_{center}_{device_id}"
+      instance_name_pattern = "{device}"
+      required_dimensions {
+        required_dimension {
+          key = "center"
+        }
+        required_dimension {
+          key = "device_id"
+        }
+        required_dimension {
+          key           = "device"
+          value_pattern = "$exists()"
+        }
+      }
+      sources {
+        source {
+          condition   = "$eq(com.dynatrace.extension.network_device.cpu_usage)"
+          source_type = "Metrics"
+        }
+        source {
+          condition   = "$eq(com.dynatrace.extension.network_device.memory_usage)"
           source_type = "Metrics"
         }
       }

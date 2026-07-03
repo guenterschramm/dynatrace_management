@@ -1,8 +1,8 @@
 resource "dynatrace_metric_metadata" "Synchronization_health_2" {
-  description        = "Intersection of the synchronization state of a database that is joined to the group on the replica and the availability mode of the replica"
+  description        = "Rollup of the database synchronization state of all joined replicas and the availability mode of the replica"
   display_name       = "Synchronization health"
-  metric_id          = "metric-sql-server.always-on.db.synchronizationHealth"
-  source_entity_type = "sql:sql_server_availability_database"
+  metric_id          = "metric-sql-server.always-on.ar.synchronizationHealth"
+  source_entity_type = "sql:sql_server_availability_replica"
   unit               = "State"
   dimensions {
     dimension {
@@ -22,24 +22,36 @@ resource "dynatrace_metric_metadata" "Synchronization_health_2" {
       key          = "availability.replica.name"
     }
     dimension {
-      display_name = "Availability database ID"
-      key          = "availability.database.id"
+      display_name = "Availability replica availability mode"
+      key          = "availability.replica.availability_mode"
     }
     dimension {
-      display_name = "Availability database name"
-      key          = "availability.database.name"
+      display_name = "Availability replica failover mode"
+      key          = "availability.replica.failover_mode"
     }
     dimension {
-      display_name = "Availability database synchronization state"
-      key          = "availability.database.synchronization_state"
+      display_name = "Availability replica is local"
+      key          = "availability.replica.is_local"
     }
     dimension {
-      display_name = "Availability database synchronization health"
-      key          = "availability.database.synchronization_health"
+      display_name = "Availability replica role"
+      key          = "availability.replica.role"
     }
     dimension {
-      display_name = "Availability database state"
-      key          = "availability.database.state"
+      display_name = "Availability replica operational state"
+      key          = "availability.replica.operational_state"
+    }
+    dimension {
+      display_name = "Availability replica recovery health"
+      key          = "availability.replica.recovery_health"
+    }
+    dimension {
+      display_name = "Availability replica synchronization health"
+      key          = "availability.replica.synchronization_health"
+    }
+    dimension {
+      display_name = "Availability replica connected state"
+      key          = "availability.replica.connected_state"
     }
   }
   metric_properties {

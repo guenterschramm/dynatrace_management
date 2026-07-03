@@ -1,6 +1,6 @@
 resource "dynatrace_generic_relationships" "snmp_com_dynatrace_extension_snmp_generic_device_SAME_AS_snmptraps_com_dynatrace_ext_snmp-traps" {
   enabled          = true
-  created_by       = "com.dynatrace.extension.snmp-generic-device 2.5.12"
+  created_by       = "com.dynatrace.extension.snmp-generic-device 3.0.4"
   from_type        = "snmp:com_dynatrace_extension_snmp_generic_device"
   to_type          = "snmptraps:com_dynatrace_ext_snmp-traps"
   type_of_relation = "SAME_AS"

@@ -1,6 +1,6 @@
 resource "dynatrace_generic_relationships" "network_port_RUNS_ON_host" {
   enabled          = true
-  created_by       = "com.dynatrace.extension.snmp-auto-discovery 4.1.5"
+  created_by       = "com.dynatrace.extension.snmp-auto-discovery 4.1.7"
   from_type        = "network:port"
   to_type          = "host"
   type_of_relation = "RUNS_ON"

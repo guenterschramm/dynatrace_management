@@ -5,22 +5,22 @@ resource "dynatrace_generic_setting" "app_dynatrace_discovery_coverage_discovery
       "rule": {
         "actions": [
           {
-            "name": "setMonitoringMode",
+            "name": "configureLogForwardingForTechnology",
             "parameters": [
               {
-                "name": "mode",
-                "value": "FULL_STACK"
+                "name": "technology",
+                "value": "fluentd"
               }
             ]
           }
         ],
-        "category": "Deep monitoring",
-        "description": "All hosts which have processes that support deep monitoring. Deep monitoring of microservices\n        enables end to end tracing.",
-        "environmentScope": false,
-        "id": "hosts-with-injectable-processes-0",
-        "priority": "INFO",
-        "query": "fetch dt.entity.process_group_instance, from:-15m\n        | filter in(processType,{\"JAVA\", \"PHP\", \"DOTNET\", \"GO\", \"NODE_JS\", \"APACHE_HTTPD\", \"NGINX\"})\n        | fieldsAdd hostid=belongs_to[dt.entity.host]\n        | lookup [ fetch dt.entity.host | fieldsAdd monitoringMode], sourceField:hostid, lookupField:id, prefix:\"host.\"\n        | fields entity.name=host.entity.name, id=host.id, monitoringMode=host.monitoringMode\n        | summarize by:{id,entity.name,monitoringMode}, count=count()\n        | fieldsRemove count\n        | fieldsAdd host.id=id, compliant=(monitoringMode == \"FULL_STACK\")\n        ",
-        "title": "Hosts with injectable processes"
+        "category": "Logs",
+        "description": "Monitoring Kubernetes logs, together with other observability signals like metrics and traces, is important to assure full context for observability and troubleshooting use cases.\n    This rule detects existing fluentd instances that are not integrated with Dynatrace, and provides instructions for configuring your log forwarder to send data to logs ingest API.",
+        "environmentScope": true,
+        "id": "unmonitored-fluentd-logs-0",
+        "priority": "WARNING",
+        "query": "fetch dt.entity.container_group_instance\n        | fieldsAdd containerImageName, cluster_id=belongs_to[dt.entity.kubernetes_cluster]\n        | filter matchesPhrase(containerImageName,\"fluentd\")\n        | summarize tmp=count(), by: cluster_id\n        | fieldsRemove tmp\n        | fieldsAdd compliant = cluster_id in [\n          timeseries count = sum(dt.log.status_per_entity_count), by: {dt.entity.kubernetes_cluster}, from: now()-1h\n          | filterOut isNull(dt.entity.kubernetes_cluster)\n          | fields dt.entity.kubernetes_cluster\n        ]\n        | lookup [fetch dt.entity.kubernetes_cluster], sourceField:cluster_id, lookupField:id, prefix:\"kubernetes_cluster.\"\n        | fields kubernetes_cluster=kubernetes_cluster.entity.name, kubernetes_cluster.id=cluster_id, compliant\n        ",
+        "title": "Unmonitored fluentd logs"
       },
       "settings": {
         "muted": false

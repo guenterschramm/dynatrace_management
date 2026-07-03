@@ -1,0 +1,2 @@
+# Module scaffold: request_naming
+# Dynatrace resources are added in later iterations.

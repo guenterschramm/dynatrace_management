@@ -3,8 +3,38 @@ resource "dynatrace_generic_types" "os_service" {
   enabled      = true
   created_by   = "Dynatrace"
   display_name = "OS Service"
-  insert_after = "vu9U3hXa3q0AAAABACZidWlsdGluOm1vbml0b3JlZGVudGl0aWVzLmdlbmVyaWMudHlwZQAGdGVuYW50AAZ0ZW5hbnQAJDg5MGRhZGZiLTg2YWItNTQzMy1iMTE3LTc3MGE0YWNjNDhjMb7vVN4V2t6t"
+  insert_after = "vu9U3hXa3q0AAAABACZidWlsdGluOm1vbml0b3JlZGVudGl0aWVzLmdlbmVyaWMudHlwZQAGdGVuYW50AAZ0ZW5hbnQAJDY3OGM1ZDQ5LWEwNjctNWI4My1iZTE1LWU2ZTA4MDBkN2MyNb7vVN4V2t6t"
   rules {
+    rule {
+      id_pattern            = "{os_service.name}{dt.smartscape.host}"
+      instance_name_pattern = "{os_service.display_name}"
+      required_dimensions {
+        required_dimension {
+          key = "os_service.display_name"
+        }
+      }
+      sources {
+        source {
+          condition   = "$eq(dt.osservice.availability)"
+          source_type = "Metrics"
+        }
+      }
+    }
+    rule {
+      id_pattern            = "{os_service.name}{dt.smartscape.host}"
+      instance_name_pattern = "{os_service.display_name}"
+      required_dimensions {
+        required_dimension {
+          key = "os_service.display_name"
+        }
+      }
+      sources {
+        source {
+          condition   = "$eq(AVAILABILITY_EVENT)"
+          source_type = "Events"
+        }
+      }
+    }
     rule {
       id_pattern            = "{dt.osservice.name}{dt.entity.host}"
       instance_name_pattern = "{dt.osservice.display_name}"

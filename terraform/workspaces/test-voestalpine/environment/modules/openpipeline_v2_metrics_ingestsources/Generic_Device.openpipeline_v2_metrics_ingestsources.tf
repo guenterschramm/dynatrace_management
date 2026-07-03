@@ -10,7 +10,7 @@ resource "dynatrace_openpipeline_v2_metrics_ingestsources" "Generic_Device" {
     }
     metadata {
       entry_key   = "extension_version"
-      entry_value = "3.0.4"
+      entry_value = "3.0.5"
     }
   }
   static_routing {

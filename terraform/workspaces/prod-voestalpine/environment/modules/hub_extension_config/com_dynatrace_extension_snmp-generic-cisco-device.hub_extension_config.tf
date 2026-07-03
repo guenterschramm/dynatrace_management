@@ -7,55 +7,45 @@ resource "dynatrace_hub_extension_config" "com_dynatrace_extension_snmp-generic-
   scope             = "ag_group-default"
   value             = jsonencode({
       "activationContext": "REMOTE",
-      "description": "BG88 - Cisco",
+      "description": "Network - WLAN Core router Linz",
       "dtAttributes": {
-        "dt.cost.costcenter": "network",
-        "dt.cost.product": "cisco",
+        "dt.cost.costcenter": "cisco",
+        "dt.cost.product": "network",
         "dt.security_context": "network"
       },
-      "enabled": false,
+      "enabled": true,
       "featureSets": [
-        "BGP",
-        "Cisco BGP",
         "Control Plane",
-        "EIGRP",
-        "FRUs",
-        "Health",
-        "High availability",
         "Interfaces",
-        "Interfaces 32-bit",
         "Interfaces 64-bit",
-        "Memory pools",
-        "OSPF",
-        "Power supply",
-        "Sensors",
-        "Sensors (Advanced)",
         "Traffic",
-        "Advanced interfaces"
+        "OSPF",
+        "neighbor-discovery",
+        "Power supply"
       ],
       "snmp": {
         "devices": [
           {
             "authentication": {
-              "community": "***1925f55dcb8b06d5***",
-              "type": "SNMPv2c",
-              "useCredentialVault": false
+              "credentialVaultIdSnmpV3": "CREDENTIALS_VAULT-BEB60FA211474B83",
+              "type": "SNMPv3",
+              "useCredentialVault": true
             },
-            "ip": "10.163.32.39",
+            "ip": "10.233.0.25",
             "port": 161
           },
           {
             "authentication": {
-              "community": "***d741673b148b61b6***",
-              "type": "SNMPv2c",
-              "useCredentialVault": false
+              "credentialVaultIdSnmpV3": "CREDENTIALS_VAULT-BEB60FA211474B83",
+              "type": "SNMPv3",
+              "useCredentialVault": true
             },
-            "ip": "10.163.32.80",
+            "ip": "10.233.0.24",
             "port": 161
           }
         ]
       },
       "vars": {},
-      "version": "3.4.10"
+      "version": "4.0.9"
     })
 }

@@ -1,7 +1,7 @@
 resource "dynatrace_generic_types" "cisco_cc_center" {
   name         = "cisco_cc:center"
   enabled      = true
-  created_by   = "com.dynatrace.extension.cisco-cc 2.2.1"
+  created_by   = "com.dynatrace.extension.cisco-cc 3.0.3"
   display_name = "Catalyst Center"
   insert_after = "vu9U3hXa3q0AAAABACZidWlsdGluOm1vbml0b3JlZGVudGl0aWVzLmdlbmVyaWMudHlwZQAGdGVuYW50AAZ0ZW5hbnQAJDIzZGRhZTMzLWM4NzgtNTc2Ni04ZTdmLTFkMmM1ZTQxZTFkMr7vVN4V2t6t"
   rules {

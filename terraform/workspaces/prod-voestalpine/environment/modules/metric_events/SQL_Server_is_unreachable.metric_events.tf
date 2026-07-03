@@ -1,6 +1,7 @@
 resource "dynatrace_metric_events" "SQL_Server_is_unreachable" {
-  enabled = false
-  summary = "SQL Server is unreachable"
+  enabled                    = false
+  event_entity_dimension_key = "dt.entity.sql:sql_server_instance"
+  summary                    = "SQL Server is unreachable"
   event_template {
     description = "The {metricname} value of {severity} was {alert_condition} threshold of {threshold}."
     davis_merge = true

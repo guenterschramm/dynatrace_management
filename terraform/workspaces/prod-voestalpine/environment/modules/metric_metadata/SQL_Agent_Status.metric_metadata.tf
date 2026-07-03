@@ -1,9 +1,8 @@
 resource "dynatrace_metric_metadata" "SQL_Agent_Status" {
-  description        = "The status of the SQL Server Agent on the database instance"
-  display_name       = "SQL Agent Status"
-  metric_id          = "metric-sql-server.agent.status"
-  source_entity_type = "sql:sql_server_agent"
-  unit               = "Unspecified"
+  description  = "The status of the SQL Server Agent on the database instance"
+  display_name = "SQL Agent Status"
+  metric_id    = "metric-sql-server.sql.agent.status"
+  unit         = "Unspecified"
   dimensions {
     dimension {
       display_name = "Service Name"

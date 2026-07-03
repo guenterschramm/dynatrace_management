@@ -2,15 +2,15 @@ resource "dynatrace_hub_extension_config" "com_dynatrace_extension_wmi_iis_3" {
   name                = "com.dynatrace.extension.wmi.iis"
   # active_gate_group = ""
   # host              = ""
-  host_group          = "HOST_GROUP-F8254B0A4393DA8D"
+  host_group          = "HOST_GROUP-C345CA5D0D760424"
   # management_zone   = ""
-  scope               = "HOST_GROUP-F8254B0A4393DA8D"
+  scope               = "HOST_GROUP-C345CA5D0D760424"
   value               = jsonencode({
       "activationContext": "LOCAL",
       "activationTags": [
         "Webserver:IIS"
       ],
-      "description": "Bee4IT IIS",
+      "description": "xECM Steel IIS",
       "enabled": true,
       "featureSets": [
         "IIS Extended Request Metrics",

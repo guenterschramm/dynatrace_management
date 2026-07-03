@@ -62,8 +62,17 @@ class TerraformRunner:
     def init(self, workspace_dir):
         return self.run(workspace_dir, 'init', '-input=false', '-no-color')
 
-    def plan(self, workspace_dir):
-        return self.run(workspace_dir, 'plan', '-input=false', '-no-color')
+    def plan(self, workspace_dir, target_module=None):
+        arguments = ['plan', '-input=false', '-no-color']
+        if target_module:
+            arguments.append(f'-target=module.{target_module}')
+        return self.run(workspace_dir, *arguments)
+
+    def apply(self, workspace_dir, target_module=None):
+        arguments = ['apply', '-auto-approve', '-input=false', '-no-color']
+        if target_module:
+            arguments.append(f'-target=module.{target_module}')
+        return self.run(workspace_dir, *arguments)
 
 
 class DynatraceConfigExporter:
@@ -777,21 +786,23 @@ class TerraformExecutionService:
         self.runner = runner or TerraformRunner()
 
     def _create_execution_log(self, workspace, command, result):
+        safe_stdout = result.stdout if isinstance(result.stdout, str) else ''
+        safe_stderr = result.stderr if isinstance(result.stderr, str) else ''
         return TerraformExecution.objects.create(
             workspace=workspace,
             command=command,
             exit_code=result.returncode,
-            stdout=result.stdout,
-            stderr=result.stderr,
+            stdout=safe_stdout,
+            stderr=safe_stderr,
             succeeded=result.returncode == 0,
         )
 
-    def execute(self, workspace, command):
+    def execute(self, workspace, command, target_module=None, run_provider_export=True):
         ensure_workspace_files(workspace)
 
         provider_export_result = {'ran': False, 'success': True}
 
-        if workspace.scope in (
+        if run_provider_export and workspace.scope in (
             TerraformWorkspace.WorkspaceScope.ACCOUNT_MANAGEMENT,
             TerraformWorkspace.WorkspaceScope.ENVIRONMENT,
             TerraformWorkspace.WorkspaceScope.PLATFORM,
@@ -799,7 +810,7 @@ class TerraformExecutionService:
             # All supported scopes export via provider export scripts in reference/.
             provider_export_result = run_legacy_export_script(workspace)
 
-        if workspace.scope in (
+        if run_provider_export and workspace.scope in (
             TerraformWorkspace.WorkspaceScope.ACCOUNT_MANAGEMENT,
             TerraformWorkspace.WorkspaceScope.ENVIRONMENT,
             TerraformWorkspace.WorkspaceScope.PLATFORM,
@@ -810,13 +821,14 @@ class TerraformExecutionService:
         status_map = {
             'init': TerraformWorkspace.WorkspaceStatus.INIT_RUNNING,
             'plan': TerraformWorkspace.WorkspaceStatus.PLAN_RUNNING,
+            'apply': TerraformWorkspace.WorkspaceStatus.APPLY_RUNNING,
         }
         workspace.status = status_map[command]
         workspace.last_command = command
         workspace.last_run_at = timezone.now()
         workspace.save(update_fields=['status', 'last_command', 'last_run_at', 'updated_at'])
 
-        if command == TerraformExecution.CommandType.PLAN:
+        if command in (TerraformExecution.CommandType.PLAN, TerraformExecution.CommandType.APPLY):
             init_result = self.runner.init(workspace.workspace_dir)
             self._create_execution_log(workspace, TerraformExecution.CommandType.INIT, init_result)
             if init_result.returncode != 0:
@@ -826,8 +838,10 @@ class TerraformExecutionService:
 
         if command == TerraformExecution.CommandType.INIT:
             result = self.runner.init(workspace.workspace_dir)
+        elif command == TerraformExecution.CommandType.APPLY:
+            result = self.runner.apply(workspace.workspace_dir, target_module=target_module)
         else:
-            result = self.runner.plan(workspace.workspace_dir)
+            result = self.runner.plan(workspace.workspace_dir, target_module=target_module)
 
         if provider_export_result.get('ran') and not provider_export_result.get('success'):
             export_reason = (

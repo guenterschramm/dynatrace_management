@@ -10,7 +10,7 @@ resource "dynatrace_openpipeline_v2_logs_ingestsources" "SNMP_Autodiscovery" {
     }
     metadata {
       entry_key   = "extension_version"
-      entry_value = "4.1.5"
+      entry_value = "4.1.7"
     }
   }
   static_routing {

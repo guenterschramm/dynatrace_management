@@ -48,5 +48,13 @@ resource "dynatrace_metric_metadata" "TX_Utilization" {
       display_name = "Interface Index"
       key          = "if_index"
     }
+    dimension {
+      display_name = "Chassis MAC"
+      key          = "chassis.mac"
+    }
+    dimension {
+      display_name = "Site Id"
+      key          = "site_id"
+    }
   }
 }

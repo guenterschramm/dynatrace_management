@@ -3,13 +3,13 @@ resource "dynatrace_custom_tags" "_2217DBSQLCLN02_voestalpine_root_local" {
   tags {
     filter {
       context = "CONTEXTLESS"
-      key     = "Cluster"
-      value   = "SQL2019"
+      key     = "Application"
+      value   = "SQL Server"
     }
     filter {
       context = "CONTEXTLESS"
-      key     = "Application"
-      value   = "SQL Server"
+      key     = "Cluster"
+      value   = "SQL2019"
     }
   }
 }
