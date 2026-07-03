@@ -27,15 +27,15 @@
                     <div class="d-inline-flex gap-2">
                         <form action="{% url 'terraform_engine:init' account_workspace.pk %}?next=account_{{ section|default:'users' }}" method="post" data-init-progress="true" data-scope="{{ account_workspace.scope }}" data-workspace="{{ account_workspace.workspace_name }}" data-export-total="12" data-progress-url="{% url 'terraform_engine:progress' account_workspace.pk %}">
                             {% csrf_token %}
-                            <button class="btn btn-sm btn-outline-secondary" type="submit">Init</button>
+                            <button class="btn btn-sm btn-outline-dark" type="submit">Init</button>
                         </form>
                         <form action="{% url 'terraform_engine:plan' account_workspace.pk %}?next=account_{{ section|default:'users' }}" method="post">
                             {% csrf_token %}
-                            <button class="btn btn-sm btn-dark" type="submit">Plan</button>
+                            <button class="btn btn-sm btn-outline-dark" type="submit" {% if not account_total_modified %}disabled{% endif %}>Plan</button>
                         </form>
                         <form action="{% url 'terraform_engine:sync' account_workspace.pk %}?next=account_{{ section|default:'users' }}" method="post">
                             {% csrf_token %}
-                            <button class="btn btn-sm btn-outline-dark" type="submit">Apply</button>
+                            <button class="btn btn-sm btn-outline-dark" type="submit" {% if not account_last_plan_succeeded or not account_total_modified %}disabled{% endif %}>Apply</button>
                         </form>
                     </div>
                 </div>

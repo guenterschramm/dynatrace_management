@@ -1,4 +1,4 @@
-{% extends 'base.html' %}
+﻿{% extends 'base.html' %}
 {% load tz %}
 
 {% block content %}
@@ -62,11 +62,11 @@
 									<div class="d-inline-flex gap-2">
 										<form action="{% url 'terraform_engine:init' account_workspace.pk %}" method="post" data-init-progress="true" data-scope="{{ account_workspace.scope }}" data-workspace="{{ account_workspace.workspace_name }}" data-export-total="{{ account_workspace.expected_export_total }}" data-progress-url="{% url 'terraform_engine:progress' account_workspace.pk %}">
 											{% csrf_token %}
-											<button class="btn btn-sm btn-outline-secondary" type="submit">Init</button>
+											<button class="btn btn-sm btn-outline-dark" type="submit">Init</button>
 										</form>
 										<form action="{% url 'terraform_engine:plan' account_workspace.pk %}" method="post">
 											{% csrf_token %}
-											<button class="btn btn-sm btn-dark" type="submit">Plan</button>
+											<button class="btn btn-sm btn-outline-dark" type="submit">Plan</button>
 										</form>
 										<form action="{% url 'terraform_engine:sync' account_workspace.pk %}" method="post">
 											{% csrf_token %}
@@ -131,11 +131,11 @@
 									<div class="d-inline-flex gap-2">
 										<form action="{% url 'terraform_engine:init' work.pk %}" method="post" data-init-progress="true" data-scope="{{ work.scope }}" data-workspace="{{ work.workspace_name }}" data-export-total="{{ work.expected_export_total }}" data-progress-url="{% url 'terraform_engine:progress' work.pk %}">
 											{% csrf_token %}
-											<button class="btn btn-sm btn-outline-secondary" type="submit">Init</button>
+											<button class="btn btn-sm btn-outline-dark" type="submit">Init</button>
 										</form>
 										<form action="{% url 'terraform_engine:plan' work.pk %}" method="post">
 											{% csrf_token %}
-											<button class="btn btn-sm btn-dark" type="submit">Plan</button>
+											<button class="btn btn-sm btn-outline-dark" type="submit">Plan</button>
 										</form>
 										<form action="{% url 'terraform_engine:sync' work.pk %}" method="post">
 											{% csrf_token %}
@@ -178,11 +178,11 @@
 									<div class="d-inline-flex gap-2">
 										<form action="{% url 'terraform_engine:init' work.pk %}" method="post" data-init-progress="true" data-scope="{{ work.scope }}" data-workspace="{{ work.workspace_name }}" data-export-total="{{ work.expected_export_total }}" data-progress-url="{% url 'terraform_engine:progress' work.pk %}">
 											{% csrf_token %}
-											<button class="btn btn-sm btn-outline-secondary" type="submit">Init</button>
+											<button class="btn btn-sm btn-outline-dark" type="submit">Init</button>
 										</form>
 										<form action="{% url 'terraform_engine:plan' work.pk %}" method="post">
 											{% csrf_token %}
-											<button class="btn btn-sm btn-dark" type="submit">Plan</button>
+											<button class="btn btn-sm btn-outline-dark" type="submit">Plan</button>
 										</form>
 										<form action="{% url 'terraform_engine:sync' work.pk %}" method="post">
 											{% csrf_token %}
@@ -403,3 +403,4 @@
 	});
 </script>
 {% endblock %}
+

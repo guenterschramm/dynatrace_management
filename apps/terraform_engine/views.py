@@ -1,6 +1,7 @@
 from datetime import datetime, timezone as dt_timezone
 import json
 import re
+import subprocess
 
 from django.conf import settings
 from django.contrib import messages
@@ -177,6 +178,7 @@ def _read_module_objects(workspace, module_name):
 
 	scaffold_names = {'main.tf', 'variables.tf', 'outputs.tf', '___providers___.tf', '___variables___.tf'}
 	tf_files = sorted(path for path in module_dir.glob('*.tf'))
+	changed_files = _get_module_changed_tf_files(workspace, module_name)
 	exported_files = [
 		path.name
 		for path in tf_files
@@ -195,9 +197,44 @@ def _read_module_objects(workspace, module_name):
 				'name': candidate.stem,
 				'file_name': exported_file,
 				'content': content,
+				'created': exported_file in changed_files,
 			}
 		)
 	return objects
+
+
+def _get_module_changed_tf_files(workspace, module_name):
+	module_dir = workspace.workspace_dir / 'modules' / module_name
+	if not module_dir.exists() or not module_dir.is_dir():
+		return set()
+
+	try:
+		result = subprocess.run(
+			['git', '-C', str(settings.BASE_DIR), 'status', '--porcelain', '--', str(module_dir)],
+			capture_output=True,
+			text=True,
+			check=False,
+			timeout=5,
+		)
+	except Exception:
+		return set()
+
+	if result.returncode != 0:
+		return set()
+
+	changed = set()
+	for raw_line in (result.stdout or '').splitlines():
+		line = raw_line.strip()
+		if not line or len(line) < 4:
+			continue
+		path_part = line[3:]
+		if ' -> ' in path_part:
+			path_part = path_part.split(' -> ', 1)[1]
+		file_name = path_part.replace('\\', '/').split('/')[-1]
+		if file_name.endswith('.tf'):
+			changed.add(file_name)
+
+	return changed
 
 
 def _is_editable_platform_module_object(workspace, module_name, candidate):
@@ -231,6 +268,8 @@ def _build_init_summary(workspace, include_object_content=False):
 	modules_root = workspace.workspace_dir / 'modules'
 	scaffold_names = {'main.tf', 'variables.tf', 'outputs.tf', '___providers___.tf', '___variables___.tf'}
 	last_init_execution = workspace.executions.filter(command=TerraformExecution.CommandType.INIT).first()
+	last_plan_execution = workspace.executions.filter(command=TerraformExecution.CommandType.PLAN).first()
+	last_plan_succeeded = last_plan_execution.succeeded if last_plan_execution else False
 	last_init_result = None
 	workspace_stamp = _workspace_content_stamp(workspace)
 	content_mode = 'full' if include_object_content else 'lite'
@@ -240,6 +279,7 @@ def _build_init_summary(workspace, include_object_content=False):
 
 	cache_key = (
 		'terraform_init_summary:'
+		'v2:'
 		f'{content_mode}:'
 		f'{workspace.pk}:'
 		f'{workspace_stamp}:'
@@ -254,6 +294,8 @@ def _build_init_summary(workspace, include_object_content=False):
 		'workspace_name': workspace.workspace_name,
 		'scope_label': workspace.get_scope_display(),
 		'total_loaded_objects': 0,
+		'total_modified_count': 0,
+		'last_plan_succeeded': last_plan_succeeded,
 		'possible_total': _expected_export_total(workspace),
 		'module_count': 0,
 		'filled_module_count': 0,
@@ -288,16 +330,19 @@ def _build_init_summary(workspace, include_object_content=False):
 			if _is_hidden_environment_module(workspace, module_dir.name):
 				continue
 			tf_files = sorted(path for path in module_dir.glob('*.tf'))
+			changed_files = _get_module_changed_tf_files(workspace, module_dir.name)
 			exported_files = [
 				path.name
 				for path in tf_files
 				if path.name not in scaffold_names and _is_editable_platform_module_object(workspace, module_dir.name, path)
 			]
+			modified_count = sum(1 for file_name in exported_files if file_name in changed_files)
 			objects = []
 			if include_object_content and exported_files:
 				objects = _read_module_objects(workspace, module_dir.name)
 			loaded_count = len(exported_files)
 			summary['total_loaded_objects'] += loaded_count
+			summary['total_modified_count'] += modified_count
 			if loaded_count > 0:
 				summary['filled_module_count'] += 1
 			summary['types'].append(
@@ -310,6 +355,7 @@ def _build_init_summary(workspace, include_object_content=False):
 				{
 					'name': module_dir.name,
 					'loaded_count': loaded_count,
+					'modified_count': modified_count,
 					'files': exported_files,
 					'preview': '',
 					'objects': objects,
@@ -409,6 +455,8 @@ def _serialize_init_summary(summary):
 		'workspace_name': summary.get('workspace_name', ''),
 		'scope_label': summary.get('scope_label', ''),
 		'total_loaded_objects': summary.get('total_loaded_objects', 0),
+		'total_modified_count': summary.get('total_modified_count', 0),
+		'last_plan_succeeded': bool(summary.get('last_plan_succeeded', False)),
 		'possible_total': summary.get('possible_total', 0),
 		'module_count': summary.get('module_count', 0),
 		'filled_module_count': summary.get('filled_module_count', 0),
@@ -748,6 +796,7 @@ class TerraformModuleDetailsView(View):
 				'workspace_id': workspace.pk,
 				'workspace_name': workspace.workspace_name,
 				'module_name': module_name,
+				'save_url': reverse('terraform_engine:module_object_update', args=[workspace.pk, module_name]),
 				'loaded_count': len(objects),
 				'objects': objects,
 			}
@@ -765,19 +814,43 @@ class TerraformModuleObjectUpdateView(View):
 
 		file_name = (request.POST.get('file_name') or '').strip()
 		content = request.POST.get('content')
+		create_new = (request.POST.get('create_new') or '').strip().lower() in {'1', 'true', 'yes', 'on'}
+		delete_object = (request.POST.get('delete') or '').strip().lower() in {'1', 'true', 'yes', 'on'}
 		if not file_name:
 			return JsonResponse({'ok': False, 'error': 'Dateiname fehlt.'}, status=400)
-		if content is None:
+		if content is None and not delete_object:
 			return JsonResponse({'ok': False, 'error': 'Inhalt fehlt.'}, status=400)
 		if '/' in file_name or '\\' in file_name or not file_name.endswith('.tf'):
 			return JsonResponse({'ok': False, 'error': 'Ungueltiger Dateiname.'}, status=400)
 
 		target_file = module_dir / file_name
-		if not target_file.exists() or not target_file.is_file():
+		if delete_object:
+			if not target_file.exists():
+				return JsonResponse({'ok': False, 'error': 'Objektdatei nicht gefunden.'}, status=404)
+			if not target_file.is_file():
+				return JsonResponse({'ok': False, 'error': 'Ungueltiges Zielobjekt.'}, status=400)
+			target_file.unlink()
+			return JsonResponse({'ok': True, 'deleted': True, 'file_name': file_name})
+
+		if target_file.exists() and create_new:
+			return JsonResponse({'ok': False, 'error': 'Objektdatei existiert bereits.'}, status=409)
+		if not target_file.exists() and not create_new:
 			return JsonResponse({'ok': False, 'error': 'Objektdatei nicht gefunden.'}, status=404)
+		if target_file.exists() and not target_file.is_file():
+			return JsonResponse({'ok': False, 'error': 'Ungueltiges Zielobjekt.'}, status=400)
 
 		target_file.write_text(content, encoding='utf-8')
-		return JsonResponse({'ok': True})
+		return JsonResponse(
+			{
+				'ok': True,
+				'created': create_new,
+				'object': {
+					'name': target_file.stem,
+					'file_name': target_file.name,
+					'content': content,
+				},
+			}
+		)
 
 
 class TerraformPlanView(TerraformCommandView):

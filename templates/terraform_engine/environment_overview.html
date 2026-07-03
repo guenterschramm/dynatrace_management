@@ -1,4 +1,4 @@
-{% extends 'base.html' %}
+﻿{% extends 'base.html' %}
 {% load tz %}
 
 {% block content %}
@@ -74,15 +74,15 @@
 									<div class="d-inline-flex gap-2">
 										<form action="{% url 'terraform_engine:init' work.pk %}?next=environment" method="post" data-init-progress="true" data-scope="{{ work.scope }}" data-workspace="{{ work.workspace_name }}" data-export-total="{{ work.expected_export_total }}" data-progress-url="{% url 'terraform_engine:progress' work.pk %}">
 											{% csrf_token %}
-											<button class="btn btn-sm btn-outline-secondary" type="submit">Init</button>
+											<button class="btn btn-sm btn-outline-dark" type="submit">Init</button>
 										</form>
 										<form action="{% url 'terraform_engine:plan' work.pk %}?next=environment" method="post">
 											{% csrf_token %}
-											<button class="btn btn-sm btn-dark" type="submit">Plan</button>
+											<button class="btn btn-sm btn-outline-dark" type="submit" data-workspace-plan-button="true" data-workspace-id="{{ work.pk }}" disabled>Plan</button>
 										</form>
 										<form action="{% url 'terraform_engine:sync' work.pk %}?next=environment" method="post">
 											{% csrf_token %}
-											<button class="btn btn-sm btn-outline-dark" type="submit">Apply</button>
+											<button class="btn btn-sm btn-outline-dark" type="submit" data-workspace-apply-button="true" data-workspace-id="{{ work.pk }}" disabled>Apply</button>
 										</form>
 									</div>
 								</div>
@@ -93,19 +93,19 @@
 										<div class="list-group-item d-flex flex-column flex-lg-row justify-content-between align-items-lg-center gap-2" data-module-row="true" data-workspace-id="{{ work.pk }}" data-module-name="{{ module.name }}">
 											<button type="button" class="btn btn-link p-0 text-start text-decoration-none" data-open-module="true" data-workspace-id="{{ work.pk }}" data-module-name="{{ module.name }}">
 												<span class="fw-semibold" data-module-label="true">{{ module.name }}</span>
-												<span class="badge text-bg-warning ms-2 d-none" data-module-modified-badge="true">0 geaendert</span>
+												<span class="badge text-bg-warning ms-2{% if not module.modified_count %} d-none{% endif %}" data-module-modified-badge="true">{{ module.modified_count|default:0 }} geaendert</span>
 												<span class="badge text-bg-success ms-2">{{ module.loaded_count }} objekte</span>
 											</button>
 											<div class="d-inline-flex gap-2">
 												<form action="{% url 'terraform_engine:init' work.pk %}?next=environment" method="post" data-init-progress="true" data-scope="{{ work.scope }}" data-workspace="{{ work.workspace_name }}" data-export-total="{{ work.expected_export_total }}" data-progress-url="{% url 'terraform_engine:progress' work.pk %}">
 													{% csrf_token %}
 													<input type="hidden" name="module_name" value="{{ module.name }}">
-													<button class="btn btn-sm btn-outline-secondary" type="submit">Init</button>
+													<button class="btn btn-sm btn-outline-dark" type="submit">Init</button>
 												</form>
 												<form action="{% url 'terraform_engine:plan' work.pk %}?next=environment" method="post" data-module-action="plan" data-workspace-id="{{ work.pk }}" data-module-name="{{ module.name }}">
 													{% csrf_token %}
 													<input type="hidden" name="module_name" value="{{ module.name }}">
-													<button class="btn btn-sm btn-dark" type="submit" data-module-plan-button="true" disabled>Plan</button>
+													<button class="btn btn-sm btn-outline-dark" type="submit" data-module-plan-button="true" disabled>Plan</button>
 												</form>
 												<form action="{% url 'terraform_engine:sync' work.pk %}?next=environment" method="post" data-module-action="apply" data-workspace-id="{{ work.pk }}" data-module-name="{{ module.name }}">
 													{% csrf_token %}
@@ -158,7 +158,10 @@
 				<div class="module-details-layout" id="moduleDetailsLayout">
 					<div>
 						<div class="border rounded p-2 bg-light-subtle h-100">
-							<div class="small text-secondary mb-2">Objects in module</div>
+							<div class="d-flex justify-content-between align-items-center mb-2">
+								<div class="small text-secondary">Objects in module</div>
+								<button type="button" class="btn btn-sm btn-outline-dark" id="moduleDetailsNewButton">New</button>
+							</div>
 							<div class="list-group" id="moduleDetailsObjectList"></div>
 						</div>
 					</div>
@@ -167,10 +170,17 @@
 							<div class="small text-secondary mb-2">Details</div>
 							<div class="mb-2">Object: <strong id="moduleDetailsObjectName">-</strong></div>
 							<div class="mb-3">File: <strong id="moduleDetailsObjectFile">-</strong></div>
+							<div class="mb-2" id="moduleDetailsFileNameEditorWrap" style="display: none;">
+								<label for="moduleDetailsFileNameInput" class="form-label form-label-sm mb-1">File name</label>
+								<input type="text" class="form-control form-control-sm font-monospace" id="moduleDetailsFileNameInput" placeholder="new_object.tf">
+							</div>
 							<div class="mb-2 d-inline-flex gap-2">
-								<button type="button" class="btn btn-sm btn-outline-secondary" id="moduleDetailsEditButton">Edit</button>
-								<button type="button" class="btn btn-sm btn-dark" id="moduleDetailsSaveButton" disabled>Save</button>
-								<button type="button" class="btn btn-sm btn-outline-dark" id="moduleDetailsDiscardButton" disabled>Discard</button>
+								<button type="button" class="btn btn-sm btn-outline-dark" id="moduleDetailsEditButton">Edit</button>
+								<button type="button" class="btn btn-sm btn-outline-dark" id="moduleDetailsCopyButton" disabled>Copy</button>
+								<button type="button" class="btn btn-sm btn-outline-dark" id="moduleDetailsClipboardButton" disabled>Add from clipboard</button>
+										<button type="button" class="btn btn-sm btn-outline-dark" id="moduleDetailsSaveButton" disabled>Save</button>
+										<button type="button" class="btn btn-sm btn-outline-dark" id="moduleDetailsDiscardButton" disabled>Discard</button>
+										<button type="button" class="btn btn-sm btn-outline-danger" id="moduleDetailsDeleteButton" disabled>Delete</button>
 							</div>
 							<div class="small text-secondary mb-1">Terraform file content</div>
 							<textarea class="form-control form-control-sm font-monospace" rows="16" id="moduleDetailsObjectContent" disabled></textarea>
@@ -204,6 +214,22 @@
 		if (!modalElement) {
 			return;
 		}
+
+		// Initialise workspace-level Plan/Apply button states from summaryData
+		Object.keys(summaryData).forEach(function (wsId) {
+			var ws = summaryData[wsId];
+			var hasChanges = (ws.total_modified_count || 0) > 0;
+			var planSucceeded = ws.last_plan_succeeded === true;
+
+			var planBtn = document.querySelector('[data-workspace-plan-button][data-workspace-id="' + wsId + '"]');
+			if (planBtn) {
+				planBtn.disabled = !hasChanges;
+			}
+			var applyBtn = document.querySelector('[data-workspace-apply-button][data-workspace-id="' + wsId + '"]');
+			if (applyBtn) {
+				applyBtn.disabled = !(planSucceeded && hasChanges);
+			}
+		});
 
 		var totalsByScope = {
 			account_management: 12,
@@ -303,20 +329,262 @@
 		var objectFile = document.getElementById('moduleDetailsObjectFile');
 		var objectContent = document.getElementById('moduleDetailsObjectContent');
 		var moduleDetailsLayout = document.getElementById('moduleDetailsLayout');
+		var newButton = document.getElementById('moduleDetailsNewButton');
+		var editButton = document.getElementById('moduleDetailsEditButton');
+		var copyButton = document.getElementById('moduleDetailsCopyButton');
+		var clipboardButton = document.getElementById('moduleDetailsClipboardButton');
+		var saveButton = document.getElementById('moduleDetailsSaveButton');
+		var discardButton = document.getElementById('moduleDetailsDiscardButton');
+		var deleteButton = document.getElementById('moduleDetailsDeleteButton');
+		var fileNameEditorWrap = document.getElementById('moduleDetailsFileNameEditorWrap');
+		var fileNameInput = document.getElementById('moduleDetailsFileNameInput');
+
+		var currentModule = null;
+		var currentWorkspaceId = null;
+		var currentObject = null;
+		var fallbackObject = null;
+		var isEditing = false;
+		var isNewObjectDraft = false;
+		var createdFiles = {};
+
+		function getCookie(name) {
+			var cookieValue = null;
+			if (document.cookie && document.cookie !== '') {
+				var cookies = document.cookie.split(';');
+				for (var i = 0; i < cookies.length; i += 1) {
+					var cookie = cookies[i].trim();
+					if (cookie.substring(0, name.length + 1) === (name + '=')) {
+						cookieValue = decodeURIComponent(cookie.substring(name.length + 1));
+						break;
+					}
+				}
+			}
+			return cookieValue;
+		}
+
+		function setEditorMode(editing, asNewDraft) {
+			isEditing = editing;
+			isNewObjectDraft = editing && asNewDraft;
+			objectContent.disabled = !editing;
+			saveButton.disabled = !editing;
+			discardButton.disabled = !editing;
+			deleteButton.disabled = editing || !currentObject;
+			clipboardButton.disabled = !(editing && asNewDraft);
+			editButton.disabled = editing || !currentObject;
+			copyButton.disabled = editing || !currentObject;
+			newButton.disabled = editing || !currentModule;
+			fileNameEditorWrap.style.display = editing && asNewDraft ? '' : 'none';
+		}
 
 		function renderObjectDetails(selectedObject) {
+			currentObject = selectedObject || null;
 			if (!selectedObject) {
 				objectName.textContent = '-';
 				objectFile.textContent = '-';
-				objectContent.textContent = '-';
+				objectContent.value = '';
+				setEditorMode(false, false);
 				return;
 			}
 			objectName.textContent = selectedObject.name || '-';
 			objectFile.textContent = selectedObject.file_name || '-';
-			objectContent.textContent = selectedObject.content || '-';
+			objectContent.value = selectedObject.content || '';
+			setEditorMode(false, false);
+		}
+
+		function setActiveObjectByFileName(fileName) {
+			var target = null;
+			objectList.querySelectorAll('button[data-file-name]').forEach(function (entry) {
+				if (entry.dataset.fileName === fileName) {
+					target = entry;
+				}
+			});
+			if (target) {
+				target.click();
+			}
+		}
+
+		function renderObjectList(module, preferredFileName) {
+			objectList.innerHTML = '';
+			var objects = module && module.objects ? module.objects : [];
+			var longestFileNameLength = objects.reduce(function (maxLength, item) {
+				var fileName = item.file_name || item.name || '';
+				return Math.max(maxLength, fileName.length);
+			}, 0);
+			var objectColumnWidth = Math.max(240, Math.min(420, (longestFileNameLength * 8) + 64));
+			if (moduleDetailsLayout) {
+				moduleDetailsLayout.style.setProperty('--objects-col-width', objectColumnWidth + 'px');
+			}
+
+			objects.forEach(function (item, index) {
+				var button = document.createElement('button');
+				button.type = 'button';
+				button.className = 'list-group-item list-group-item-action d-flex justify-content-between align-items-center';
+				var fileName = item.file_name || item.name || '-';
+				var badge = item.created ? '<span class="badge text-bg-info">NEW</span>' : '';
+				button.innerHTML = fileName + (badge ? ' ' + badge : '');
+				button.title = fileName;
+				button.dataset.fileName = item.file_name || '';
+				button.addEventListener('click', function () {
+					objectList.querySelectorAll('.active').forEach(function (entry) {
+						entry.classList.remove('active');
+					});
+					button.classList.add('active');
+					renderObjectDetails(item);
+				});
+				objectList.appendChild(button);
+				if (index === 0 && !preferredFileName) {
+					button.classList.add('active');
+					renderObjectDetails(item);
+				}
+			});
+
+			if (!objects.length) {
+				var empty = document.createElement('div');
+				empty.className = 'list-group-item text-secondary';
+				empty.textContent = 'Keine Objekte im Modul vorhanden.';
+				objectList.appendChild(empty);
+				renderObjectDetails(null);
+				return;
+			}
+
+			if (preferredFileName) {
+				setActiveObjectByFileName(preferredFileName);
+			}
+		}
+
+		function startNewObjectDraft() {
+			if (!currentModule) {
+				return;
+			}
+			fallbackObject = currentObject;
+			objectList.querySelectorAll('.active').forEach(function (entry) {
+				entry.classList.remove('active');
+			});
+			objectName.textContent = 'New object';
+			objectFile.textContent = '-';
+			objectContent.value = '';
+			fileNameInput.value = '';
+			setEditorMode(true, true);
+			objectContent.focus();
+		}
+
+		function extractClipboardObjectPayload(rawText) {
+			var text = rawText || '';
+			var headerMatch = text.match(/^\/\/\s*terraform-object-file:\s*([^\r\n]+)\r?\n([\s\S]*)$/);
+			if (headerMatch) {
+				return {
+					fileName: (headerMatch[1] || '').trim(),
+					content: headerMatch[2] || ''
+				};
+			}
+			try {
+				var parsed = JSON.parse(text);
+				if (parsed && typeof parsed === 'object') {
+					return {
+						fileName: (parsed.file_name || '').trim(),
+						content: typeof parsed.content === 'string' ? parsed.content : text
+					};
+				}
+			} catch (error) {
+				return {
+					fileName: '',
+					content: text
+				};
+			}
+			return {
+				fileName: '',
+				content: text
+			};
+		}
+
+		function saveObjectDraft() {
+			if (!currentModule || !currentModule.save_url) {
+				return;
+			}
+			var fileName = isNewObjectDraft ? (fileNameInput.value || '').trim() : ((currentObject && currentObject.file_name) || '');
+			if (!fileName) {
+				window.alert('Bitte Dateinamen angeben.');
+				return;
+			}
+			if (fileName.indexOf('/') >= 0 || fileName.indexOf('\\') >= 0 || !fileName.endsWith('.tf')) {
+				window.alert('Dateiname muss auf .tf enden und darf keine Pfadtrenner enthalten.');
+				return;
+			}
+
+			saveButton.disabled = true;
+			var body = new URLSearchParams();
+			body.append('file_name', fileName);
+			body.append('content', objectContent.value || '');
+			body.append('create_new', isNewObjectDraft ? '1' : '0');
+
+			fetch(currentModule.save_url, {
+				method: 'POST',
+				headers: {
+					'Content-Type': 'application/x-www-form-urlencoded;charset=UTF-8',
+					'X-CSRFToken': getCookie('csrftoken') || '',
+					'X-Requested-With': 'XMLHttpRequest'
+				},
+				body: body.toString()
+			})
+				.then(function (response) {
+					return response.json().then(function (payload) {
+						return {
+							ok: response.ok,
+							payload: payload
+						};
+					});
+				})
+				.then(function (result) {
+					if (!result.ok || !result.payload.ok) {
+						throw new Error(result.payload.error || 'Speichern fehlgeschlagen.');
+					}
+
+					var savedObject = result.payload.object || {
+						name: fileName.replace(/\.tf$/, ''),
+						file_name: fileName,
+						content: objectContent.value || ''
+					};
+					savedObject.created = result.payload.created || false;
+
+					if (savedObject.created) {
+						createdFiles[savedObject.file_name] = true;
+					}
+
+					var existingIndex = (currentModule.objects || []).findIndex(function (item) {
+						return item.file_name === savedObject.file_name;
+					});
+					if (existingIndex >= 0) {
+						currentModule.objects[existingIndex] = savedObject;
+					} else {
+						currentModule.objects = currentModule.objects || [];
+						currentModule.objects.push(savedObject);
+					}
+					currentModule.objects.sort(function (left, right) {
+						return (left.file_name || '').localeCompare(right.file_name || '');
+					});
+					currentModule.loaded_count = currentModule.objects.length;
+					moduleCount.textContent = String(currentModule.loaded_count);
+
+					var modifiedCount = (currentModule.objects || []).filter(function (obj) { return obj.created; }).length;
+					document.querySelectorAll('[data-module-row][data-workspace-id="' + currentWorkspaceId + '"][data-module-name="' + (currentModule.name || '') + '"] [data-module-modified-badge]').forEach(function (badge) {
+						if (modifiedCount > 0) {
+							badge.textContent = modifiedCount + ' geaendert';
+							badge.classList.remove('d-none');
+						} else {
+							badge.classList.add('d-none');
+						}
+					});
+
+					renderObjectList(currentModule, savedObject.file_name);
+				})
+				.catch(function (error) {
+					window.alert(error.message || 'Speichern fehlgeschlagen.');
+					setEditorMode(true, isNewObjectDraft);
+				});
 		}
 
 		function openModule(workspaceId, selectedModuleName) {
+			currentWorkspaceId = workspaceId;
 			var summary = summaryData[String(workspaceId)];
 			if (!summary) {
 				return;
@@ -330,6 +598,7 @@
 			if (!module && modules.length) {
 				module = modules[0];
 			}
+			currentModule = module || null;
 
 			moduleName.textContent = module ? (module.name || '-') : '-';
 			moduleCount.textContent = module ? String(module.loaded_count || 0) : '0';
@@ -341,6 +610,7 @@
 			if ((!objects || !objects.length) && detailsUrl) {
 				objectList.innerHTML = '<div class="list-group-item text-secondary">Lade Moduldetails...</div>';
 				renderObjectDetails(null);
+				setEditorMode(false, false);
 				modal.show();
 				fetch(detailsUrl, {
 					headers: {
@@ -354,7 +624,13 @@
 						if (!module) {
 							return;
 						}
-						module.objects = payload.objects || [];
+						module.save_url = payload.save_url || module.save_url || '';
+						module.objects = (payload.objects || []).map(function (obj) {
+							if (createdFiles[obj.file_name]) {
+								obj.created = true;
+							}
+							return obj;
+						});
 						module.loaded_count = payload.loaded_count || module.loaded_count || 0;
 						openModule(workspaceId, selectedModuleName);
 					})
@@ -365,43 +641,142 @@
 				return;
 			}
 
-			var longestFileNameLength = objects.reduce(function (maxLength, item) {
-				var fileName = item.file_name || item.name || '';
-				return Math.max(maxLength, fileName.length);
-			}, 0);
-			var objectColumnWidth = Math.max(240, Math.min(420, (longestFileNameLength * 8) + 64));
-			if (moduleDetailsLayout) {
-				moduleDetailsLayout.style.setProperty('--objects-col-width', objectColumnWidth + 'px');
-			}
-			objects.forEach(function (item, index) {
-				var button = document.createElement('button');
-				button.type = 'button';
-				button.className = 'list-group-item list-group-item-action';
-				button.textContent = item.file_name || item.name || '-';
-				button.title = item.file_name || item.name || '-';
-				button.addEventListener('click', function () {
-					objectList.querySelectorAll('.active').forEach(function (entry) {
-						entry.classList.remove('active');
-					});
-					button.classList.add('active');
-					renderObjectDetails(item);
-				});
-				objectList.appendChild(button);
-				if (index === 0) {
-					button.classList.add('active');
-					renderObjectDetails(item);
-				}
-			});
-
-			if (!objects.length) {
-				var empty = document.createElement('div');
-				empty.className = 'list-group-item text-secondary';
-				empty.textContent = 'Keine Objekte im Modul vorhanden.';
-				objectList.appendChild(empty);
-				renderObjectDetails(null);
-			}
+			renderObjectList(module, '');
+			setEditorMode(false, false);
 
 			modal.show();
+		}
+
+		if (newButton) {
+			newButton.addEventListener('click', function () {
+				startNewObjectDraft();
+			});
+		}
+
+		if (editButton) {
+			editButton.addEventListener('click', function () {
+				if (!currentObject) {
+					return;
+				}
+				setEditorMode(true, false);
+				objectContent.focus();
+			});
+		}
+
+		if (copyButton) {
+			copyButton.addEventListener('click', function () {
+				if (!currentObject || !navigator.clipboard) {
+					return;
+				}
+				var payload = '// terraform-object-file: ' + (currentObject.file_name || '') + '\n' + (objectContent.value || '');
+				navigator.clipboard.writeText(payload).catch(function () {
+					window.alert('Zwischenablage konnte nicht beschrieben werden.');
+				});
+			});
+		}
+
+		if (clipboardButton) {
+			clipboardButton.addEventListener('click', function () {
+				if (!isEditing || !isNewObjectDraft || !navigator.clipboard) {
+					return;
+				}
+				navigator.clipboard.readText()
+					.then(function (text) {
+						var extracted = extractClipboardObjectPayload(text);
+						if (extracted.fileName) {
+							fileNameInput.value = extracted.fileName;
+						} else if (!fileNameInput.value) {
+							fileNameInput.value = 'new_object.tf';
+						}
+						objectContent.value = extracted.content || '';
+					})
+					.catch(function () {
+						window.alert('Zwischenablage konnte nicht gelesen werden.');
+					});
+			});
+		}
+
+		if (saveButton) {
+			saveButton.addEventListener('click', function () {
+				saveObjectDraft();
+			});
+		}
+
+		if (discardButton) {
+			discardButton.addEventListener('click', function () {
+				if (isNewObjectDraft) {
+					renderObjectDetails(fallbackObject);
+					if (fallbackObject && fallbackObject.file_name) {
+						setActiveObjectByFileName(fallbackObject.file_name);
+					}
+					return;
+				}
+				renderObjectDetails(currentObject);
+			});
+		}
+
+		if (deleteButton) {
+			deleteButton.addEventListener('click', function () {
+				if (!currentObject || !currentModule || !currentModule.save_url) {
+					return;
+				}
+				var confirmed = window.confirm('Changes can be reverted, are you sure?');
+				if (!confirmed) {
+					return;
+				}
+
+				deleteButton.disabled = true;
+				var fileName = (currentObject && currentObject.file_name) || '';
+				var body = new URLSearchParams();
+				body.append('file_name', fileName);
+				body.append('delete', '1');
+
+				fetch(currentModule.save_url, {
+					method: 'POST',
+					headers: {
+						'Content-Type': 'application/x-www-form-urlencoded;charset=UTF-8',
+						'X-CSRFToken': getCookie('csrftoken') || '',
+						'X-Requested-With': 'XMLHttpRequest'
+					},
+					body: body.toString()
+				})
+					.then(function (response) {
+						return response.json().then(function (payload) {
+							return {
+								ok: response.ok,
+								payload: payload
+							};
+						});
+					})
+					.then(function (result) {
+						if (!result.ok || !result.payload.ok) {
+							throw new Error(result.payload.error || 'Loeschen fehlgeschlagen.');
+						}
+
+						currentModule.objects = (currentModule.objects || []).filter(function (item) {
+							return item.file_name !== fileName;
+						});
+						delete createdFiles[fileName];
+						currentModule.loaded_count = currentModule.objects.length;
+						moduleCount.textContent = String(currentModule.loaded_count);
+
+						var modifiedCount = (currentModule.objects || []).filter(function (obj) { return obj.created; }).length;
+						document.querySelectorAll('[data-module-row][data-workspace-id="' + currentWorkspaceId + '"][data-module-name="' + (currentModule.name || '') + '"] [data-module-modified-badge]').forEach(function (badge) {
+							if (modifiedCount > 0) {
+								badge.textContent = modifiedCount + ' geaendert';
+								badge.classList.remove('d-none');
+							} else {
+								badge.classList.add('d-none');
+							}
+						});
+
+						renderObjectList(currentModule, '');
+					})
+					.catch(function (error) {
+						window.alert(error.message || 'Loeschen fehlgeschlagen.');
+						setEditorMode(false, false);
+					});
+			});
 		}
 
 		document.querySelectorAll('[data-open-module="true"]').forEach(function (button) {
@@ -480,3 +855,4 @@
 	});
 </script>
 {% endblock %}
+

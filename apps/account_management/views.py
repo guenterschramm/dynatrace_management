@@ -4,7 +4,8 @@ from django.urls import reverse
 from django.utils import timezone
 from django.views.generic import TemplateView
 
-from apps.terraform_engine.models import TerraformWorkspace
+from apps.terraform_engine.models import TerraformExecution, TerraformWorkspace
+from apps.terraform_engine.views import _get_module_changed_tf_files
 
 from .services import TerraformAccountDataService
 
@@ -76,11 +77,27 @@ class TerraformAccountContextMixin:
 		data = self._terraform_data()
 		workspace = self._account_workspace()
 		freshness = self._data_freshness(workspace)
+		last_plan_succeeded = False
+		total_modified_count = 0
+		if workspace:
+			last_plan = workspace.executions.filter(command=TerraformExecution.CommandType.PLAN).first()
+			last_plan_succeeded = last_plan.succeeded if last_plan else False
+			modules_root = workspace.workspace_dir / 'modules'
+			scaffold_names = {'main.tf', 'variables.tf', 'outputs.tf', '___providers___.tf', '___variables___.tf'}
+			if modules_root.exists():
+				for module_dir in modules_root.iterdir():
+					if not module_dir.is_dir():
+						continue
+					changed = _get_module_changed_tf_files(workspace, module_dir.name)
+					tf_files = [p.name for p in module_dir.glob('*.tf') if p.name not in scaffold_names]
+					total_modified_count += sum(1 for f in tf_files if f in changed)
 		return {
 			'source_root': data['source_root'],
 			'resource_count': data['resource_count'],
 			'account_workspace': workspace,
 			'account_data_freshness': freshness,
+			'account_last_plan_succeeded': last_plan_succeeded,
+			'account_total_modified': total_modified_count,
 		}
 
 	def _build_iam_summary(self, workspace):
